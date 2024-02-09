@@ -29,6 +29,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache lib directory
+        uses: actions/cache@v3
+        with:
+          path: module/lib
+          key: ${{ hashFiles('tools/*.properties') }}
+
       - run: ./tools/init.ps1
 
       - run: Get-Item ./module/sentry.psd1 | Import-Module
