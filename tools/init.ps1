@@ -13,7 +13,7 @@ if ((Get-Content $targetPropsFile -Raw -ErrorAction SilentlyContinue) -eq $props
 
 $conf = ($propsFileContent | ConvertFrom-StringData)
 $sourceUrl = "$($conf.repo)/releases/download/$($conf.version)/Sentry.$($conf.version).nupkg"
-$sourceZip = "$targetDir\sentry.zip"
+$sourceZip = "$targetDir/sentry.zip"
 
 Write-Output "Downloading $sourceUrl"
 Invoke-WebRequest $sourceUrl -OutFile $sourceZip
@@ -28,7 +28,7 @@ function extract([string] $fileToExtract, [string] $extractDir)
 
         Write-Output "Extracting $fileToExtract to $destinationFile"
         New-Item $extractDir -ItemType Directory -Force | Out-Null
-        Remove-Item $destinationFile -Force | Out-Null
+        Remove-Item $destinationFile -Force -ErrorAction SilentlyContinue | Out-Null
         [IO.Compression.ZipFileExtensions]::ExtractToFile($file, $destinationFile)
     }
     else
