@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: ${{ matrix.shell }} on ${{ matrix.os }}
+    name: ${{ matrix.os }} - ${{ matrix.shell }}
     runs-on: ${{ matrix.os }}-latest
 
     strategy:
