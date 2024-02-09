@@ -15,7 +15,7 @@ jobs:
       matrix:
         include:
           - name: Dotnet SDK
-            path: tools/update-dotnet.ps1
+            path: tools/sentry-dotnet.properties
     uses: getsentry/github-workflows/.github/workflows/updater.yml@v2
     with:
       name: ${{ matrix.name }}
