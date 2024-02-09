@@ -40,5 +40,5 @@ jobs:
 
       - name: Test
         run: |
-          Get-Item ./module/sentry.psd1 | Import-Module -PassThru
+          Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
           '[Sentry.SentrySdk]::init'
