@@ -1,2 +1,1 @@
-# sentry-powershell
-Sentry for PowerShell
+# Sentry for PowerShell
