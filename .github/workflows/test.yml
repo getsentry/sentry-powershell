@@ -38,6 +38,7 @@ jobs:
       - run: ./tools/init.ps1
         shell: pwsh
 
-      - run: Get-Item ./module/sentry.psd1 | Import-Module -PassThru
-
-      - run: '[Sentry.SentrySdk]::init'
+      - name: Test
+        run: |
+          Get-Item ./module/sentry.psd1 | Import-Module -PassThru
+          '[Sentry.SentrySdk]::init'
