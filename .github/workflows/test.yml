@@ -1,5 +1,3 @@
-name: build
-
 on:
   push:
     branches:
@@ -33,7 +31,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: module/lib
-          key: ${{ hashFiles('tools/*.properties') }}
+          key: lib-${{ hashFiles('tools/*.properties') }}
 
       - run: ./tools/init.ps1
 

@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 
 $propsFileContent = Get-Content "$PSScriptRoot/sentry-dotnet.properties" -Raw
 $targetDir = "$PSScriptRoot/downloads"
+New-Item $targetDir -ItemType Directory -Force | Out-Null
 $targetPropsFile = "$targetDir/sentry-dotnet.properties"
 if ((Get-Content $targetPropsFile -Raw -ErrorAction SilentlyContinue) -eq $propsFileContent)
 {
@@ -18,15 +19,15 @@ Write-Output "Downloading $sourceUrl"
 Invoke-WebRequest $sourceUrl -OutFile $sourceZip
 $archive = [IO.Compression.ZipFile]::OpenRead($sourceZip)
 
-function extract([string] $fileToExtract, [string] $targetDir)
+function extract([string] $fileToExtract, [string] $extractDir)
 {
     if ($file = $archive.Entries.Where(({ $_.FullName -eq $fileToExtract })))
     {
         $file = $file[0]
-        $destinationFile = Join-Path $targetDir $file.Name
+        $destinationFile = Join-Path $extractDir $file.Name
 
         Write-Output "Extracting $fileToExtract to $destinationFile"
-        New-Item $targetDir -ItemType Directory -Force | Out-Null
+        New-Item $extractDir -ItemType Directory -Force | Out-Null
         Remove-Item $destinationFile -Force | Out-Null
         [IO.Compression.ZipFileExtensions]::ExtractToFile($file, $destinationFile)
     }
