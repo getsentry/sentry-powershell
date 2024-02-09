@@ -1,0 +1,44 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  test:
+    name: ${{ matrix.os }} - ${{ matrix.shell }}
+    runs-on: ${{ matrix.os }}-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, windows, macos]
+        shell: [pwsh]
+        include:
+          - os: windows
+            shell: powershell
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache lib directory
+        uses: actions/cache@v4
+        with:
+          path: module/lib
+          key: lib-${{ hashFiles('tools/*.properties') }}
+
+      - run: ./tools/init.ps1
+        shell: pwsh
+
+      - name: Test
+        run: |
+          Get-Item ./module/sentry.psd1 | Import-Module -PassThru
+          '[Sentry.SentrySdk]::init'

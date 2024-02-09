@@ -1,8 +1,5 @@
 $dir = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) 'lib'
 
-# TODO move libs to this package and remove the following code
-$dir = Join-Path $dir '../../Sentry/bin/Debug'
-
 function GetTFM
 {
     # Source https://learn.microsoft.com/en-us/powershell/scripting/whats-new/differences-from-windows-powershell?view=powershell-7.4#net-framework-vs-net-core
@@ -51,7 +48,6 @@ if ($type)
 }
 else
 {
-    # TODO remove write-output & pipe output of LoadFrom() to out-null if we don't wont users to see it.
-    Write-Output "Loading Sentry assembly from $lib"
+    Write-Debug "Loading Sentry assembly from $lib"
     [Reflection.Assembly]::LoadFrom($lib)
 }
