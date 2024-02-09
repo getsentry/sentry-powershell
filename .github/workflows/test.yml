@@ -1,0 +1,36 @@
+name: build
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  test:
+    name: (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        shell: [pwsh]
+        include:
+          - os: windows-latest
+            shell: powershell
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: ./tools/init.ps1
+
+      - run: Get-Item ./module/sentry.psd1 | Import-Module
+
+      - run: '[Sentry.SentrySdk]::init'
