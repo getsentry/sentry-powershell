@@ -30,13 +30,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Cache lib directory
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: module/lib
           key: lib-${{ hashFiles('tools/*.properties') }}
 
       - run: ./tools/init.ps1
+        shell: pwsh
 
-      - run: Get-Item ./module/sentry.psd1 | Import-Module
+      - run: Get-Item ./module/sentry.psd1 | Import-Module -PassThru
 
       - run: '[Sentry.SentrySdk]::init'
