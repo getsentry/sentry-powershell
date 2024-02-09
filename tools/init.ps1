@@ -4,7 +4,8 @@ $ErrorActionPreference = 'Stop'
 $propsFileContent = Get-Content "$PSScriptRoot/sentry-dotnet.properties" -Raw
 $targetDir = "$PSScriptRoot/downloads"
 New-Item $targetDir -ItemType Directory -Force | Out-Null
-$targetPropsFile = "$targetDir/sentry-dotnet.properties"
+$libDir = "$PSScriptRoot/../module/lib"
+$targetPropsFile = "$libDir/sentry-dotnet.properties"
 if ((Get-Content $targetPropsFile -Raw -ErrorAction SilentlyContinue) -eq $propsFileContent)
 {
     Write-Debug "No changes detected in $targetPropsFile, skipping download"
@@ -39,7 +40,6 @@ function extract([string] $fileToExtract, [string] $extractDir)
 
 try
 {
-    $libDir = "$PSScriptRoot/../module/lib"
     extract 'lib/net8.0/Sentry.dll' "$libDir/net8.0"
     extract 'lib/net6.0/Sentry.dll' "$libDir/net6.0"
     extract 'lib/netstandard2.0/Sentry.dll' "$libDir/netstandard2.0"
