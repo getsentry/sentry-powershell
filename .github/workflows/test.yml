@@ -53,6 +53,7 @@ jobs:
 
       - name: Unit tests
         run: |
+          Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
           # Run Pester tests with Code Coverage
           $config = New-PesterConfiguration
           $config.Run.Path = "tests"

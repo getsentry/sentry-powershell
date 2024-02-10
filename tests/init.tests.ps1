@@ -1,4 +1,4 @@
-BeforeAll {
+BeforeDiscovery {
     Import-Module "$PSScriptRoot/../module/Sentry.psd1"
 }
 
