@@ -36,9 +36,33 @@ jobs:
           key: lib-${{ hashFiles('tools/*.properties') }}
 
       - run: ./tools/init.ps1
+        # This development script only runs on PowerShell core, not Windows PowerShell.
         shell: pwsh
 
-      - name: Test
+        # We don't test module loading with Pester because we're unable to unload the module between tests.
+      - name: Module loading
         run: |
+          # Loading the first time
           Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
+          # This needs to return actual types (method overloads)
           '[Sentry.SentrySdk]::init'
+          # Loading the second time must be possible, without errors
+          Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
+          # And accessing APIs must still work too
+          '[Sentry.SentrySdk]::init'
+
+      - name: Unit tests
+        run: |
+          # Run Pester tests with Code Coverage
+          $config = New-PesterConfiguration
+          $config.Run.Path = "tests"
+          $config.CodeCoverage.Enabled = $true
+          $config.TestResult.Enabled = $true
+          Invoke-Pester -Configuration $config
+
+      - name: Upload code coverage report
+        uses: actions/upload-artifact@v4
+        if: ${{ success() }}
+        with:
+          name: code-coverage-report
+          path: coverage.xml
