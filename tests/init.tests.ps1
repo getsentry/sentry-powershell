@@ -17,13 +17,13 @@ Describe 'SentrySdk' {
         [Sentry.SentrySdk]::IsEnabled | Should -Be $true
     }
 
-    # It 'close closes the SDK' {
-    #     $handle = [Sentry.SentrySdk]::init('https://key@host/1')
-    #     $handle | Should -Be Sentry.SentrySdk+DisposeHandle
-    #     [Sentry.SentrySdk]::IsEnabled | Should -Be $true
-    #     [Sentry.SentrySdk]::close()
-    #     [Sentry.SentrySdk]::IsEnabled | Should -Be $false
-    # }
+    It 'close closes the SDK' {
+        $handle = [Sentry.SentrySdk]::init('https://key@host/1')
+        $handle | Should -Be Sentry.SentrySdk+DisposeHandle
+        [Sentry.SentrySdk]::IsEnabled | Should -Be $true
+        [Sentry.SentrySdk]::close()
+        [Sentry.SentrySdk]::IsEnabled | Should -Be $false
+    }
 
     # It 'init respects options' {
     #     class TestLogger:Sentry.Infrastructure.DiagnosticLogger
