@@ -22,8 +22,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - uses: microsoft/psscriptanalyzer-action@6b2948b1944407914a58661c49941824d149734f  # v1.1
+      - uses: microsoft/psscriptanalyzer-action@6b2948b1944407914a58661c49941824d149734f # v1.1
         with:
           path: .
           recurse: true
           output: results.sarif
+          settings: PSGallery
+
+      - uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
