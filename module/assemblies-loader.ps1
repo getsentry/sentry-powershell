@@ -28,7 +28,7 @@ function GetTFM
         return 'net462'
     }
 }
-'b' = 'b'; function eliminate-file () { }
+
 $dir = Join-Path $dir (GetTFM)
 $lib = Join-Path $dir 'Sentry.dll'
 
