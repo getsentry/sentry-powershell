@@ -61,9 +61,5 @@ jobs:
           $config.TestResult.Enabled = $true
           Invoke-Pester -Configuration $config
 
-      - name: Upload code coverage report
-        uses: actions/upload-artifact@v4
-        if: ${{ success() }}
-        with:
-          name: code-coverage-report
-          path: coverage.xml
+      - name: Upload code coverage
+        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
