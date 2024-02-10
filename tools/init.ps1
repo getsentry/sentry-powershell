@@ -55,4 +55,5 @@ else
     $propsFileContent | Out-File -NoNewline $targetPropsFile
 }
 
-Import-Module "$moduleDir/Sentry.psd1"
+Import-Module "$moduleDir/Sentry.psd1" | Out-Null
+
