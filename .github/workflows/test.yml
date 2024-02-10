@@ -47,13 +47,13 @@ jobs:
           # This needs to return actual types (method overloads)
           '[Sentry.SentrySdk]::init'
           # Loading the second time must be possible, without errors
-          Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
+          Get-Item ./module/Sentry.psd1 | Import-Module
           # And accessing APIs must still work too
           '[Sentry.SentrySdk]::init'
 
       - name: Unit tests
         run: |
-          Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
+          Get-Item ./module/Sentry.psd1 | Import-Module
           # Run Pester tests with Code Coverage
           $config = New-PesterConfiguration
           $config.Run.Path = "tests"
