@@ -22,12 +22,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - uses: microsoft/psscriptanalyzer-action@6b2948b1944407914a58661c49941824d149734f # v1.1
-        with:
-          path: .
-          recurse: true
-          output: results.sarif
-          settings: PSGallery
+      - name: PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Install-Module -Name ConvertToSARIF -Force
+          Import-Module -Name ConvertToSARIF -Force
+          Invoke-ScriptAnalyzer -Path . -Recurse -Settings PSGallery | ConvertTo-SARIF -FilePath results.sarif
 
       - uses: github/codeql-action/upload-sarif@v3
         with:
