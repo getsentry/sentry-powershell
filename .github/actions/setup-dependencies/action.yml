@@ -1,0 +1,12 @@
+name: Setup dependencies
+runs:
+  using: composite
+  steps:
+    - name: Cache lib directory
+      uses: actions/cache@v4
+      with:
+        path: module/lib
+        key: dependencies-${{ hashFiles('dependencies/**') }}
+
+    - run: ./dependencies/download.ps1
+      shell: pwsh

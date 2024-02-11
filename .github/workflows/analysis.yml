@@ -22,12 +22,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup dependencies
+        uses: ./.github/actions/setup-dependencies
+
       - name: PSScriptAnalyzer
         shell: pwsh
         run: |
           Install-Module -Name ConvertToSARIF -Force
           Import-Module -Name ConvertToSARIF -Force
-          ./tools/init.ps1
+          Get-Item ./module/Sentry.psd1 | Import-Module
           Invoke-ScriptAnalyzer -Path . -Recurse -Settings PSGallery | ConvertTo-SARIF -FilePath results.sarif
 
       - uses: github/codeql-action/upload-sarif@v3
