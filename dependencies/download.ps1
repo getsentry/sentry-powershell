@@ -27,6 +27,7 @@ function Download([string] $dependency, [string] $sourceTFM, [string] $targetTFM
 
     $targetLibFile = "$libDir/$targetTFM/$dependency.dll"
     $targetVersionFile = "$libDir/$targetTFM/$dependency.version"
+    $targetLicenseFile = "$libDir/$targetTFM/$dependency.license"
 
     if ((Test-Path $targetLibFile) -and ((Get-Content $targetVersionFile -Raw -ErrorAction SilentlyContinue) -eq $assemblyVersion))
     {
@@ -43,6 +44,7 @@ function Download([string] $dependency, [string] $sourceTFM, [string] $targetTFM
 
     Remove-Item $targetLibFile -Force -ErrorAction SilentlyContinue
     Remove-Item $targetVersionFile -Force -ErrorAction SilentlyContinue
+    Remove-Item $targetLicenseFile -Force -ErrorAction SilentlyContinue
 
     $archiveName = "$($dependency.ToLower()).$($props.version).nupkg"
     $archiveFile = "$downloadDir/$archiveName"
@@ -60,14 +62,12 @@ function Download([string] $dependency, [string] $sourceTFM, [string] $targetTFM
 
     $archive = [IO.Compression.ZipFile]::OpenRead($archiveFile)
 
-    function extract([string] $fileToExtract, [string] $extractDir)
+    function extract([string] $fileToExtract, [string] $targetFile)
     {
         if ($file = $archive.Entries.Where(({ $_.FullName -eq $fileToExtract })))
         {
-            Write-Output "Extracting $fileToExtract to $targetLibFile"
-            New-Item $extractDir -ItemType Directory -Force | Out-Null
-            Remove-Item targetLibFile -Force -ErrorAction SilentlyContinue | Out-Null
-            [IO.Compression.ZipFileExtensions]::ExtractToFile($file[0], $targetLibFile)
+            Write-Output "Extracting $fileToExtract to $targetFile"
+            [IO.Compression.ZipFileExtensions]::ExtractToFile($file[0], $targetFile)
         }
         else
         {
@@ -77,7 +77,15 @@ function Download([string] $dependency, [string] $sourceTFM, [string] $targetTFM
 
     try
     {
-        extract "lib/$sourceTFM/$dependency.dll" "$libDir/$targetTFM"
+        extract "lib/$sourceTFM/$dependency.dll" $targetLibFile
+        if ($props.ContainsKey('licenseFile'))
+        {
+            extract $props.licenseFile $targetLicenseFile
+        }
+        else
+        {
+            $props.license | Out-File -NoNewline $targetLicenseFile
+        }
     }
     finally
     {
