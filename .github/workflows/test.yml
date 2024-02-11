@@ -41,6 +41,7 @@ jobs:
         shell: pwsh
 
         # We don't test module loading with Pester because we're unable to unload the module between tests.
+        # Testing as a separate step allows unloads it automatically at the step end.
       - name: Module loading
         run: |
           # Loading the first time
@@ -55,7 +56,6 @@ jobs:
       - name: Unit tests
         run: |
           Get-Item ./module/Sentry.psd1 | Import-Module
-          # Run Pester tests with Code Coverage
           $config = New-PesterConfiguration
           $config.Run.Path = "tests"
           $config.CodeCoverage.Enabled = $true
