@@ -18,10 +18,9 @@ jobs:
       matrix:
         os: [ubuntu, windows, macos]
         shell: [pwsh]
-        # TODO: Windows Powershell requires all dependent dlls to be preloaded
-        # include:
-        #   - os: windows
-        #     shell: powershell
+        include:
+          - os: windows
+            shell: powershell
 
     defaults:
       run:
@@ -30,15 +29,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache lib directory
-        uses: actions/cache@v4
-        with:
-          path: module/lib
-          key: lib-${{ hashFiles('tools/*.properties') }}
-
-      - run: ./tools/init.ps1
-        # This development script only runs on PowerShell core, not Windows PowerShell.
-        shell: pwsh
+      - name: Setup dependencies
+        uses: ./.github/actions/setup-dependencies
 
         # We don't test module loading with Pester because we're unable to unload the module between tests.
         # Testing as a separate step allows unloads it automatically at the step end.
