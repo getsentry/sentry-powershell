@@ -105,10 +105,10 @@ function Download([string] $dependency, [string] $sourceTFM, [string] $targetTFM
     $assemblyVersion | Out-File -NoNewline $targetVersionFile
 }
 
-Download 'Sentry' 'net8.0'
-Download 'Sentry' 'net6.0'
-Download 'Sentry' 'netstandard2.0'
-Download 'Sentry' 'net462'
-Download 'System.Text.Json' 'net461' 'net462'
-Download 'Microsoft.Bcl.AsyncInterfaces' 'net461' 'net462'
-Download 'System.Threading.Tasks.Extensions' 'net461' 'net462'
+Download -Dependency 'Sentry' -SourceTFM 'net8.0'
+Download -Dependency 'Sentry' -SourceTFM 'net6.0'
+Download -Dependency 'Sentry' -SourceTFM 'netstandard2.0'
+Download -Dependency 'Sentry' -SourceTFM 'net462'
+Download -Dependency 'System.Text.Json' -SourceTFM 'net461' -TargetTFM 'net462'
+Download -Dependency 'Microsoft.Bcl.AsyncInterfaces' -SourceTFM 'net461' -TargetTFM 'net462'
+Download -Dependency 'System.Threading.Tasks.Extensions' -SourceTFM 'net461' -TargetTFM 'net462'
