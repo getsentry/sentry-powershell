@@ -42,9 +42,18 @@ function Download([string] $dependency, [string] $sourceTFM, [string] $targetTFM
         }
     }
 
-    Remove-Item $targetLibFile -Force -ErrorAction SilentlyContinue
-    Remove-Item $targetVersionFile -Force -ErrorAction SilentlyContinue
-    Remove-Item $targetLicenseFile -Force -ErrorAction SilentlyContinue
+    if (Test-Path $targetLibFile)
+    {
+        Remove-Item $targetLibFile -Force
+    }
+    if (Test-Path $targetVersionFile)
+    {
+        Remove-Item $targetVersionFile -Force
+    }
+    if (Test-Path $targetLicenseFile)
+    {
+        Remove-Item $targetLicenseFile -Force
+    }
 
     $archiveName = "$($dependency.ToLower()).$($props.version).nupkg"
     $archiveFile = "$downloadDir/$archiveName"
@@ -100,3 +109,6 @@ Download 'Sentry' 'net8.0'
 Download 'Sentry' 'net6.0'
 Download 'Sentry' 'netstandard2.0'
 Download 'Sentry' 'net462'
+Download 'System.Text.Json' 'net461' 'net462'
+Download 'Microsoft.Bcl.AsyncInterfaces' 'net461' 'net462'
+Download 'System.Threading.Tasks.Extensions' 'net461' 'net462'

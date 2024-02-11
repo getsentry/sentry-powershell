@@ -18,10 +18,9 @@ jobs:
       matrix:
         os: [ubuntu, windows, macos]
         shell: [pwsh]
-        # TODO: Windows Powershell requires all dependent dlls to be preloaded
-        # include:
-        #   - os: windows
-        #     shell: powershell
+        include:
+          - os: windows
+            shell: powershell
 
     defaults:
       run:
