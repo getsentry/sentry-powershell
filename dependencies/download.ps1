@@ -1,8 +1,8 @@
 Set-StrictMode -Version latest
 $ErrorActionPreference = 'Stop'
 
-$downloadDir = "$PSScriptRoot/dependencies/downloads"
-$propsDir = "$PSScriptRoot/dependencies"
+$downloadDir = "$PSScriptRoot/downloads"
+$propsDir = "$PSScriptRoot"
 $moduleDir = "$PSScriptRoot/../module"
 $libDir = "$moduleDir/lib"
 
