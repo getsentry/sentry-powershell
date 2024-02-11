@@ -18,9 +18,10 @@ jobs:
       matrix:
         os: [ubuntu, windows, macos]
         shell: [pwsh]
-        include:
-          - os: windows
-            shell: powershell
+        # TODO: Windows Powershell requires all dependent dlls to be preloaded
+        # include:
+        #   - os: windows
+        #     shell: powershell
 
     defaults:
       run:
@@ -36,9 +37,30 @@ jobs:
           key: lib-${{ hashFiles('tools/*.properties') }}
 
       - run: ./tools/init.ps1
+        # This development script only runs on PowerShell core, not Windows PowerShell.
         shell: pwsh
 
-      - name: Test
+        # We don't test module loading with Pester because we're unable to unload the module between tests.
+        # Testing as a separate step allows unloads it automatically at the step end.
+      - name: Module loading
         run: |
+          # Loading the first time
           Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
+          # This needs to return actual types (method overloads)
           '[Sentry.SentrySdk]::init'
+          # Loading the second time must be possible, without errors
+          Get-Item ./module/Sentry.psd1 | Import-Module
+          # And accessing APIs must still work too
+          '[Sentry.SentrySdk]::init'
+
+      - name: Unit tests
+        run: |
+          Get-Item ./module/Sentry.psd1 | Import-Module
+          $config = New-PesterConfiguration
+          $config.Run.Path = "tests"
+          $config.CodeCoverage.Enabled = $true
+          $config.TestResult.Enabled = $true
+          Invoke-Pester -Configuration $config
+
+      - name: Upload code coverage
+        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
