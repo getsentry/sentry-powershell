@@ -35,7 +35,7 @@ runs:
     # Verify the installation by checking the `pwsh` command version.
     - run: |
         pwsh --version
-        '[[ "$(pwsh --version)" == "PowerShell ${{ inputs.version }}" ]]'
+        [[ "$(pwsh --version)" == "PowerShell ${{ inputs.version }}" ]]
       shell: bash
 
     # Verify the installation by using the `pwsh` shell.
