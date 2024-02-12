@@ -79,7 +79,8 @@ jobs:
           Get-Item ./module/Sentry.psd1 | Import-Module
 
            # Pester doesn't work on PowerShell 6.0 so our testing here is extremely limited.
-          if ("${{ matrix.version }}" -eq "6.0.0") {
+           # Also, PowerShell 6.1 doesn't break when there's an error, regardless of the $ErrorActionPreference.
+          if (("${{ matrix.version }}" -eq "6.0.0") -or ("${{ matrix.version }}" -eq "6.1.0"))
             if ([Sentry.SentrySdk].GetType().Name -ne 'RuntimeType') { throw "Invalid type on Sentry.SentrySdk" }
             [Sentry.SentrySdk]::init('https://key@host/1')
             if (-not [Sentry.SentrySdk]::IsEnabled) { throw "Sentry isn't enabled after init" }
