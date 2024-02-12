@@ -1,6 +1,4 @@
-Set-StrictMode -Version latest
-$ErrorActionPreference = 'Stop'
-
+. "$PSScriptRoot/../tools/settings.ps1"
 $downloadDir = "$PSScriptRoot/downloads"
 $propsDir = "$PSScriptRoot"
 $moduleDir = "$PSScriptRoot/../module"
@@ -17,13 +15,17 @@ function CheckAssemblyVersion([string] $libFile, [string] $assemblyVersion)
     }
 }
 
-function Download([string] $dependency, [string] $sourceTFM, [string] $targetTFM = $null)
+function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $null, [string] $assemblyVersion = $null)
 {
-    $targetTFM = "$targetTFM" -eq '' ? $sourceTFM : $targetTFM
+    $targetTFM = "$targetTFM" -eq '' ? $TFM : $targetTFM
     New-Item "$libDir/$targetTFM" -ItemType Directory -Force | Out-Null
 
     $props = (Get-Content "$propsDir/$dependency.properties" -Raw | ConvertFrom-StringData)
-    $assemblyVersion = $props.ContainsKey('assemblyVersion') ? $props.assemblyVersion : "$($props.version).0"
+
+    if ("$assemblyVersion" -eq '')
+    {
+        $assemblyVersion = $props.ContainsKey('assemblyVersion') ? $props.assemblyVersion : "$($props.version).0"
+    }
 
     $targetLibFile = "$libDir/$targetTFM/$dependency.dll"
     $targetVersionFile = "$libDir/$targetTFM/$dependency.version"
@@ -34,11 +36,12 @@ function Download([string] $dependency, [string] $sourceTFM, [string] $targetTFM
         try
         {
             CheckAssemblyVersion $targetLibFile $assemblyVersion
+            Write-Debug "Dependency $targetLibFile already exists and has the expected assembly version ($assemblyVersion), skipping."
             return
         }
         catch
         {
-            Write-Warning "$_, downloading again".
+            Write-Warning "$_, downloading again"
         }
     }
 
@@ -86,7 +89,7 @@ function Download([string] $dependency, [string] $sourceTFM, [string] $targetTFM
 
     try
     {
-        extract "lib/$sourceTFM/$dependency.dll" $targetLibFile
+        extract "lib/$TFM/$dependency.dll" $targetLibFile
         if ($props.ContainsKey('licenseFile'))
         {
             extract $props.licenseFile $targetLicenseFile
@@ -105,10 +108,15 @@ function Download([string] $dependency, [string] $sourceTFM, [string] $targetTFM
     $assemblyVersion | Out-File -NoNewline $targetVersionFile
 }
 
-Download -Dependency 'Sentry' -SourceTFM 'net8.0'
-Download -Dependency 'Sentry' -SourceTFM 'net6.0'
-Download -Dependency 'Sentry' -SourceTFM 'netstandard2.0'
-Download -Dependency 'Sentry' -SourceTFM 'net462'
-Download -Dependency 'System.Text.Json' -SourceTFM 'net461' -TargetTFM 'net462'
-Download -Dependency 'Microsoft.Bcl.AsyncInterfaces' -SourceTFM 'net461' -TargetTFM 'net462'
-Download -Dependency 'System.Threading.Tasks.Extensions' -SourceTFM 'net461' -TargetTFM 'net462'
+Download -Dependency 'Sentry' -TFM 'net8.0'
+Download -Dependency 'Sentry' -TFM 'net6.0'
+Download -Dependency 'Sentry' -TFM 'netstandard2.0'
+Download -Dependency 'Sentry' -TFM 'net462'
+
+Download -Dependency 'System.Text.Json' -TFM 'net461' -TargetTFM 'net462'
+Download -Dependency 'Microsoft.Bcl.AsyncInterfaces' -TFM 'net461' -TargetTFM 'net462'
+Download -Dependency 'System.Threading.Tasks.Extensions' -TFM 'net461' -TargetTFM 'net462'
+
+Download -Dependency 'System.Text.Json' -TFM 'netstandard2.0' -assemblyVersion '6.0.0.0'
+Download -Dependency 'Microsoft.Bcl.AsyncInterfaces' -TFM 'netstandard2.0'
+Download -Dependency 'System.Threading.Tasks.Extensions' -TFM 'netstandard2.0'

@@ -1,0 +1,52 @@
+name: Setup PowerShell
+description: Setup PowerShell (Core) at a given version
+inputs:
+  version:
+    description: Powershell version to install
+    required: true
+
+runs:
+  using: composite
+  steps:
+    # Download the powershell '.tar.gz' archive
+    - run: curl -L -o /tmp/powershell.tar.gz https://github.com/PowerShell/PowerShell/releases/download/v${{ inputs.version }}/powershell-${{ inputs.version }}-linux-x64.tar.gz
+      shell: bash
+
+    # Create the target folder where powershell will be placed
+    - run: sudo mkdir -p /opt/microsoft/powershell/${{ inputs.version }}
+      shell: bash
+
+    # Expand powershell to the target folder
+    - run: sudo tar zxf /tmp/powershell.tar.gz -C /opt/microsoft/powershell/${{ inputs.version }}
+      shell: bash
+
+    # Set execute permissions
+    - run: sudo chmod +x /opt/microsoft/powershell/${{ inputs.version }}/pwsh
+      shell: bash
+
+    # Unlink the original pwsh binary already present in the system
+    - run: sudo unlink /usr/bin/pwsh
+      shell: bash
+
+    # Create the symbolic link that points to pwsh
+    - run: sudo ln -s /opt/microsoft/powershell/${{ inputs.version }}/pwsh /usr/bin/pwsh
+      shell: bash
+
+    # Verify the installation by checking the `pwsh` command version.
+    - run: |
+        pwsh --version
+        [[ "$(pwsh --version)" == "PowerShell ${{ inputs.version == '6.0.0' && 'v6.0.0' || inputs.version }}" ]]
+      shell: bash
+
+    # Setup old OpenSSL necessary for .NET Core 2.1.
+    - if: ${{ startsWith(inputs.version, '6.') }}
+      shell: bash
+      run: |
+        wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl1.0/libssl1.0.0_1.0.2n-1ubuntu5_amd64.deb
+        sudo dpkg -i libssl1.0.0_1.0.2n-1ubuntu5_amd64.deb
+
+    # Verify the installation by using the `pwsh` shell.
+    - run: |
+        $PSVersionTable
+        if ( $PSVersionTable.PSVersion.ToString() -ne "${{ inputs.version }}" ) { exit 1 }
+      shell: pwsh
