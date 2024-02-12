@@ -35,7 +35,7 @@ runs:
     # Verify the installation by checking the `pwsh` command version.
     - run: |
         pwsh --version
-        [[ "$(pwsh --version)" == "PowerShell ${{ inputs.version }}" ]]
+        [[ "$(pwsh --version)" == "PowerShell ${{ inputs.version == '6.0.0' && 'v6.0.0' || inputs.version }}" ]]
       shell: bash
 
     # Setup old OpenSSL necessary for .NET Core 2.1.
