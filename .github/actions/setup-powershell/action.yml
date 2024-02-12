@@ -24,6 +24,13 @@ runs:
     - run: sudo chmod +x /opt/microsoft/powershell/${{ inputs.version }}/pwsh
       shell: bash
 
+    # Unlink the original pwsh binary already present in the system
+    - run: sudo unlink /usr/bin/pwsh
+      shell: bash
+
     # Create the symbolic link that points to pwsh
     - run: sudo ln -s /opt/microsoft/powershell/${{ inputs.version }}/pwsh /usr/bin/pwsh
+      shell: bash
+
+    - run: '[[ "$(pwsh --version)" == "PowerShell ${{ inputs.version }}" ]]'
       shell: bash
