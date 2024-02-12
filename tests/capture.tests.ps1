@@ -1,34 +1,34 @@
-Describe 'Sentry' {
-    BeforeAll {
-        class RecordingTransport:Sentry.Extensibility.ITransport
+BeforeAll {
+    class RecordingTransport:Sentry.Extensibility.ITransport
+    {
+        $envelopes = [System.Collections.Concurrent.ConcurrentQueue[Sentry.Protocol.Envelopes.Envelope]]::new();
+
+        [System.Threading.Tasks.Task]SendEnvelopeAsync([Sentry.Protocol.Envelopes.Envelope] $envelope, [System.Threading.CancellationToken] $cancellationToken)
         {
-            $envelopes = [System.Collections.Concurrent.ConcurrentQueue[Sentry.Protocol.Envelopes.Envelope]]::new();
-
-            [System.Threading.Tasks.Task]SendEnvelopeAsync([Sentry.Protocol.Envelopes.Envelope] $envelope, [System.Threading.CancellationToken] $cancellationToken)
-            {
-                $this.envelopes.Enqueue($envelope);
-                return [System.Threading.Tasks.Task]::CompletedTask;
-            }
+            $this.envelopes.Enqueue($envelope);
+            return [System.Threading.Tasks.Task]::CompletedTask;
         }
-
-        $transport = [RecordingTransport]::new()
-
-        $options = [Sentry.SentryOptions]::new()
-        $options.Debug = $true
-        $options.Dsn = 'https://key@127.0.0.1/1'
-        $options.Transport = $transport;
-        [Sentry.SentrySdk]::init($options)
     }
 
-    AfterAll {
-        [Sentry.SentrySdk]::close()
-    }
+    $transport = [RecordingTransport]::new()
 
-    It 'pipeline captures message' {
+    $options = [Sentry.SentryOptions]::new()
+    $options.Debug = $true
+    $options.Dsn = 'https://key@127.0.0.1/1'
+    $options.Transport = $transport;
+    [Sentry.SentrySdk]::init($options)
+}
+
+AfterAll {
+    [Sentry.SentrySdk]::close()
+}
+
+Describe 'Pipeline' {
+    It 'captures message' {
         'foo' | Sentry
     }
 
-    It 'pipeline captures error record' {
+    It 'captures error record' {
         try
         {
             throw 'hello'
@@ -39,7 +39,7 @@ Describe 'Sentry' {
         }
     }
 
-    It 'pipeline aptures exception' {
+    It 'captures exception' {
         try
         {
             throw 'hello'
@@ -49,9 +49,10 @@ Describe 'Sentry' {
             $_.Exception | Sentry
         }
     }
+}
 
+Describe 'Invoke' {
     It 'invoke captures error record' {
         Invoke-WithSentry { throw 'hello' }
     }
-
 }
