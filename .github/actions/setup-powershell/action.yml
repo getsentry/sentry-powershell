@@ -38,12 +38,6 @@ runs:
         [[ "$(pwsh --version)" == "PowerShell ${{ inputs.version }}" ]]
       shell: bash
 
-    # Verify the installation by using the `pwsh` shell.
-    - run: |
-        $PSVersionTable
-        if ( $PSVersionTable.PSVersion.ToString() -ne "${{ inputs.version }}" ) { exit 1 }
-      shell: pwsh
-
     # Setup old OpenSSL necessary for .NET Core 2.1.
     - if: ${{ startsWith(inputs.version, '6.') }}
       shell: bash
@@ -54,3 +48,9 @@ runs:
         ./config
         make
         sudo make install
+
+    # Verify the installation by using the `pwsh` shell.
+    - run: |
+        $PSVersionTable
+        if ( $PSVersionTable.PSVersion.ToString() -ne "${{ inputs.version }}" ) { exit 1 }
+      shell: pwsh
