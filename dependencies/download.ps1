@@ -15,13 +15,17 @@ function CheckAssemblyVersion([string] $libFile, [string] $assemblyVersion)
     }
 }
 
-function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $null)
+function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $null, [string] $assemblyVersion = $null)
 {
     $targetTFM = "$targetTFM" -eq '' ? $TFM : $targetTFM
     New-Item "$libDir/$targetTFM" -ItemType Directory -Force | Out-Null
 
     $props = (Get-Content "$propsDir/$dependency.properties" -Raw | ConvertFrom-StringData)
-    $assemblyVersion = $props.ContainsKey('assemblyVersion') ? $props.assemblyVersion : "$($props.version).0"
+
+    if ("$assemblyVersion" -eq '')
+    {
+        $assemblyVersion = $props.ContainsKey('assemblyVersion') ? $props.assemblyVersion : "$($props.version).0"
+    }
 
     $targetLibFile = "$libDir/$targetTFM/$dependency.dll"
     $targetVersionFile = "$libDir/$targetTFM/$dependency.version"
@@ -112,4 +116,4 @@ Download -Dependency 'System.Text.Json' -TFM 'net461' -TargetTFM 'net462'
 Download -Dependency 'Microsoft.Bcl.AsyncInterfaces' -TFM 'net461' -TargetTFM 'net462'
 Download -Dependency 'System.Threading.Tasks.Extensions' -TFM 'net461' -TargetTFM 'net462'
 
-Download -Dependency 'System.Text.Json' -TFM 'netstandard2.0'
+Download -Dependency 'System.Text.Json' -TFM 'netstandard2.0' -assemblyVersion '6.0.0.0'
