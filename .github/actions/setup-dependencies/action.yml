@@ -1,4 +1,6 @@
 name: Setup dependencies
+description: Download dependent libraries
+
 runs:
   using: composite
   steps:

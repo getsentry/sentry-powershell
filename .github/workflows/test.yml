@@ -10,31 +10,48 @@ on:
 
 jobs:
   test:
-    name: ${{ matrix.os }} - ${{ matrix.shell }}
+    name: ${{ matrix.os }} - ${{ matrix.shell }} ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        # Test all Powershell (core) versions on Ubuntu
+        os: [ubuntu-latest]
         shell: [pwsh]
+        version:
+          - '7.4.0'
+          - '7.3.0'
+          - '7.2.0'
+          - '7.1.0'
+          - '7.0.0'
+          - '6.2.0'
+          - '6.1.0'
+          - '6.0.0'
+        # And test all built-in PowerShell/Windows Powershell versions on latest CI runner images
         include:
+          - os: ubuntu-latest
+            shell: pwsh
+          - os: macos-latest
+            shell: pwsh
           - os: windows-2019
             shell: powershell
-          - os: windows-2022
+          - os: windows-2022 # same as windows-latest as of 02/2024
             shell: powershell
-
-    defaults:
-      run:
-        shell: ${{ matrix.shell }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - run: $PSVersionTable
-
       - name: Setup dependencies
         uses: ./.github/actions/setup-dependencies
+
+      - name: Setup PowerShell
+        if: ${{ matrix.version != '' }}
+        uses: ./.github/actions/setup-powershell
+        with:
+          version: ${{ matrix.version }}
+
+      - run: $PSVersionTable
 
         # We don't test module loading with Pester because we're unable to unload the module between tests.
         # Testing as a separate step allows unloads it automatically at the step end.
