@@ -78,10 +78,18 @@ jobs:
         run: |
           Set-StrictMode -Version latest
           $ErrorActionPreference = 'Stop'
-          Import-Module Pester
-          Get-Module Pester
           Get-Item ./module/Sentry.psd1 | Import-Module
-          $config = New-PesterConfiguration
-          $config.Run.Path = "tests"
-          $config.TestResult.Enabled = $true
-          Invoke-Pester -Configuration $config
+
+           # Pester doesn't work on PowerShell 6.0 so our testing here is extremely limited.
+          if ("${{ matrix.version }}" -eq "6.0.0") {
+            if ([Sentry.SentrySdk].GetType().Name -ne 'RuntimeType') { throw "Invalid type on Sentry.SentrySdk" }
+            [Sentry.SentrySdk]::init('https://key@host/1')
+            if (-not [Sentry.SentrySdk]::IsEnabled) { throw "Sentry isn't enabled after init" }
+            [Sentry.SentrySdk]::close()
+            if ([Sentry.SentrySdk]::IsEnabled) { throw "Sentry is still enabled after close" }
+          } else {
+            $config = New-PesterConfiguration
+            $config.Run.Path = "tests"
+            $config.TestResult.Enabled = $true
+            Invoke-Pester -Configuration $config
+          }
