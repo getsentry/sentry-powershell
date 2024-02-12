@@ -49,5 +49,5 @@ if ($type)
 else
 {
     Write-Debug "Loading Sentry assembly from $lib"
-    [Reflection.Assembly]::LoadFrom($lib)
+    [Reflection.Assembly]::LoadFrom($lib) | Write-Debug
 }
