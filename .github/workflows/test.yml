@@ -63,8 +63,7 @@ jobs:
         # Testing as a separate step allows unloads it automatically at the step end.
       - name: Module loading
         run: |
-          Set-StrictMode -Version latest
-          $ErrorActionPreference = 'Stop'
+          . ./tools/settings.ps1
           # Loading the first time
           Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
           # This needs to return actual types (method overloads)
@@ -76,8 +75,7 @@ jobs:
 
       - name: Unit tests
         run: |
-          Set-StrictMode -Version latest
-          $ErrorActionPreference = 'Stop'
+          . ./tools/settings.ps1
           Get-Item ./module/Sentry.psd1 | Import-Module
 
            # Pester doesn't work on PowerShell 6.0 so our testing here is extremely limited.
@@ -92,5 +90,4 @@ jobs:
             $config.Run.Path = "tests"
             $config.TestResult.Enabled = $true
             Invoke-Pester -Configuration $config
-            exit $LASTEXITCODE
           }
