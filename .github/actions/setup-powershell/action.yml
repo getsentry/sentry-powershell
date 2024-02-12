@@ -39,7 +39,18 @@ runs:
       shell: bash
 
     # Verify the installation by using the `pwsh` shell.
-    - run:  |
+    - run: |
         $PSVersionTable
         if ( $PSVersionTable.PSVersion.ToString() -ne "${{ inputs.version }}" ) { exit 1 }
       shell: pwsh
+
+    # Setup old OpenSSL necessary for .NET Core 2.1.
+    - if: ${{ startsWith(inputs.version, '6.') }}
+      shell: bash
+      run: |
+        wget https://www.openssl.org/source/openssl-1.1.1c.tar.gz
+        tar -xzvf openssl-1.1.1c.tar.gz
+        cd openssl-1.1.1c
+        ./config
+        make
+        sudo make install
