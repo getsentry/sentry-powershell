@@ -63,6 +63,8 @@ jobs:
         # Testing as a separate step allows unloads it automatically at the step end.
       - name: Module loading
         run: |
+          Set-StrictMode -Version latest
+          $ErrorActionPreference = 'Stop'
           # Loading the first time
           Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
           # This needs to return actual types (method overloads)
@@ -74,6 +76,8 @@ jobs:
 
       - name: Unit tests
         run: |
+          Set-StrictMode -Version latest
+          $ErrorActionPreference = 'Stop'
           Get-Item ./module/Sentry.psd1 | Import-Module
           $config = New-PesterConfiguration
           $config.Run.Path = "tests"
