@@ -78,6 +78,8 @@ jobs:
         run: |
           Set-StrictMode -Version latest
           $ErrorActionPreference = 'Stop'
+          Import-Module Pester
+          Get-Module Pester
           Get-Item ./module/Sentry.psd1 | Import-Module
           $config = New-PesterConfiguration
           $config.Run.Path = "tests"
