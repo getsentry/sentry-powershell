@@ -36,11 +36,12 @@ function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $nu
         try
         {
             CheckAssemblyVersion $targetLibFile $assemblyVersion
+            Write-Debug "Dependency $targetLibFile already exists and has the expected assembly version ($assemblyVersion), skipping."
             return
         }
         catch
         {
-            Write-Warning "$_, downloading again".
+            Write-Warning "$_, downloading again"
         }
     }
 
