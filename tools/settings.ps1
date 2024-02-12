@@ -2,3 +2,9 @@
 Set-StrictMode -Version latest
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
+
+# Enable debug logging in CI
+if (Test-Path env:CI)
+{
+    $DebugPreference = 'Continue'
+}

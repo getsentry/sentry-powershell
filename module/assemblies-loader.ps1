@@ -45,6 +45,10 @@ if ($type)
         Found:    ($loadedAsssembly), location: $($loadedAsssembly.Location)
         Expected: ($expectedAssembly), location: $($expectedAssembly.Location)"
     }
+    else
+    {
+        Write-Debug "Sentry assembly is already loaded and at the expected version ($($expectedAssembly.GetName().Version)"
+    }
 }
 else
 {
