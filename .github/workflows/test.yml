@@ -11,13 +11,13 @@ on:
 jobs:
   test:
     name: ${{ matrix.os }} - ${{ matrix.shell }} ${{ matrix.version }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu' && 'ubuntu-latest' || matrix.os == 'macos' && 'macos-latest' || matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         # Test all Powershell (core) versions on Ubuntu
-        os: [ubuntu-latest]
+        os: [ubuntu]
         shell: [pwsh]
         version:
           - '7.4.0'
@@ -30,9 +30,9 @@ jobs:
           - '6.0.0'
         # And test all built-in PowerShell/Windows Powershell versions on latest CI runner images
         include:
-          - os: ubuntu-latest
+          - os: ubuntu
             shell: pwsh
-          - os: macos-latest
+          - os: macos
             shell: pwsh
           - os: windows-2019
             shell: powershell
