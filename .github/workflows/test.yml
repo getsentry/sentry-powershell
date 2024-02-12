@@ -11,15 +11,17 @@ on:
 jobs:
   test:
     name: ${{ matrix.os }} - ${{ matrix.shell }}
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu, windows, macos]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         shell: [pwsh]
         include:
-          - os: windows
+          - os: windows-2019
+            shell: powershell
+          - os: windows-2022
             shell: powershell
 
     defaults:
