@@ -52,10 +52,12 @@ jobs:
           version: ${{ matrix.version }}
 
       - run: $PSVersionTable
+        shell: pwsh
 
         # We don't test module loading with Pester because we're unable to unload the module between tests.
         # Testing as a separate step allows unloads it automatically at the step end.
       - name: Module loading
+        shell: pwsh
         run: |
           # Loading the first time
           Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
@@ -67,6 +69,7 @@ jobs:
           '[Sentry.SentrySdk]::init'
 
       - name: Unit tests
+        shell: pwsh
         run: |
           Get-Item ./module/Sentry.psd1 | Import-Module
           $config = New-PesterConfiguration
