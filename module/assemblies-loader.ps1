@@ -54,6 +54,6 @@ else
     Write-Debug "Loading assemblies from $($dir):"
     Get-ChildItem -Path $dir -Filter '*.dll' | ForEach-Object {
         Write-Debug "Loading assembly: $($_.Name)"
-        [Reflection.Assembly]::LoadFrom($_.FullName)
+        [Reflection.Assembly]::LoadFrom($_.FullName) | Write-Debug
     }
 }
