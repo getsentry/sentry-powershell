@@ -87,6 +87,7 @@ jobs:
             if (-not [Sentry.SentrySdk]::IsEnabled) { throw "Sentry isn't enabled after init" }
             [Sentry.SentrySdk]::close()
             if ([Sentry.SentrySdk]::IsEnabled) { throw "Sentry is still enabled after close" }
+            Write-Host -ForegroundColor Green "All tests successful"
           }
           else
           {
