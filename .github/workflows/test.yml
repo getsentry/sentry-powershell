@@ -67,11 +67,11 @@ jobs:
           # Loading the first time
           Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
           # This needs to return actual types (method overloads)
-          '[Sentry.SentrySdk]::init'
+          [Sentry.SentrySdk]::init
           # Loading the second time must be possible, without errors
           Get-Item ./module/Sentry.psd1 | Import-Module
           # And accessing APIs must still work too
-          '[Sentry.SentrySdk]::init'
+          [Sentry.SentrySdk]::init
 
       - name: Unit tests
         run: |
