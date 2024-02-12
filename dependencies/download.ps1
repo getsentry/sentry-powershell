@@ -117,3 +117,4 @@ Download -Dependency 'Microsoft.Bcl.AsyncInterfaces' -TFM 'net461' -TargetTFM 'n
 Download -Dependency 'System.Threading.Tasks.Extensions' -TFM 'net461' -TargetTFM 'net462'
 
 Download -Dependency 'System.Text.Json' -TFM 'netstandard2.0' -assemblyVersion '6.0.0.0'
+Download -Dependency 'Microsoft.Bcl.AsyncInterfaces' -TFM 'netstandard2.0'
