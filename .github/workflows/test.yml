@@ -16,18 +16,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Test all Powershell (core) versions on Ubuntu
+        # Test all Powershell (core) versions on Ubuntu.
+        # See https://github.com/getsentry/sentry-powershell/issues/13 and PR #12 about the disabled versions.
         os: [ubuntu]
         shell: [pwsh]
         version:
           - '7.4.0'
           - '7.3.0'
           - '7.2.0'
-          - '7.1.0'
-          - '7.0.0'
+          # - '7.1.0'
+          # - '7.0.0'
           - '6.2.0'
           - '6.1.0'
-          - '6.0.0'
+          # - '6.0.0'
         # And test all built-in PowerShell/Windows Powershell versions on latest CI runner images
         include:
           - os: ubuntu
