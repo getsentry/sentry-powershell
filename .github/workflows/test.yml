@@ -51,7 +51,7 @@ jobs:
       - name: Setup dependencies
         uses: ./.github/actions/setup-dependencies
 
-      - name: Setup PowerShell
+      - name: Setup PowerShell ${{ matrix.version }}
         if: ${{ matrix.version != '' }}
         uses: ./.github/actions/setup-powershell
         with:
