@@ -32,5 +32,10 @@ runs:
     - run: sudo ln -s /opt/microsoft/powershell/${{ inputs.version }}/pwsh /usr/bin/pwsh
       shell: bash
 
+    # Verify the installation by checking the `pwsh` command version.
     - run: '[[ "$(pwsh --version)" == "PowerShell ${{ inputs.version }}" ]]'
       shell: bash
+
+    # Verify the installation by using the `pwsh` shell.
+    - run:  if ( $PSVersionTable.PSVersion.ToString() -ne "${{ inputs.version }}" ) { exit 1 }
+      shell: pwsh
