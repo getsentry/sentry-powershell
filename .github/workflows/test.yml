@@ -11,7 +11,7 @@ on:
 jobs:
   test:
     name: ${{ matrix.os }} - ${{ matrix.shell }} ${{ matrix.version }}
-    runs-on: ${{ matrix.os == 'ubuntu' && 'ubuntu-latest' || matrix.os == 'macos' && 'macos-latest' || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu' && 'ubuntu-latest' || matrix.os == 'macos' && 'macos-latest' || matrix.os == 'windows' && 'windows-latest' || matrix.os }}
 
     strategy:
       fail-fast: false
@@ -34,10 +34,16 @@ jobs:
             shell: pwsh
           - os: macos
             shell: pwsh
+          - os: windows
+            shell: pwsh
           - os: windows-2019
             shell: powershell
           - os: windows-2022 # same as windows-latest as of 02/2024
             shell: powershell
+
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
 
     steps:
       - uses: actions/checkout@v4
@@ -52,12 +58,10 @@ jobs:
           version: ${{ matrix.version }}
 
       - run: $PSVersionTable
-        shell: pwsh
 
         # We don't test module loading with Pester because we're unable to unload the module between tests.
         # Testing as a separate step allows unloads it automatically at the step end.
       - name: Module loading
-        shell: pwsh
         run: |
           # Loading the first time
           Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
@@ -69,7 +73,6 @@ jobs:
           '[Sentry.SentrySdk]::init'
 
       - name: Unit tests
-        shell: pwsh
         run: |
           Get-Item ./module/Sentry.psd1 | Import-Module
           $config = New-PesterConfiguration
