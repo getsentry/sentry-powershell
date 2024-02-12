@@ -1,7 +1,7 @@
 # https://learn.microsoft.com/en-us/powershell/scripting/developer/module/how-to-write-a-powershell-module-manifest
 @{
     # Script module or binary module file associated with this manifest.
-    # RootModule = ''
+    RootModule           = 'Sentry.psm1'
 
     # Version number of this module.
     ModuleVersion        = '0.0.1'
