@@ -92,4 +92,5 @@ jobs:
             $config.Run.Path = "tests"
             $config.TestResult.Enabled = $true
             Invoke-Pester -Configuration $config
+            exit $LASTEXITCODE
           }
