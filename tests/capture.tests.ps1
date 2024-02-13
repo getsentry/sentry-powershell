@@ -1,12 +1,12 @@
 BeforeAll {
-    $events = [System.Collections.Concurrent.ConcurrentQueue[Sentry.SentryEvent]]::new();
+    $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
     $options = [Sentry.SentryOptions]::new()
     $options.Debug = $true
     $options.Dsn = 'https://key@127.0.0.1/1'
     $options.AutoSessionTracking = $false
     $options.SetBeforeSend([System.Func[Sentry.SentryEvent, Sentry.SentryEvent]] {
             param([Sentry.SentryEvent]$e)
-            $events.Enqueue($e)
+            $events.Add($e)
             return $null # Prevent sending
         });
     [Sentry.SentrySdk]::init($options)
