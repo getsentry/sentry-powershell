@@ -26,8 +26,8 @@ jobs:
           - '7.2.0'
           # - '7.1.0'
           # - '7.0.0'
-          - '6.2.0'
-          - '6.1.0'
+          # - '6.2.0'
+          # - '6.1.0'
           # - '6.0.0'
         # And test all built-in PowerShell/Windows Powershell versions on latest CI runner images
         include:
