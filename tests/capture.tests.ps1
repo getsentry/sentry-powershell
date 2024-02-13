@@ -1,58 +1,80 @@
 BeforeAll {
-    class RecordingTransport:Sentry.Extensibility.ITransport
-    {
-        $envelopes = [System.Collections.Concurrent.ConcurrentQueue[Sentry.Protocol.Envelopes.Envelope]]::new();
-
-        [System.Threading.Tasks.Task]SendEnvelopeAsync([Sentry.Protocol.Envelopes.Envelope] $envelope, [System.Threading.CancellationToken] $cancellationToken)
-        {
-            $this.envelopes.Enqueue($envelope);
-            return [System.Threading.Tasks.Task]::CompletedTask;
-        }
-    }
-
-    $transport = [RecordingTransport]::new()
-
+    $events = [System.Collections.Concurrent.ConcurrentQueue[Sentry.SentryEvent]]::new();
     $options = [Sentry.SentryOptions]::new()
     $options.Debug = $true
     $options.Dsn = 'https://key@127.0.0.1/1'
-    $options.Transport = $transport;
+    $options.AutoSessionTracking = $false
+    $options.SetBeforeSend([System.Func[Sentry.SentryEvent, Sentry.SentryEvent]] {
+            param([Sentry.SentryEvent]$e)
+            $events.Enqueue($e)
+            return $null # Prevent sending
+        });
     [Sentry.SentrySdk]::init($options)
 }
 
 AfterAll {
-    [Sentry.SentrySdk]::close()
+    [Sentry.SentrySdk]::Close()
 }
 
-Describe 'Pipeline' {
+
+Describe 'Out-Sentry' {
+    AfterEach {
+        $events.Clear()
+    }
+
     It 'captures message' {
-        'foo' | Sentry
+        'message' | Out-Sentry
+        $events.Count | Should -Be 1
+        [Sentry.SentryEvent]$event = $events.ToArray()[0]
+        $event.Exception | Should -Be $null
+        $event.Message.Message | Should -Be 'message'
     }
 
     It 'captures error record' {
         try
         {
-            throw 'hello'
+            throw 'error'
         }
         catch
         {
-            $_ | Sentry
+            $_ | Out-Sentry
         }
+        $events.Count | Should -Be 1
+        [Sentry.SentryEvent]$event = $events.ToArray()[0]
+        $event.Exception | Should -BeOfType [System.Management.Automation.RuntimeException]
+        $event.Exception.Message | Should -Be 'error'
     }
 
     It 'captures exception' {
         try
         {
-            throw 'hello'
+            throw 'exception'
         }
         catch
         {
-            $_.Exception | Sentry
+            $_.Exception | Out-Sentry
         }
+        $events.Count | Should -Be 1
+        [Sentry.SentryEvent]$event = $events.ToArray()[0]
+        $event.Exception | Should -BeOfType [System.Management.Automation.RuntimeException]
+        $event.Exception.Message | Should -Be 'exception'
     }
 }
 
-Describe 'Invoke' {
-    It 'invoke captures error record' {
-        Invoke-WithSentry { throw 'hello' }
+Describe 'Invoke-WithSentry' {
+    AfterEach {
+        $events.Clear()
+    }
+
+    It 'captures error record' {
+        try
+        {
+            Invoke-WithSentry { throw 'inside invoke' }
+        }
+        catch {}
+        $events.Count | Should -Be 1
+        [Sentry.SentryEvent]$event = $events.ToArray()[0]
+        $event.Exception | Should -BeOfType [System.Management.Automation.RuntimeException]
+        $event.Exception.Message | Should -Be 'inside invoke'
     }
 }

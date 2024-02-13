@@ -1,3 +1,7 @@
+BeforeAll {
+    . $PSScriptRoot/utils.ps1
+}
+
 Describe 'SentrySdk' {
     AfterEach {
         [Sentry.SentrySdk]::close()
@@ -23,15 +27,6 @@ Describe 'SentrySdk' {
 
     # Currently breaks tests, see 'https://github.com/getsentry/sentry-dotnet/issues/3141'
     # It 'init respects options' {
-    #     class TestLogger:Sentry.Infrastructure.DiagnosticLogger
-    #     {
-    #         TestLogger([Sentry.SentryLevel]$level) : base($level) {}
-
-    #         $entries = [System.Collections.Concurrent.ConcurrentQueue[string]]::new();
-
-    #         [void]LogMessage([string] $message) { $this.entries.Enqueue($message); }
-    #     }
-
     #     $logger = [TestLogger]::new([Sentry.SentryLevel]::Debug)
 
     #     $options = [Sentry.SentryOptions]::new()

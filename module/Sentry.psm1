@@ -1,4 +1,4 @@
-function Sentry
+function Out-Sentry
 {
     param(
         [Parameter(ValueFromPipeline = $true)]
@@ -22,7 +22,7 @@ function Sentry
             # TODO details
             [Sentry.SentrySdk]::CaptureException($ErrorRecord.Exception)
         }
-        if ($Exception -ne $null -and "$Exception" -ne "$Message")
+        if ($Exception -ne $null -and ($Message -eq $null -or "$Exception" -eq "$Message"))
         {
             [Sentry.SentrySdk]::CaptureException($Exception)
         }
@@ -47,7 +47,7 @@ function Invoke-WithSentry
     }
     catch
     {
-        $_ | Sentry
+        $_ | Out-Sentry
         throw
     }
 }
