@@ -9,12 +9,6 @@ class RecordingTransport:Sentry.Extensibility.ITransport
     }
 }
 
-class BeforeSendRecorder
-{
-
-    
-}
-
 class TestLogger:Sentry.Infrastructure.DiagnosticLogger
 {
     TestLogger([Sentry.SentryLevel]$level) : base($level) {}
