@@ -110,7 +110,6 @@ function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $nu
 
 Download -Dependency 'Sentry' -TFM 'net8.0'
 Download -Dependency 'Sentry' -TFM 'net6.0'
-Download -Dependency 'Sentry' -TFM 'netstandard2.0'
 Download -Dependency 'Sentry' -TFM 'net462'
 
 # You can see the list of dependencies that are actually used in sentry-dotnet/src/Sentry/bin/Debug/net462
@@ -126,14 +125,3 @@ Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Text.Encodings.We
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Text.Json'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Threading.Tasks.Extensions'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.ValueTuple'
-
-Download -TFM 'netstandard2.0' -Dependency 'Microsoft.Bcl.AsyncInterfaces'
-Download -TFM 'netstandard2.0' -Dependency 'System.Buffers'
-Download -TFM 'netstandard2.0' -Dependency 'System.Collections.Immutable'
-Download -TFM 'netstandard2.0' -Dependency 'System.Memory'
-Download -TFM 'netstandard2.0' -Dependency 'System.Numerics.Vectors'
-Download -TFM 'netstandard2.0' -Dependency 'System.Reflection.Metadata'
-Download -TFM 'netstandard2.0' -Dependency 'System.Runtime.CompilerServices.Unsafe'
-Download -TFM 'netstandard2.0' -Dependency 'System.Text.Encodings.Web'
-Download -TFM 'netstandard2.0' -Dependency 'System.Text.Json' -assemblyVersion '6.0.0.0'
-Download -TFM 'netstandard2.0' -Dependency 'System.Threading.Tasks.Extensions'
