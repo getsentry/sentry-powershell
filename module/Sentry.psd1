@@ -1,7 +1,7 @@
 # https://learn.microsoft.com/en-us/powershell/scripting/developer/module/how-to-write-a-powershell-module-manifest
 @{
     # Script module or binary module file associated with this manifest.
-    # RootModule = ''
+    RootModule           = 'Sentry.psm1'
 
     # Version number of this module.
     ModuleVersion        = '0.0.1'
@@ -31,13 +31,13 @@
     ScriptsToProcess     = @('assemblies-loader.ps1')
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport    = @()
+    FunctionsToExport    = @('Out-Sentry', 'Invoke-WithSentry')
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport      = @()
 
     # Variables to export from this module
-    VariablesToExport    = '*'
+    VariablesToExport    = @()
 
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
     AliasesToExport      = @()
