@@ -19,10 +19,6 @@ function GetTFM
     {
         return 'net6.0'
     }
-    elseif ($PSVersionTable.PSVersion -ge '6.0')
-    {
-        return 'netstandard2.0'
-    }
     else
     {
         return 'net462'

@@ -16,19 +16,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Test all Powershell (core) versions on Ubuntu.
-        # See https://github.com/getsentry/sentry-powershell/issues/13 and PR #12 about the disabled versions.
         os: [ubuntu]
         shell: [pwsh]
         version:
           - '7.4.0'
           - '7.3.0'
           - '7.2.0'
-          # - '7.1.0'
-          # - '7.0.0'
-          # - '6.2.0'
-          # - '6.1.0'
-          # - '6.0.0'
         # And test all built-in PowerShell/Windows Powershell versions on latest CI runner images
         include:
           - os: ubuntu
@@ -78,22 +71,7 @@ jobs:
         run: |
           . ./tools/settings.ps1
           Get-Item ./module/Sentry.psd1 | Import-Module
-
-           # Pester doesn't work on PowerShell 6.0 so our testing here is extremely limited.
-           # Also, PowerShell 6.1 doesn't break when there's an error, regardless of the $ErrorActionPreference.
-          if (("${{ matrix.version }}" -eq "6.0.0") -or ("${{ matrix.version }}" -eq "6.1.0"))
-          {
-            if ([Sentry.SentrySdk].GetType().Name -ne 'RuntimeType') { throw "Invalid type on Sentry.SentrySdk" }
-            [Sentry.SentrySdk]::init('https://key@host/1')
-            if (-not [Sentry.SentrySdk]::IsEnabled) { throw "Sentry isn't enabled after init" }
-            [Sentry.SentrySdk]::close()
-            if ([Sentry.SentrySdk]::IsEnabled) { throw "Sentry is still enabled after close" }
-            Write-Host -ForegroundColor Green "All tests successful"
-          }
-          else
-          {
-            $config = New-PesterConfiguration
-            $config.Run.Path = "tests"
-            $config.TestResult.Enabled = $true
-            Invoke-Pester -Configuration $config
-          }
+          $config = New-PesterConfiguration
+          $config.Run.Path = "tests"
+          $config.TestResult.Enabled = $true
+          Invoke-Pester -Configuration $config
