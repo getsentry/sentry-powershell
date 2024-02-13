@@ -117,7 +117,7 @@ Download -Dependency 'Sentry' -TFM 'net462'
 # As for the versions in use, check the sentry package on nuget.org.
 Download -Dependency 'Microsoft.Bcl.AsyncInterfaces' -TFM 'net461' -TargetTFM 'net462'
 Download -Dependency 'System.Buffers' -TFM 'net461'
-Download -Dependency 'System.Collections.Immutable' -TFM 'net462'
+Download -Dependency 'System.Collections.Immutable' -TFM 'net461'
 Download -Dependency 'System.Memory' -TFM 'net461'
 Download -Dependency 'System.Numerics.Vectors' -TFM 'net46'
 Download -Dependency 'System.Reflection.Metadata' -TFM 'net461' -TargetTFM 'net462'
