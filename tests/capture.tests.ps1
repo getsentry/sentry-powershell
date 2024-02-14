@@ -1,14 +1,22 @@
 BeforeAll {
-    $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
+    . "$PSScriptRoot/utils.ps1"
     $options = [Sentry.SentryOptions]::new()
     $options.Debug = $true
     $options.Dsn = 'https://key@127.0.0.1/1'
     $options.AutoSessionTracking = $false
+
+    # Capture all events in BeforeSend callback & drop them.
+    $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
     $options.SetBeforeSend([System.Func[Sentry.SentryEvent, Sentry.SentryEvent]] {
             param([Sentry.SentryEvent]$e)
             $events.Add($e)
-            return $null # Prevent sending
+            return $null
         });
+
+    # If events are not sent, there's a client report sent at the end and it blocks the process for the default flush
+    # timeout because it cannot connect to the server. Let's just replace the transport too.
+    $options.Transport = [RecordingTransport]::new()
+
     [Sentry.SentrySdk]::init($options)
 }
 
@@ -27,27 +35,13 @@ class EventEnricher:Sentry.Extensibility.ISentryEventProcessor
     {
         try
         {
-            if ($null -ne $this.SentryException -and $null -ne $this.StackTraceFrames)
+            if ($null -ne $this.SentryException)
             {
-                $this.SentryException.Stacktrace = $this.GetStackTrace()
-                $this.SentryException.Module = $this.SentryException.Stacktrace.Frames | Select-Object -First 1 -Property 'Module'
-
-                # Add the c# exception to the front of the exception list, followed by whatever is already there.
-                $newExceptions = New-Object System.Collections.Generic.List[Sentry.Protocol.SentryException]
-                $newExceptions.Add($this.SentryException)
-                if ($null -ne $event_.SentryExceptions)
-                {
-                    $event_.SentryExceptions | ForEach-Object {
-                        if ($null -eq $_.Mechanism)
-                        {
-                            $_.Mechanism = [Sentry.Protocol.Mechanism]::new()
-                        }
-                        $_.Mechanism.Synthetic = $true
-                        $newExceptions.Add($_)
-                    }
-                }
-                $event_.SentryExceptions = $newExceptions
-                Write-Host 'done'
+                $this.ProcessException($event_)
+            }
+            elseif ($null -ne $event_.Message)
+            {
+                $this.ProcessMessage($event_)
             }
         }
         catch
@@ -63,29 +57,89 @@ class EventEnricher:Sentry.Extensibility.ISentryEventProcessor
         return $event_
     }
 
+    hidden ProcessException([Sentry.SentryEvent] $event_)
+    {
+        if ($null -ne $this.StackTraceFrames)
+        {
+            $this.SentryException.Stacktrace = $this.GetStackTrace()
+            $this.SentryException.Module = $this.SentryException.Stacktrace.Frames | Select-Object -First 1 -Property 'Module'
+        }
+
+        # Add the c# exception to the front of the exception list, followed by whatever is already there.
+        $newExceptions = New-Object System.Collections.Generic.List[Sentry.Protocol.SentryException]
+        $newExceptions.Add($this.SentryException)
+        if ($null -ne $event_.SentryExceptions)
+        {
+            foreach ($e in $event_.SentryExceptions)
+            {
+                if ($null -eq $e.Mechanism)
+                {
+                    $e.Mechanism = [Sentry.Protocol.Mechanism]::new()
+                }
+                $e.Mechanism.Synthetic = $true
+                $newExceptions.Add($e)
+            }
+        }
+        $event_.SentryExceptions = $newExceptions
+    }
+
+    hidden ProcessMessage([Sentry.SentryEvent] $event_)
+    {
+        # TODO
+        # $sentryStackTrae = $this.GetStackTrace()
+        # Write-Host 'done'
+    }
+
     hidden [Sentry.SentryStackTrace]GetStackTrace()
     {
         # We collect all frames and then reverse them to the order expected by Sentry (caller->callee).
         # Do not try to make this code go backwards, because it relies on the InvocationInfo from the previous frame.
         $sentryFrames = New-Object System.Collections.Generic.List[Sentry.SentryStackFrame] $this.StackTraceFrames.Count
-        $invocInfo = $this.InvocationInfo
+
+        # Note: if InvocationInfo is present, use it to fill the first frame. This is the case for ErrroRecord handling
+        # and has the information about the actual script file and line that have thrown the exception.
+        if ($null -ne $this.InvocationInfo)
+        {
+            $sentryFrames.Add($this.CreateFrame($this.InvocationInfo))
+        }
 
         foreach ($frame in $this.StackTraceFrames)
         {
-            $sentryFrame = [Sentry.SentryStackFrame]::new()
-            $this.SetScriptInfo($sentryFrame, $frame)
-            $this.SetModule($sentryFrame)
-            $this.SetFunction($sentryFrame, $frame)
-            $sentryFrame.InApp = $null -eq $sentryFrame.Module
+            $sentryFrames.Add($this.CreateFrame($frame))
+        }
 
-            $sentryFrames.Add($sentryFrame)
-            $invocInfo = $frame.InvocationInfo
+        foreach ($sentryFrame in $sentryFrames)
+        {
+            # Update module info
+            $this.SetModule($sentryFrame)
+            $sentryFrame.InApp = $null -eq $sentryFrame.Module
+            $this.SetContextLines($sentryFrame)
         }
 
         $sentryFrames.Reverse()
         $stacktrace_ = [Sentry.SentryStackTrace]::new()
         $stacktrace_.Frames = $sentryFrames
         return $stacktrace_
+    }
+
+    hidden [Sentry.SentryStackFrame] CreateFrame([System.Management.Automation.InvocationInfo] $info)
+    {
+        $sentryFrame = [Sentry.SentryStackFrame]::new()
+        $sentryFrame.AbsolutePath = $info.ScriptName
+        $sentryFrame.LineNumber = $info.ScriptLineNumber
+        $sentryFrame.ColumnNumber = $info.OffsetInLine
+        $sentryFrame.ContextLine = $info.Line
+        return $sentryFrame
+    }
+
+    hidden [Sentry.SentryStackFrame] CreateFrame([System.Management.Automation.CallStackFrame] $frame)
+    {
+        $sentryFrame = [Sentry.SentryStackFrame]::new()
+        $this.SetScriptInfo($sentryFrame, $frame)
+        $this.SetModule($sentryFrame)
+        $this.SetFunction($sentryFrame, $frame)
+        $sentryFrame.InApp = $null -eq $sentryFrame.Module
+        return $sentryFrame
     }
 
     hidden SetScriptInfo([Sentry.SentryStackFrame] $sentryFrame, [System.Management.Automation.CallStackFrame] $frame)
@@ -126,6 +180,33 @@ class EventEnricher:Sentry.Extensibility.ISentryEventProcessor
             $sentryFrame.Function = $frame.FunctionName
         }
     }
+
+    hidden SetContextLines([Sentry.SentryStackFrame] $sentryFrame)
+    {
+        if ($null -ne $sentryFrame.AbsolutePath -and $sentryFrame.LineNumber -ge 1 -and (Test-Path $sentryFrame.AbsolutePath -PathType Leaf))
+        {
+            try
+            {
+                $lines = Get-Content $sentryFrame.AbsolutePath -TotalCount ($sentryFrame.LineNumber + 5)
+                if ($sentryFrame.LineNumber -gt 6)
+                {
+                    $lines = $lines | Select-Object -Skip ($sentryFrame.LineNumber - 6)
+                }
+                # TODO currently these are read-only
+                # $sentryFrame.PreContext = $lines | Select-Object -First 5
+                # $sentryFrame.PostContext = $lines | Select-Object -Last 5
+                if ($null -eq $sentryFrame.ContextLine)
+                {
+                    $sentryFrame.ContextLine = $lines[$sentryFrame.LineNumber - 1]
+                }
+            }
+            catch
+            {
+                Write-Warning "Failed to read context lines for $($sentryFrame.AbsolutePath): $_"
+            }
+        }
+    }
+
 }
 
 function Out-Sentry2
@@ -156,7 +237,15 @@ function Out-Sentry2
             $processor.InvocationInfo = $ErrorRecord.InvocationInfo
             $processor.SentryException = [Sentry.Protocol.SentryException]::new()
             $processor.SentryException.Type = $ErrorRecord.FullyQualifiedErrorId
-            $processor.SentryException.Value = $ErrorRecord.Exception.Message
+            if ($details = $ErrorRecord.ErrorDetails -and $null -ne $details.Message)
+            {
+                $processor.SentryException.Value = $details.Message
+            }
+            else
+            {
+                $processor.SentryException.Value = $ErrorRecord.Exception.Message
+            }
+
 
             # TODO parse $ErrorRecord.ScriptStackTrace
             # $processor.StackTraceFrames = @()
@@ -186,7 +275,6 @@ function Out-Sentry2
             $processor.StackTraceFrames = Get-PSCallStack | Select-Object -Skip 1
         }
 
-        $event_.Platform = 'Sentry.PowerShell'
         [Sentry.SentrySdk]::CaptureEvent($event_, [System.Action[Sentry.Scope]] {
                 param([Sentry.Scope]$scope)
                 [Sentry.ScopeExtensions]::AddEventProcessor($scope, $processor)
@@ -209,9 +297,17 @@ Describe 'Out-Sentry' {
     # }
 
     It 'captures error record' {
-        try
+        function funcA
+        {
+            funcB
+        }
+        function funcB
         {
             throw 'error'
+        }
+        try
+        {
+            funcA
         }
         catch
         {
@@ -224,13 +320,21 @@ Describe 'Out-Sentry' {
     }
 
     # It 'captures exception' {
+    #     function funcA
+    #     {
+    #         funcB
+    #     }
+    #     function funcB
+    #     {
+    #         throw 'error'
+    #     }
     #     try
     #     {
-    #         throw 'exception'
+    #         funcA
     #     }
     #     catch
     #     {
-    #         $_.Exception | Out-Sentry
+    #         $_.Exception | Out-Sentry2
     #     }
     #     $events.Count | Should -Be 1
     #     [Sentry.SentryEvent]$event = $events.ToArray()[0]
