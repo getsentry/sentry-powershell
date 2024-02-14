@@ -62,7 +62,10 @@ class EventEnricher:Sentry.Extensibility.ISentryEventProcessor
         if ($null -ne $this.StackTraceFrames)
         {
             $this.SentryException.Stacktrace = $this.GetStackTrace()
-            $this.SentryException.Module = $this.SentryException.Stacktrace.Frames | Select-Object -First 1 -Property 'Module'
+            if ($this.SentryException.Stacktrace.Frames.Count -gt 0 -and $null -ne $this.SentryException.Stacktrace.Frames[0].Module)
+            {
+                $this.SentryException.Module = $this.SentryException.Stacktrace.Frames[0].Module
+            }
         }
 
         # Add the c# exception to the front of the exception list, followed by whatever is already there.
@@ -188,17 +191,17 @@ class EventEnricher:Sentry.Extensibility.ISentryEventProcessor
             try
             {
                 $lines = Get-Content $sentryFrame.AbsolutePath -TotalCount ($sentryFrame.LineNumber + 5)
-                if ($sentryFrame.LineNumber -gt 6)
-                {
-                    $lines = $lines | Select-Object -Skip ($sentryFrame.LineNumber - 6)
-                }
-                # TODO currently these are read-only
-                # $sentryFrame.PreContext = $lines | Select-Object -First 5
-                # $sentryFrame.PostContext = $lines | Select-Object -Last 5
                 if ($null -eq $sentryFrame.ContextLine)
                 {
                     $sentryFrame.ContextLine = $lines[$sentryFrame.LineNumber - 1]
                 }
+                if ($sentryFrame.LineNumber -gt 6)
+                {
+                    $lines = $lines | Select-Object -Skip ($sentryFrame.LineNumber - 6)
+                }
+                # TODO currently these are read-only in sentry-dotnet. We should change that.
+                # $sentryFrame.PreContext = $lines | Select-Object -First 5
+                # $sentryFrame.PostContext = $lines | Select-Object -Last 5
             }
             catch
             {
@@ -283,64 +286,82 @@ function Out-Sentry2
     end {}
 }
 
+
+function funcA($action, $param)
+{
+    funcB $action $param
+}
+function funcB($action, $param)
+{
+    if ($action -eq 'throw')
+    {
+        throw $param
+    }
+    else
+    {
+        $param | Out-Sentry2
+    }
+}
+
 Describe 'Out-Sentry' {
     AfterEach {
         $events.Clear()
     }
 
     # It 'captures message' {
-    #     'message' | Out-Sentry
+    #     FuncA ' ' 'message'
     #     $events.Count | Should -Be 1
     #     [Sentry.SentryEvent]$event = $events.ToArray()[0]
     #     $event.Exception | Should -Be $null
     #     $event.Message.Message | Should -Be 'message'
     # }
 
-    It 'captures error record' {
-        function funcA
-        {
-            funcB
-        }
-        function funcB
-        {
-            throw 'error'
-        }
-        try
-        {
-            funcA
-        }
-        catch
-        {
-            $_ | Out-Sentry2
-        }
-        $events.Count | Should -Be 1
-        [Sentry.SentryEvent]$event = $events.ToArray()[0]
-        $event.Exception | Should -BeOfType [System.Management.Automation.RuntimeException]
-        $event.Exception.Message | Should -Be 'error'
-    }
-
-    # It 'captures exception' {
-    #     function funcA
-    #     {
-    #         funcB
-    #     }
-    #     function funcB
-    #     {
-    #         throw 'error'
-    #     }
+    # It 'captures error record' {
     #     try
     #     {
-    #         funcA
+    #         funcA 'throw' 'error'
     #     }
     #     catch
     #     {
-    #         $_.Exception | Out-Sentry2
+    #         $_ | Out-Sentry2
     #     }
     #     $events.Count | Should -Be 1
     #     [Sentry.SentryEvent]$event = $events.ToArray()[0]
     #     $event.Exception | Should -BeOfType [System.Management.Automation.RuntimeException]
-    #     $event.Exception.Message | Should -Be 'exception'
+    #     $event.Exception.Message | Should -Be 'error'
     # }
+
+    It 'captures exception' {
+        try
+        {
+            funcA 'throw' 'exception'
+        }
+        catch
+        {
+            $_.Exception | Out-Sentry2
+        }
+        $events.Count | Should -Be 1
+        [Sentry.SentryEvent]$event = $events.ToArray()[0]
+        $event.SentryExceptions.Count | Should -Be 2
+
+        $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
+        $event.SentryExceptions[0].Value | Should -Be 'exception'
+        $event.SentryExceptions[0].Module | Should -BeNullOrEmpty
+        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[0].Stacktrace.Frames
+        $frames.Count | Should -BeGreaterThan 0
+        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be '<ScriptBlock>'
+        $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be $PSCommandPath
+        $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
+        $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '            $_.Exception | Out-Sentry2'
+
+        $event.SentryExceptions[1].Type | Should -Be 'System.Management.Automation.RuntimeException'
+        $event.SentryExceptions[1].Value | Should -Be 'exception'
+        $event.SentryExceptions[1].Module | Should -Match 'System.Management.Automation'
+        $event.SentryExceptions[1].Stacktrace.Frames.Count | Should -Be 0
+
+        $event.SentryThreads.Count | Should -Be 1
+        $event.SentryThreads[0].Stacktrace.Frames.Count | Should -BeGreaterThan 0
+    }
 }
 
 # Describe 'Invoke-WithSentry' {
