@@ -29,6 +29,7 @@ class EventEnricher:Sentry.Extensibility.ISentryEventProcessor
     [Sentry.Protocol.SentryException]$SentryException
     [System.Management.Automation.InvocationInfo]$InvocationInfo
     [System.Management.Automation.CallStackFrame[]]$StackTraceFrames
+    [string[]]$StackTraceString
     hidden [string[]] $modulePaths = $env:PSModulePath.Split(';')
 
     [Sentry.SentryEvent]Process([Sentry.SentryEvent] $event_)
@@ -64,13 +65,10 @@ class EventEnricher:Sentry.Extensibility.ISentryEventProcessor
 
     hidden ProcessException([Sentry.SentryEvent] $event_)
     {
-        if ($null -ne $this.StackTraceFrames)
+        $this.SentryException.Stacktrace = $this.GetStackTrace()
+        if ($this.SentryException.Stacktrace.Frames.Count -gt 0 -and $null -ne $this.SentryException.Stacktrace.Frames[0].Module)
         {
-            $this.SentryException.Stacktrace = $this.GetStackTrace()
-            if ($this.SentryException.Stacktrace.Frames.Count -gt 0 -and $null -ne $this.SentryException.Stacktrace.Frames[0].Module)
-            {
-                $this.SentryException.Module = $this.SentryException.Stacktrace.Frames[0].Module
-            }
+            $this.SentryException.Module = $this.SentryException.Stacktrace.Frames[0].Module
         }
 
         # Add the c# exception to the front of the exception list, followed by whatever is already there.
@@ -117,18 +115,52 @@ class EventEnricher:Sentry.Extensibility.ISentryEventProcessor
     {
         # We collect all frames and then reverse them to the order expected by Sentry (caller->callee).
         # Do not try to make this code go backwards, because it relies on the InvocationInfo from the previous frame.
-        $sentryFrames = New-Object System.Collections.Generic.List[Sentry.SentryStackFrame] $this.StackTraceFrames.Count
-
-        # Note: if InvocationInfo is present, use it to fill the first frame. This is the case for ErrroRecord handling
-        # and has the information about the actual script file and line that have thrown the exception.
-        if ($null -ne $this.InvocationInfo)
+        $sentryFrames = New-Object System.Collections.Generic.List[Sentry.SentryStackFrame]
+        if ($null -ne $this.StackTraceFrames)
         {
-            $sentryFrames.Add($this.CreateFrame($this.InvocationInfo))
+            $sentryFrames.Capacity = $this.StackTraceFrames.Count + 1
+        }
+        else
+        {
+            $sentryFrames.Capacity = $this.StackTraceString.Count + 1
         }
 
-        foreach ($frame in $this.StackTraceFrames)
+        if ($null -ne $this.StackTraceFrames)
         {
-            $sentryFrames.Add($this.CreateFrame($frame))
+            # Note: if InvocationInfo is present, use it to fill the first frame. This is the case for ErrroRecord handling
+            # and has the information about the actual script file and line that have thrown the exception.
+            if ($null -ne $this.InvocationInfo)
+            {
+                $sentryFrames.Add($this.CreateFrame($this.InvocationInfo))
+            }
+
+            foreach ($frame in $this.StackTraceFrames)
+            {
+                $sentryFrames.Add($this.CreateFrame($frame))
+            }
+        }
+        else
+        {
+            foreach ($frame in $this.StackTraceString)
+            {
+                $sentryFrame = $this.CreateFrame($frame)
+                # Note: if InvocationInfo is present, use it to update the first frame. This is the case for ErrroRecord handling
+                # and has the information about the actual script file and line that have thrown the exception.
+                if ($sentryFrames.Count -eq 0 -and $null -ne $this.InvocationInfo)
+                {
+                    $sentryFrameInitial = $this.CreateFrame($this.InvocationInfo)
+                    if ($sentryFrameInitial.AbsolutePath -eq $sentryFrame.AbsolutePath -and $sentryFrameInitial.LineNumber -eq $sentryFrame.LineNumber)
+                    {
+                        $sentryFrame.ContextLine = $sentryFrameInitial.ContextLine
+                        $sentryFrame.ColumnNumber = $sentryFrameInitial.ColumnNumber
+                    }
+                    else
+                    {
+                        $sentryFrames.Add($sentryFrameInitial)
+                    }
+                }
+                $sentryFrames.Add($sentryFrame)
+            }
         }
 
         foreach ($sentryFrame in $sentryFrames)
@@ -161,7 +193,24 @@ class EventEnricher:Sentry.Extensibility.ISentryEventProcessor
         $this.SetScriptInfo($sentryFrame, $frame)
         $this.SetModule($sentryFrame)
         $this.SetFunction($sentryFrame, $frame)
-        $sentryFrame.InApp = $null -eq $sentryFrame.Module
+        return $sentryFrame
+    }
+
+    hidden [Sentry.SentryStackFrame] CreateFrame([string] $frame)
+    {
+        $sentryFrame = [Sentry.SentryStackFrame]::new()
+        # at funcB, C:\dev\sentry-powershell\tests\capture.tests.ps1: line 363
+        $regex = 'at (?<Function>[^,]+), (?<AbsolutePath>.+): line (?<LineNumber>\d+)'
+        if ($frame -match $regex)
+        {
+            $sentryFrame.AbsolutePath = $Matches.AbsolutePath
+            $sentryFrame.LineNumber = [int]$Matches.LineNumber
+            $sentryFrame.Function = $Matches.Function
+        }
+        else
+        {
+            Write-Warning "Failed to parse stack frame: $frame"
+        }
         return $sentryFrame
     }
 
@@ -269,9 +318,9 @@ function Out-Sentry2
                 $processor.SentryException.Value = $ErrorRecord.Exception.Message
             }
 
-
-            # TODO parse $ErrorRecord.ScriptStackTrace
-            # $processor.StackTraceFrames = @()
+            # Note: we use ScriptStackTrace even though we need to parse it, becaause it contains actual stack trace
+            # to the throw, not just the trace to the call to this function.
+            $processor.StackTraceString = $ErrorRecord.ScriptStackTrace -split "`r`n"
         }
         elseif ($Exception -ne $null -and ($Message -eq $null -or "$Exception" -eq "$Message"))
         {
@@ -293,7 +342,7 @@ function Out-Sentry2
             return
         }
 
-        if ($null -eq $processor.StackTraceFrames)
+        if ($null -eq $processor.StackTraceFrames -and $null -eq $processor.StackTraceString)
         {
             $processor.StackTraceFrames = Get-PSCallStack | Select-Object -Skip 1
         }
@@ -305,6 +354,7 @@ function Out-Sentry2
     }
     end {}
 }
+
 function Invoke-WithSentry2
 {
     param(
@@ -391,12 +441,17 @@ Describe 'Out-Sentry' {
         $event.SentryExceptions[0].Module | Should -BeNullOrEmpty
         [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[0].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -BeNullOrEmpty # Todo, ideally this should be FuncB
+        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'FuncB'
         $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be $PSCommandPath
         $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
+        $frames | Select-Object -Last 1 -ExpandProperty 'ColumnNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '        throw $param'
 
-        # TODO second frame should be of FuncB call in FuncA
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'FuncA'
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'AbsolutePath' | Should -Be $PSCommandPath
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'ContextLine' | Should -Be '    funcB $action $param'
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $true
 
         $event.SentryExceptions[1].Type | Should -Be 'System.Management.Automation.RuntimeException'
         $event.SentryExceptions[1].Value | Should -Be 'error'
@@ -467,12 +522,17 @@ Describe 'Invoke-WithSentry' {
         $event.SentryExceptions[0].Module | Should -BeNullOrEmpty
         [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[0].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -BeNullOrEmpty # Todo, ideally this should be FuncB
+        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'FuncB'
         $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be $PSCommandPath
         $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
+        $frames | Select-Object -Last 1 -ExpandProperty 'ColumnNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '        throw $param'
 
-        # TODO second frame should be of FuncB call in FuncA
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'FuncA'
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'AbsolutePath' | Should -Be $PSCommandPath
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'ContextLine' | Should -Be '    funcB $action $param'
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $true
 
         $event.SentryExceptions[1].Type | Should -Be 'System.Management.Automation.RuntimeException'
         $event.SentryExceptions[1].Value | Should -Be 'inside invoke'
