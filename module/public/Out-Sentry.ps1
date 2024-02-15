@@ -39,7 +39,7 @@ function Out-Sentry
 
             # Note: we use ScriptStackTrace even though we need to parse it, becaause it contains actual stack trace
             # to the throw, not just the trace to the call to this function.
-            $processor.StackTraceString = $ErrorRecord.ScriptStackTrace -split "`r`n" | Where-Object { $_ -ne 'at <ScriptBlock>, <No file>: line 1' }
+            $processor.StackTraceString = $ErrorRecord.ScriptStackTrace -split "[`r`n]+" | Where-Object { $_ -ne 'at <ScriptBlock>, <No file>: line 1' }
         }
         elseif ($Exception -ne $null -and ($Message -eq $null -or "$Exception" -eq "$Message"))
         {

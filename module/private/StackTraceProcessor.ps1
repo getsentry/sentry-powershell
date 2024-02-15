@@ -5,7 +5,21 @@ class StackTraceProcessor:Sentry.Extensibility.ISentryEventProcessor
     [System.Management.Automation.InvocationInfo]$InvocationInfo
     [System.Management.Automation.CallStackFrame[]]$StackTraceFrames
     [string[]]$StackTraceString
-    hidden [string[]] $modulePaths = $env:PSModulePath.Split(';')
+    hidden [string[]] $modulePaths
+
+    StackTraceProcessor()
+    {
+        if ($env:PSModulePath.Contains(';'))
+        {
+            # Windows
+            $this.modulePaths = $env:PSModulePath -split ';'
+        }
+        else
+        {
+            # Unix
+            $this.modulePaths = $env:PSModulePath -split ':'
+        }
+    }
 
     [Sentry.SentryEvent]Process([Sentry.SentryEvent] $event_)
     {

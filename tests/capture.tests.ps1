@@ -40,13 +40,13 @@ Describe 'Out-Sentry' {
         $event.SentryThreads.Count | Should -Be 2
         [Sentry.SentryStackFrame[]] $frames = $event.SentryThreads[0].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'FuncB'
+        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'funcB'
         $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
         $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '        $param | Out-Sentry'
         $frames | Select-Object -Last 1 -ExpandProperty 'InApp' | Should -Be $true
 
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'FuncA'
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'funcA'
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'ContextLine' | Should -Be '    funcB $action $param'
@@ -74,13 +74,13 @@ Describe 'Out-Sentry' {
         $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
         [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'FuncB'
+        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'funcB'
         $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
         $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'ColumnNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '        throw $param'
 
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'FuncA'
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'funcA'
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'ContextLine' | Should -Be '    funcB $action $param'
@@ -155,13 +155,13 @@ Describe 'Invoke-WithSentry' {
         $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
         [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'FuncB'
+        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'funcB'
         $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
         $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'ColumnNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '        throw $param'
 
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'FuncA'
+        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'funcA'
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'ContextLine' | Should -Be '    funcB $action $param'
