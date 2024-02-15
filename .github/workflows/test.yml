@@ -76,9 +76,10 @@ jobs:
           $config.TestResult.Enabled = $true
           Invoke-Pester -Configuration $config
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: ${{ always() }}
+      - name: Test Report
+        uses: dorny/test-reporter@eaa763f6ffc21c7a37837f56cd5f9737f27fc6c8 # pin@v1.8.0
+        if: success() || failure()
         with:
           name: ${{ matrix.os }}-${{ matrix.shell }}-${{ matrix.version }}
           path: testResults.xml
+          reporter: dotnet-trx
