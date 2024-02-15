@@ -37,11 +37,10 @@ class StackTraceProcessor:Sentry.Extensibility.ISentryEventProcessor
         catch
         {
             $ErrorRecord = $_
-            ("$([StackTraceProcessor]) failed to update event $($event_.EventId):" `
-                && $ErrorRecord | Format-List * -Force | Out-String `
-                && $ErrorRecord.InvocationInfo | Format-List * | Out-String `
-                && $ErrorRecord.Exception | Format-List * -Force | Out-String) `
-            | Write-Warning
+            "$([StackTraceProcessor]) failed to update event $($event_.EventId):" | Write-Warning
+            $ErrorRecord | Format-List * -Force | Out-String | Write-Warning
+            $ErrorRecord.InvocationInfo | Format-List * | Out-String | Write-Warning
+            $ErrorRecord.Exception | Format-List * -Force | Out-String | Write-Warning
         }
 
         return $event_
