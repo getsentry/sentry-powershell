@@ -1,5 +1,22 @@
+. "$privateDir/Get-SentryAssembliesDirectory.ps1"
 
-class StackTraceProcessor:Sentry.Extensibility.ISentryEventProcessor
+# Note: we cannot implement ISentryEventProcessor in PowerShell directly because Windows Powershell breaks on the `Process` method.
+# https://stackoverflow.com/questions/78001695/windows-powershell-implement-c-sharp-interface-with-reserved-words-as-method-n/78001981
+# Instead, we have a thin c# implementation that takes a PowerShell callback to forward to.
+# This way, we can keep the PowerShell code here, with all the access to System.Management.Automation we need.
+
+Add-Type -TypeDefinition @'
+public class StackTraceProcessorCs: Sentry.Extensibility.ISentryEventProcessor
+{
+    public System.Func<Sentry.SentryEvent, Sentry.SentryEvent> Callback;
+
+    public Sentry.SentryEvent Process(Sentry.SentryEvent event_) {
+        return Callback(event_);
+    }
+}
+'@ -ReferencedAssemblies (Join-Path (Get-SentryAssembliesDirectory) 'Sentry.dll')
+
+class StackTraceProcessor
 {
     [Sentry.Protocol.SentryException]$SentryException
     [System.Management.Automation.InvocationInfo]$InvocationInfo
@@ -21,7 +38,14 @@ class StackTraceProcessor:Sentry.Extensibility.ISentryEventProcessor
         }
     }
 
-    [Sentry.SentryEvent]Process([Sentry.SentryEvent] $event_)
+    [Sentry.Extensibility.ISentryEventProcessor] GetSentryProcessor()
+    {
+        $cs = New-Object StackTraceProcessorCs
+        $cs.Callback = $this.DoProcess
+        return $cs
+    }
+
+    [Sentry.SentryEvent]DoProcess([Sentry.SentryEvent] $event_)
     {
         try
         {

@@ -66,9 +66,10 @@ function Out-Sentry
             $processor.StackTraceFrames = Get-PSCallStack | Select-Object -Skip 1
         }
 
+        $sentryProcessor = $processor.GetSentryProcessor()
         [Sentry.SentrySdk]::CaptureEvent($event_, [System.Action[Sentry.Scope]] {
                 param([Sentry.Scope]$scope)
-                [Sentry.ScopeExtensions]::AddEventProcessor($scope, $processor)
+                [Sentry.ScopeExtensions]::AddEventProcessor($scope, $sentryProcessor)
             })
     }
     end {}
