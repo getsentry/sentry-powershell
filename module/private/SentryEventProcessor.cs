@@ -9,3 +9,4 @@ public abstract class SentryEventProcessor : Sentry.Extensibility.ISentryEventPr
 
     protected abstract Sentry.SentryEvent DoProcess(Sentry.SentryEvent event_);
 }
+```
