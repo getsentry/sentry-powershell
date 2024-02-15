@@ -89,7 +89,7 @@ Describe 'Out-Sentry' {
         $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
         $event.SentryExceptions[0].Value | Should -Be 'error'
         $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
-        $event.SentryExceptions[0].Stacktrace.Frames.Count | Should -Be 0
+        $event.SentryExceptions[0].Stacktrace | Should -BeNullOrEmpty
 
         $event.SentryThreads.Count | Should -Be 2
         $event.SentryThreads[0].Stacktrace.Frames | Should -BeExactly $frames
@@ -124,7 +124,7 @@ Describe 'Out-Sentry' {
         $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
         $event.SentryExceptions[0].Value | Should -Be 'exception'
         $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
-        $event.SentryExceptions[0].Stacktrace.Frames.Count | Should -Be 0
+        $event.SentryExceptions[0].Stacktrace | Should -BeNullOrEmpty
 
         $event.SentryThreads.Count | Should -Be 2
         $event.SentryThreads[0].Stacktrace.Frames | Should -BeExactly $frames
@@ -170,7 +170,7 @@ Describe 'Invoke-WithSentry' {
         $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
         $event.SentryExceptions[0].Value | Should -Be 'inside invoke'
         $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
-        $event.SentryExceptions[0].Stacktrace.Frames.Count | Should -Be 0
+        $event.SentryExceptions[0].Stacktrace | Should -BeNullOrEmpty
 
         $event.SentryThreads.Count | Should -Be 2
         $event.SentryThreads[0].Stacktrace.Frames | Should -BeExactly $frames
