@@ -69,10 +69,10 @@ Describe 'Out-Sentry' {
         [Sentry.SentryEvent]$event = $events.ToArray()[0]
         $event.SentryExceptions.Count | Should -Be 2
 
-        $event.SentryExceptions[0].Type | Should -Be 'error'
-        $event.SentryExceptions[0].Value | Should -Be 'error'
-        $event.SentryExceptions[0].Module | Should -BeNullOrEmpty
-        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[0].Stacktrace.Frames
+        $event.SentryExceptions[1].Type | Should -Be 'error'
+        $event.SentryExceptions[1].Value | Should -Be 'error'
+        $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
+        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'FuncB'
         $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
@@ -86,10 +86,10 @@ Describe 'Out-Sentry' {
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'ContextLine' | Should -Be '    funcB $action $param'
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $true
 
-        $event.SentryExceptions[1].Type | Should -Be 'System.Management.Automation.RuntimeException'
-        $event.SentryExceptions[1].Value | Should -Be 'error'
-        $event.SentryExceptions[1].Module | Should -Match 'System.Management.Automation'
-        $event.SentryExceptions[1].Stacktrace.Frames.Count | Should -Be 0
+        $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
+        $event.SentryExceptions[0].Value | Should -Be 'error'
+        $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
+        $event.SentryExceptions[0].Stacktrace.Frames.Count | Should -Be 0
 
         $event.SentryThreads.Count | Should -Be 2
         $event.SentryThreads[0].Stacktrace.Frames | Should -BeExactly $frames
@@ -111,20 +111,20 @@ Describe 'Out-Sentry' {
         [Sentry.SentryEvent]$event = $events.ToArray()[0]
         $event.SentryExceptions.Count | Should -Be 2
 
-        $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
-        $event.SentryExceptions[0].Value | Should -Be 'exception'
-        $event.SentryExceptions[0].Module | Should -BeNullOrEmpty
-        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[0].Stacktrace.Frames
+        $event.SentryExceptions[1].Type | Should -Be 'System.Management.Automation.RuntimeException'
+        $event.SentryExceptions[1].Value | Should -Be 'exception'
+        $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
+        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be '<ScriptBlock>'
         $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be $PSCommandPath
         $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '            $_.Exception | Out-Sentry'
 
-        $event.SentryExceptions[1].Type | Should -Be 'System.Management.Automation.RuntimeException'
-        $event.SentryExceptions[1].Value | Should -Be 'exception'
-        $event.SentryExceptions[1].Module | Should -Match 'System.Management.Automation'
-        $event.SentryExceptions[1].Stacktrace.Frames.Count | Should -Be 0
+        $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
+        $event.SentryExceptions[0].Value | Should -Be 'exception'
+        $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
+        $event.SentryExceptions[0].Stacktrace.Frames.Count | Should -Be 0
 
         $event.SentryThreads.Count | Should -Be 2
         $event.SentryThreads[0].Stacktrace.Frames | Should -BeExactly $frames
@@ -150,10 +150,10 @@ Describe 'Invoke-WithSentry' {
         [Sentry.SentryEvent]$event = $events.ToArray()[0]
         $event.SentryExceptions.Count | Should -Be 2
 
-        $event.SentryExceptions[0].Type | Should -Be 'inside invoke'
-        $event.SentryExceptions[0].Value | Should -Be 'inside invoke'
-        $event.SentryExceptions[0].Module | Should -BeNullOrEmpty
-        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[0].Stacktrace.Frames
+        $event.SentryExceptions[1].Type | Should -Be 'inside invoke'
+        $event.SentryExceptions[1].Value | Should -Be 'inside invoke'
+        $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
+        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
         $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'FuncB'
         $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
@@ -167,10 +167,10 @@ Describe 'Invoke-WithSentry' {
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'ContextLine' | Should -Be '    funcB $action $param'
         $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $true
 
-        $event.SentryExceptions[1].Type | Should -Be 'System.Management.Automation.RuntimeException'
-        $event.SentryExceptions[1].Value | Should -Be 'inside invoke'
-        $event.SentryExceptions[1].Module | Should -Match 'System.Management.Automation'
-        $event.SentryExceptions[1].Stacktrace.Frames.Count | Should -Be 0
+        $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
+        $event.SentryExceptions[0].Value | Should -Be 'inside invoke'
+        $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
+        $event.SentryExceptions[0].Stacktrace.Frames.Count | Should -Be 0
 
         $event.SentryThreads.Count | Should -Be 2
         $event.SentryThreads[0].Stacktrace.Frames | Should -BeExactly $frames
