@@ -75,3 +75,10 @@ jobs:
           $config.Run.Path = "tests"
           $config.TestResult.Enabled = $true
           Invoke-Pester -Configuration $config
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: ${{ matrix.os }}-${{ matrix.shell }}-${{ matrix.version }}
+          path: testResults.xml
