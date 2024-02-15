@@ -33,7 +33,7 @@ Describe 'Out-Sentry' {
         FuncA ' ' 'message'
         $events.Count | Should -Be 1
         [Sentry.SentryEvent]$event = $events.ToArray()[0]
-        $event.SentryExceptions.Count | Should -Be 0
+        $event.SentryExceptions | Should -Be @()
 
         $event.Message.Message | Should -Be 'message'
 
