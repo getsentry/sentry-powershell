@@ -41,9 +41,10 @@ class StackTraceProcessor:Sentry.Extensibility.ISentryEventProcessor
     hidden ProcessException([Sentry.SentryEvent] $event_)
     {
         $this.SentryException.Stacktrace = $this.GetStackTrace()
-        if ($this.SentryException.Stacktrace.Frames.Count -gt 0 -and $null -ne $this.SentryException.Stacktrace.Frames[0].Module)
+        if ($this.SentryException.Stacktrace.Frames.Count -gt 0)
         {
-            $this.SentryException.Module = $this.SentryException.Stacktrace.Frames[0].Module
+            $topFrame = $this.SentryException.Stacktrace.Frames | Select-Object -Last 1
+            $this.SentryException.Module = $topFrame.Module
         }
 
         # Add the c# exception to the front of the exception list, followed by whatever is already there.
