@@ -17,3 +17,19 @@ class TestLogger:Sentry.Infrastructure.DiagnosticLogger
 
     [void]LogMessage([string] $message) { $this.entries.Enqueue($message); }
 }
+
+function funcA($action, $param)
+{
+    funcB $action $param
+}
+function funcB($action, $param)
+{
+    if ($action -eq 'throw')
+    {
+        throw $param
+    }
+    else
+    {
+        $param | Out-Sentry
+    }
+}
