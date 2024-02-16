@@ -16,8 +16,8 @@ function Start-Sentry
             $Options = [Sentry.SentryOptions]::new()
             $Options.Dsn = $Dsn
         }
-
-        if ($DebugPreference -eq 'Continue')
+        
+        if ($DebugPreference -ne 'SilentlyContinue')
         {
             $Options.Debug = $true
         }
