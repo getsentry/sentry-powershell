@@ -31,7 +31,12 @@
     ScriptsToProcess     = @('assemblies-loader.ps1')
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport    = @('Out-Sentry', 'Invoke-WithSentry')
+    FunctionsToExport    = @(
+        'Invoke-WithSentry',
+        'Out-Sentry',
+        'Start-Sentry',
+        'Stop-Sentry'
+    )
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport      = @()

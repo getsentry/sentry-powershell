@@ -10,5 +10,7 @@ $ignoreCsCompilerWarnings = ($PSVersionTable.PSVersion.Major -eq 7 -and $PSVersi
 Add-Type -TypeDefinition (Get-Content "$privateDir/SentryEventProcessor.cs" -Raw) -ReferencedAssemblies $sentryDllPath -IgnoreWarnings:$ignoreCsCompilerWarnings
 
 
-. "$publicDir/Out-Sentry.ps1"
 . "$publicDir/Invoke-WithSentry.ps1"
+. "$publicDir/Out-Sentry.ps1"
+. "$publicDir/Start-Sentry.ps1"
+. "$publicDir/Stop-Sentry.ps1"
