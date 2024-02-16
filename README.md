@@ -27,12 +27,11 @@ The PowerShell Sentry SDK is tested to work with:
 
 Sentry has extensive documentation for its SDKs on docs.sentry.io:
 
-- [.NET SDK](https://docs.sentry.io/platforms/dotnet/)
 - [PowerShell SDK](https://docs.sentry.io/platforms/powershell/)
+- [.NET SDK](https://docs.sentry.io/platforms/dotnet/)
 
 ## Resources
 
-- [![Discussions](https://img.shields.io/github/discussions/getsentry/sentry-dotnet.svg)](https://github.com/getsentry/sentry-dotnet/discussions)
 - [![Discord Chat](https://img.shields.io/discord/621778831602221064?logo=discord&logoColor=ffffff&color=7389D8)](https://discord.gg/PXa5Apfe7K)
 - [![Stack Overflow](https://img.shields.io/badge/stack%20overflow-sentry-green.svg)](http://stackoverflow.com/questions/tagged/sentry)
 - [![Twitter Follow](https://img.shields.io/twitter/follow/getsentry?label=getsentry&style=social)](https://twitter.com/intent/follow?screen_name=getsentry)
