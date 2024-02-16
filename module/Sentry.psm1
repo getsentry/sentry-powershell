@@ -1,5 +1,6 @@
 $publicDir = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) 'public'
 $privateDir = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) 'private'
+$moduleInfo = Import-PowerShellDataFile (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) 'Sentry.psd1')
 
 . "$privateDir/Get-SentryAssembliesDirectory.ps1"
 $sentryDllPath = (Join-Path (Get-SentryAssembliesDirectory) 'Sentry.dll')

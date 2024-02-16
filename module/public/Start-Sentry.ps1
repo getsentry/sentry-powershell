@@ -1,3 +1,5 @@
+. "$privateDir/ScopeIntegration.ps1"
+
 function Start-Sentry
 {
     [CmdletBinding(DefaultParameterSetName = 'Simple')]
@@ -21,6 +23,8 @@ function Start-Sentry
         {
             $Options.Debug = $true
         }
+
+        [Sentry.sentryOptionsExtensions]::AddIntegration($options, [ScopeIntegration]::new())
     }
     process
     {
