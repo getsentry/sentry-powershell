@@ -12,6 +12,7 @@ class StackTraceProcessor : SentryEventProcessor
     [System.Management.Automation.CallStackFrame[]]$StackTraceFrames
     [string[]]$StackTraceString
     hidden [string[]] $modulePaths
+    hidden [hashtable] $foundPackages = @{}
 
     StackTraceProcessor()
     {
@@ -38,6 +39,11 @@ class StackTraceProcessor : SentryEventProcessor
             elseif ($null -ne $event_.Message)
             {
                 $this.ProcessMessage($event_)
+            }
+
+            foreach ($package  in $this.foundPackages.Values)
+            {
+                $event_.Sdk.Packages.Add($package)
             }
         }
         catch
@@ -232,7 +238,16 @@ class StackTraceProcessor : SentryEventProcessor
             if ($prefix = $this.modulePaths | Where-Object { $sentryFrame.AbsolutePath.StartsWith($_) })
             {
                 $relativePath = $sentryFrame.AbsolutePath.Substring($prefix.Length + 1)
-                $sentryFrame.Module = ($relativePath -split '[\\/]') | Select-Object -First 1
+                $parts = $relativePath -split '[\\/]'
+                $sentryFrame.Module = $parts | Select-Object -First 1
+                if ($parts.Length -ge 2)
+                {
+                    $key = "$($parts[0]):$($parts[1])"
+                    if (-not $this.foundPackages.ContainsKey($key))
+                    {
+                        $this.foundPackages[$key] = [Sentry.SentryPackage]::new("ps:$($parts[0])", $parts[1])
+                    }
+                }
             }
         }
     }
