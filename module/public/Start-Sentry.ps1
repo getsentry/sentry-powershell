@@ -28,6 +28,6 @@ function Start-Sentry
     }
     process
     {
-        [Sentry.SentrySdk]::init($options)
+        [Sentry.SentrySdk]::init($options) | Out-Null
     }
 }
