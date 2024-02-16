@@ -240,10 +240,13 @@ class StackTraceProcessor : SentryEventProcessor
                 $relativePath = $sentryFrame.AbsolutePath.Substring($prefix.Length + 1)
                 $parts = $relativePath -split '[\\/]'
                 $sentryFrame.Module = $parts | Select-Object -First 1
-                $key = $parts | Select-Object -First 2 | Join-String -Separator ':'
-                if ($null -eq $this.foundPackages[$key] -and $parts.Length -ge 2)
+                if ($parts.Length -ge 2)
                 {
-                    $this.foundPackages[$key] = [Sentry.SentryPackage]::new("ps:$($parts[0])", $parts[1])
+                    $key = "$($parts[0]):$($parts[1])"
+                    if (-not $this.foundPackages.ContainsKey($key))
+                    {
+                        $this.foundPackages[$key] = [Sentry.SentryPackage]::new("ps:$($parts[0])", $parts[1])
+                    }
                 }
             }
         }
