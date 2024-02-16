@@ -17,6 +17,17 @@ class TestLogger:Sentry.Infrastructure.DiagnosticLogger
 
     [void]LogMessage([string] $message) { $this.entries.Enqueue($message); }
 }
+class TestIntegration : Sentry.Integrations.ISdkIntegration
+{
+    [Sentry.SentryOptions] $Options
+    [Sentry.IHub] $Hub
+
+    Register([Sentry.IHub] $hub, [Sentry.SentryOptions] $options)
+    {
+        $this.Hub = $hub
+        $this.Options = $options
+    }
+}
 
 function funcA($action, $param)
 {
