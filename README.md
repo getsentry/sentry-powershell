@@ -18,7 +18,7 @@ Although the underlying .NET SDK is proven in production, the PowerShell Sentry 
 
 ## Compatiblity
 
-The PowerShell Sentry SDK is tested to be compatible with:
+The PowerShell Sentry SDK is tested to work with:
 
 - Windows PowerShell 5.1
 - PowerShell 7.2+ on Windows, macOS, and Linux
