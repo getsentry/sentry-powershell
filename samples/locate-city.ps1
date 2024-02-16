@@ -19,10 +19,7 @@ param([string]$City = '')
 Import-Module $PSScriptRoot/../module/Sentry.psd1
 
 # Start the Sentry client.
-$options = [Sentry.SentryOptions]::new()
-$options.Debug = $true
-$options.Dsn = 'https://eb18e953812b41c3aeb042e666fd3b5c@o447951.ingest.sentry.io/5428537'
-[Sentry.SentrySdk]::init($options)
+Start-Sentry 'https://eb18e953812b41c3aeb042e666fd3b5c@o447951.ingest.sentry.io/5428537'
 
 try
 {
