@@ -5,7 +5,7 @@ class StackTraceProcessor : SentryEventProcessor
     [System.Management.Automation.CallStackFrame[]]$StackTraceFrames
     [string[]]$StackTraceString
     hidden [string[]] $modulePaths
-    hidden [hashtable] $foundPackages = @{}
+    hidden [hashtable] $foundModules = @{}
 
     StackTraceProcessor()
     {
@@ -32,9 +32,9 @@ class StackTraceProcessor : SentryEventProcessor
             $this.ProcessMessage($event_)
         }
 
-        foreach ($package  in $this.foundPackages.Values)
+        foreach ($module in $this.foundModules.GetEnumerator())
         {
-            $event_.Sdk.Packages.Add($package)
+            $event_.Modules[$module.Name] = $module.Value
         }
 
         return $event_
@@ -224,10 +224,13 @@ class StackTraceProcessor : SentryEventProcessor
                 $sentryFrame.Module = $parts | Select-Object -First 1
                 if ($parts.Length -ge 2)
                 {
-                    $key = "$($parts[0]):$($parts[1])"
-                    if (-not $this.foundPackages.ContainsKey($key))
+                    if (-not $this.foundModules.ContainsKey($parts[0]))
                     {
-                        $this.foundPackages[$key] = [Sentry.SentryPackage]::new("ps:$($parts[0])", $parts[1])
+                        $this.foundModules[$parts[0]] = $parts[1]
+                    }
+                    elseif ($this.foundModules[$parts[0]] -ne $parts[1])
+                    {
+                        $this.foundModules[$parts[0]] = $this.foundModules[$parts[0]] + ", $($parts[1])"
                     }
                 }
             }

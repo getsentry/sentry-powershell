@@ -25,6 +25,7 @@ function Start-Sentry
             $Options.Debug = $true
         }
 
+        $options.ReportAssembliesMode = [Sentry.ReportAssembliesMode]::None
         [Sentry.sentryOptionsExtensions]::AddIntegration($options, [ScopeIntegration]::new())
         [Sentry.sentryOptionsExtensions]::AddEventProcessor($options, [EventUpdater]::new())
     }

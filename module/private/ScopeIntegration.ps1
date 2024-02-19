@@ -7,7 +7,7 @@ class ScopeIntegration : Sentry.Integrations.ISdkIntegration
 
                 $scope.Sdk.Name = 'sentry.powershell';
                 $scope.Sdk.Version = $moduleInfo.ModuleVersion;
-                $scope.Sdk.AddPackage('ps:Sentry', $scope.Sdk.Version);
+                $scope.Sdk.AddPackage("ps:$($scope.Sdk.Name)", $scope.Sdk.Version);
             });
     }
 }

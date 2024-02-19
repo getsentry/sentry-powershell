@@ -45,14 +45,14 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
     }
 
     It 'Sets PowerShell SDK as a package' {
-        $package = $event.Sdk.Packages | Where-Object -Property Name -EQ 'ps:Sentry'
+        $package = $event.Sdk.Packages | Where-Object -Property Name -EQ "ps:$($event.Sdk.Name)"
         $package.Version | Should -Match $event.Sdk.Version
     }
 
-    It 'Sets PS modules as packages' {
+    It 'Sets PS modules as modules' {
         $pesterModule = Get-Module -Name 'Pester'
-        $package = $event.Sdk.Packages | Where-Object -Property Name -EQ "ps:$($pesterModule.Name)"
-        $package.Version | Should -Be $pesterModule.Version.ToString()
+        $event.Modules['Pester'] | Should -Be $pesterModule.Version.ToString()
+        $event.Modules.Count | Should -Be 1
     }
 
     It 'Sets powershell as the platform' {
