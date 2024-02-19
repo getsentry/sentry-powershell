@@ -59,6 +59,7 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
     }
 
     It 'Sets .NET modules present in stack traces as modules' {
+        $event.Modules | Out-Host
         $event.Modules['Microsoft.PowerShell.EditorServices'] | Should -Match '^\d+\.\d+\.\d+\.\d+$'
     }
 
