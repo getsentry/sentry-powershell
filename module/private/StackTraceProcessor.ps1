@@ -39,7 +39,7 @@ class StackTraceProcessor : SentryEventProcessor
         }
 
         # Add .NET modules. Note: we don't let sentry-dotnet do it because it would just add all the loaded assemblies,
-        # regardless of their present in a stacktrace. So we set the option ReportAssembliesMode=None in [Start-Sentry].
+        # regardless of their presence in a stacktrace. So we set the option ReportAssembliesMode=None in [Start-Sentry].
         foreach ($thread in $event_.SentryThreads)
         {
             foreach ($frame in $thread.Stacktrace.Frames)
