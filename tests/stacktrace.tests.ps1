@@ -24,17 +24,21 @@ Describe 'Out-Sentry' {
         $event.SentryThreads.Count | Should -Be 2
         [Sentry.SentryStackFrame[]] $frames = $event.SentryThreads[0].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'funcB'
-        $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '        $param | Out-Sentry'
-        $frames | Select-Object -Last 1 -ExpandProperty 'InApp' | Should -Be $true
+        (GetListItem $frames -1).Function | Should -Be 'funcB'
+        (GetListItem $frames -1).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
+        (GetListItem $frames -1).LineNumber | Should -BeGreaterThan 0
+        (GetListItem $frames -1).InApp | Should -Be $true
+        (GetListItem $frames -1).PreContext | Should -Be @('    {', '        throw $param', '    }', '    else', '    {')
+        (GetListItem $frames -1).ContextLine | Should -Be '        $param | Out-Sentry'
+        (GetListItem $frames -1).PostContext | Should -Be @('    }', '}', '', 'function StartSentryForEventTests([ref]  $events)', '{')
 
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'funcA'
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'ContextLine' | Should -Be '    funcB $action $param'
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $true
+        (GetListItem $frames -2).Function | Should -Be 'funcA'
+        (GetListItem $frames -2).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
+        (GetListItem $frames -2).LineNumber | Should -BeGreaterThan 0
+        (GetListItem $frames -2).InApp | Should -Be $true
+        (GetListItem $frames -2).PreContext | Should -Be @('    }', '}', '', 'function funcA($action, $param)', '{')
+        (GetListItem $frames -2).ContextLine | Should -Be '    funcB $action $param'
+        (GetListItem $frames -2).PostContext | Should -Be @('}', '', 'function funcB($action, $param)', '{', "    if (`$action -eq 'throw')")
 
         # A module-based frame should be in-app=false
         $frames | Where-Object -Property Module | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $false
@@ -58,17 +62,22 @@ Describe 'Out-Sentry' {
         $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
         [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'funcB'
-        $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'ColumnNumber' | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '        throw $param'
+        (GetListItem $frames -1).Function | Should -Be 'funcB'
+        (GetListItem $frames -1).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
+        (GetListItem $frames -1).LineNumber | Should -BeGreaterThan 0
+        (GetListItem $frames -1).ColumnNumber | Should -BeGreaterThan 0
+        (GetListItem $frames -1).InApp | Should -Be $true
+        (GetListItem $frames -1).PreContext | Should -Be @('', 'function funcB($action, $param)', '{', "    if (`$action -eq 'throw')", '    {')
+        (GetListItem $frames -1).ContextLine | Should -Be '        throw $param'
+        (GetListItem $frames -1).PostContext | Should -Be @('    }', '    else', '    {', '        $param | Out-Sentry', '    }')
 
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'funcA'
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'ContextLine' | Should -Be '    funcB $action $param'
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $true
+        (GetListItem $frames -2).Function | Should -Be 'funcA'
+        (GetListItem $frames -2).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
+        (GetListItem $frames -2).LineNumber | Should -BeGreaterThan 0
+        (GetListItem $frames -2).InApp | Should -Be $true
+        (GetListItem $frames -2).PreContext | Should -Be @('    }', '}', '', 'function funcA($action, $param)', '{')
+        (GetListItem $frames -2).ContextLine | Should -Be '    funcB $action $param'
+        (GetListItem $frames -2).PostContext | Should -Be @('}', '', 'function funcB($action, $param)', '{', "    if (`$action -eq 'throw')")
 
         $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
         $event.SentryExceptions[0].Value | Should -Be 'error'
@@ -100,10 +109,13 @@ Describe 'Out-Sentry' {
         $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
         [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be '<ScriptBlock>'
-        $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be $PSCommandPath
-        $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '            $_.Exception | Out-Sentry'
+        (GetListItem $frames -1).Function | Should -Be '<ScriptBlock>'
+        (GetListItem $frames -1).AbsolutePath | Should -Be $PSCommandPath
+        (GetListItem $frames -1).LineNumber | Should -BeGreaterThan 0
+        (GetListItem $frames -1).InApp | Should -Be $true
+        (GetListItem $frames -1).PreContext | Should -Be @('        {', "            funcA 'throw' 'exception'", '        }', '        catch', '        {')
+        (GetListItem $frames -1).ContextLine | Should -Be '            $_.Exception | Out-Sentry'
+        (GetListItem $frames -1).PostContext | Should -Be @('        }', '        $events.Count | Should -Be 1', '        [Sentry.SentryEvent]$event = $events.ToArray()[0]', '        $event.SentryExceptions.Count | Should -Be 2', '')
 
         $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
         $event.SentryExceptions[0].Value | Should -Be 'exception'
@@ -139,17 +151,22 @@ Describe 'Invoke-WithSentry' {
         $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
         [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'Function' | Should -Be 'funcB'
-        $frames | Select-Object -Last 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        $frames | Select-Object -Last 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'ColumnNumber' | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 1 -ExpandProperty 'ContextLine' | Should -Be '        throw $param'
+        (GetListItem $frames -1).Function | Should -Be 'funcB'
+        (GetListItem $frames -1).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
+        (GetListItem $frames -1).LineNumber | Should -BeGreaterThan 0
+        (GetListItem $frames -1).ColumnNumber | Should -BeGreaterThan 0
+        (GetListItem $frames -1).InApp | Should -Be $true
+        (GetListItem $frames -1).PreContext | Should -Be @('', 'function funcB($action, $param)', '{', "    if (`$action -eq 'throw')", '    {')
+        (GetListItem $frames -1).ContextLine | Should -Be '        throw $param'
+        (GetListItem $frames -1).PostContext | Should -Be @('    }', '    else', '    {', '        $param | Out-Sentry', '    }')
 
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'Function' | Should -Be 'funcA'
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'AbsolutePath' | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'LineNumber' | Should -BeGreaterThan 0
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'ContextLine' | Should -Be '    funcB $action $param'
-        $frames | Select-Object -Last 2 | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $true
+        (GetListItem $frames -2).Function | Should -Be 'funcA'
+        (GetListItem $frames -2).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
+        (GetListItem $frames -2).LineNumber | Should -BeGreaterThan 0
+        (GetListItem $frames -2).InApp | Should -Be $true
+        (GetListItem $frames -2).PreContext | Should -Be @('    }', '}', '', 'function funcA($action, $param)', '{')
+        (GetListItem $frames -2).ContextLine | Should -Be '    funcB $action $param'
+        (GetListItem $frames -2).PostContext | Should -Be @('}', '', 'function funcB($action, $param)', '{', "    if (`$action -eq 'throw')")
 
         $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
         $event.SentryExceptions[0].Value | Should -Be 'inside invoke'

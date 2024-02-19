@@ -65,3 +65,15 @@ function StartSentryForEventTests([ref]  $events)
 
     Start-Sentry $options
 }
+
+function GetListItem($list, $index)
+{
+    if ($index -ge 0)
+    {
+        $list = $list[$index]
+    }
+    else
+    {
+        $list[$list.Count + $index]
+    }
+}
