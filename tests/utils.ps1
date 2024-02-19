@@ -70,10 +70,10 @@ function GetListItem($list, $index)
 {
     if ($index -ge 0)
     {
-        $list = $list[$index]
+        return $list[$index]
     }
     else
     {
-        $list[$list.Count + $index]
+        return $list[$list.Count + $index]
     }
 }
