@@ -54,7 +54,7 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
         $event.Modules['Pester'] | Should -Be $pesterModule.Version.ToString()
     }
 
-    It 'Sets powershell as the platform' {
+    It 'Sets PowerShell as the platform' {
         $event.Platform | Should -Be 'powershell'
     }
 
@@ -73,8 +73,9 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
         }
         $event.Contexts.Runtime.Version | Should -Be $PSVersionTable.PSVersion.ToString()
     }
+
     It 'Sets .NET as runtime' {
-        $event.Contexts["runtime.net"].Name | Should -Not -BeNullOrEmpty
-        $event.Contexts["runtime.net"].Version | Should -Match '^\d+\.\d+\.\d+$'
+        $event.Contexts['runtime.net'].Name | Should -Not -BeNullOrEmpty
+        $event.Contexts['runtime.net'].Version | Should -Match '^\d+\.\d+\.\d+$'
     }
 }
