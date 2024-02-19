@@ -2,7 +2,7 @@ BeforeAll {
     . "$PSScriptRoot/utils.ps1"
     $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
     StartSentryForEventTests ([ref] $events)
-    $versionRegex = '^\d+\.\d+\.\d+(.\d+)?$'
+    $versionRegex = '^\d+\.\d+\.[\da-z\-]+(.\d+)?$'
 }
 
 AfterAll {
