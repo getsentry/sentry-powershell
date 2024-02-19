@@ -9,7 +9,7 @@ $sentryDllPath = (Join-Path (Get-SentryAssembliesDirectory) 'Sentry.dll')
 # while we actually target System.Runtime 7.0.0. The problem is no .NET7 version of Sentry anymore.
 $ignoreCsCompilerWarnings = ($PSVersionTable.PSVersion.Major -eq 7 -and $PSVersionTable.PSVersion.Minor -eq 3)
 Add-Type -TypeDefinition (Get-Content "$privateDir/SentryEventProcessor.cs" -Raw) -ReferencedAssemblies $sentryDllPath -IgnoreWarnings:$ignoreCsCompilerWarnings
-
+. "$privateDir/SentryEventProcessor.ps1"
 
 . "$publicDir/Invoke-WithSentry.ps1"
 . "$publicDir/Out-Sentry.ps1"
