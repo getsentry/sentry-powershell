@@ -52,10 +52,13 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
     It 'Sets PS modules as modules' {
         $pesterModule = Get-Module -Name 'Pester'
         $event.Modules['Pester'] | Should -Be $pesterModule.Version.ToString()
-        $event.Modules.Count | Should -Be 1
     }
 
     It 'Sets powershell as the platform' {
         $event.Platform | Should -Be 'powershell'
+    }
+
+    It 'Sets .NET modules present in stack traces as modules' {
+        $event.Modules['Microsoft.PowerShell.EditorServices'] | Should -Match '^\d+\.\d+\.\d+\.\d+$'
     }
 }

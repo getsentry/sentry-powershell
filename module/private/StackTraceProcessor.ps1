@@ -5,7 +5,7 @@ class StackTraceProcessor : SentryEventProcessor
     [System.Management.Automation.CallStackFrame[]]$StackTraceFrames
     [string[]]$StackTraceString
     hidden [string[]] $modulePaths
-    hidden [hashtable] $foundModules = @{}
+    hidden [hashtable] $pwshModules = @{}
 
     StackTraceProcessor()
     {
@@ -32,9 +32,25 @@ class StackTraceProcessor : SentryEventProcessor
             $this.ProcessMessage($event_)
         }
 
-        foreach ($module in $this.foundModules.GetEnumerator())
+        # Add modules present in PowerShell
+        foreach ($module in $this.pwshModules.GetEnumerator())
         {
             $event_.Modules[$module.Name] = $module.Value
+        }
+
+        # Add .NET modules. Note: we don't let sentry-dotnet do it because it would just add all the loaded assemblies,
+        # regardless of their present in a stacktrace. So we set the option ReportAssembliesMode=None in [Start-Sentry].
+        foreach ($thread in $event_.SentryThreads)
+        {
+            foreach ($frame in $thread.Stacktrace.Frames)
+            {
+                # .NET SDK sets the assembly info to frame.Package, for example:
+                # "System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e"
+                if ($frame.Package -match '^(?<Assembly>[^,]+), Version=(?<Version>[^,]+), ')
+                {
+                    $event_.Modules[$Matches.Assembly] = $Matches.Version
+                }
+            }
         }
 
         return $event_
@@ -224,13 +240,13 @@ class StackTraceProcessor : SentryEventProcessor
                 $sentryFrame.Module = $parts | Select-Object -First 1
                 if ($parts.Length -ge 2)
                 {
-                    if (-not $this.foundModules.ContainsKey($parts[0]))
+                    if (-not $this.pwshModules.ContainsKey($parts[0]))
                     {
-                        $this.foundModules[$parts[0]] = $parts[1]
+                        $this.pwshModules[$parts[0]] = $parts[1]
                     }
-                    elseif ($this.foundModules[$parts[0]] -ne $parts[1])
+                    elseif ($this.pwshModules[$parts[0]] -ne $parts[1])
                     {
-                        $this.foundModules[$parts[0]] = $this.foundModules[$parts[0]] + ", $($parts[1])"
+                        $this.pwshModules[$parts[0]] = $this.pwshModules[$parts[0]] + ", $($parts[1])"
                     }
                 }
             }
