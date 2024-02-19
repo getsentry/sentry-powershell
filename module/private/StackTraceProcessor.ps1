@@ -1,10 +1,3 @@
-# Note: we cannot implement ISentryEventProcessor in PowerShell directly because Windows Powershell breaks on the `Process` method.
-# https://stackoverflow.com/questions/78001695/windows-powershell-implement-c-sharp-interface-with-reserved-words-as-method-n/78001981
-# Instead, we have a thin c# implementation that takes a PowerShell callback to forward to.
-# This way, we can keep the PowerShell code here, with all the access to System.Management.Automation we need.
-# Note: `Add-Type` must be called before this .ps1 is dot-loaded ("sourced"), otherwise the base class wouldn't be
-#       found yet. Therefore, the base type is added in a parent script.
-
 class StackTraceProcessor : SentryEventProcessor
 {
     [Sentry.Protocol.SentryException]$SentryException
@@ -12,7 +5,7 @@ class StackTraceProcessor : SentryEventProcessor
     [System.Management.Automation.CallStackFrame[]]$StackTraceFrames
     [string[]]$StackTraceString
     hidden [string[]] $modulePaths
-    hidden [hashtable] $foundPackages = @{}
+    hidden [hashtable] $pwshModules = @{}
 
     StackTraceProcessor()
     {
@@ -30,29 +23,34 @@ class StackTraceProcessor : SentryEventProcessor
 
     [Sentry.SentryEvent]DoProcess([Sentry.SentryEvent] $event_)
     {
-        try
+        if ($null -ne $this.SentryException)
         {
-            if ($null -ne $this.SentryException)
-            {
-                $this.ProcessException($event_)
-            }
-            elseif ($null -ne $event_.Message)
-            {
-                $this.ProcessMessage($event_)
-            }
-
-            foreach ($package  in $this.foundPackages.Values)
-            {
-                $event_.Sdk.Packages.Add($package)
-            }
+            $this.ProcessException($event_)
         }
-        catch
+        elseif ($null -ne $event_.Message)
         {
-            $ErrorRecord = $_
-            "$([StackTraceProcessor]) failed to update event $($event_.EventId):" | Write-Warning
-            $ErrorRecord | Format-List * -Force | Out-String | Write-Warning
-            $ErrorRecord.InvocationInfo | Format-List * | Out-String | Write-Warning
-            $ErrorRecord.Exception | Format-List * -Force | Out-String | Write-Warning
+            $this.ProcessMessage($event_)
+        }
+
+        # Add modules present in PowerShell
+        foreach ($module in $this.pwshModules.GetEnumerator())
+        {
+            $event_.Modules[$module.Name] = $module.Value
+        }
+
+        # Add .NET modules. Note: we don't let sentry-dotnet do it because it would just add all the loaded assemblies,
+        # regardless of their presence in a stacktrace. So we set the option ReportAssembliesMode=None in [Start-Sentry].
+        foreach ($thread in $event_.SentryThreads)
+        {
+            foreach ($frame in $thread.Stacktrace.Frames)
+            {
+                # .NET SDK sets the assembly info to frame.Package, for example:
+                # "System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e"
+                if ($frame.Package -match '^(?<Assembly>[^,]+), Version=(?<Version>[^,]+), ')
+                {
+                    $event_.Modules[$Matches.Assembly] = $Matches.Version
+                }
+            }
         }
 
         return $event_
@@ -242,10 +240,13 @@ class StackTraceProcessor : SentryEventProcessor
                 $sentryFrame.Module = $parts | Select-Object -First 1
                 if ($parts.Length -ge 2)
                 {
-                    $key = "$($parts[0]):$($parts[1])"
-                    if (-not $this.foundPackages.ContainsKey($key))
+                    if (-not $this.pwshModules.ContainsKey($parts[0]))
                     {
-                        $this.foundPackages[$key] = [Sentry.SentryPackage]::new("ps:$($parts[0])", $parts[1])
+                        $this.pwshModules[$parts[0]] = $parts[1]
+                    }
+                    elseif ($this.pwshModules[$parts[0]] -ne $parts[1])
+                    {
+                        $this.pwshModules[$parts[0]] = $this.pwshModules[$parts[0]] + ", $($parts[1])"
                     }
                 }
             }

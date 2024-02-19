@@ -1,4 +1,5 @@
 . "$privateDir/ScopeIntegration.ps1"
+. "$privateDir/EventUpdater.ps1"
 
 function Start-Sentry
 {
@@ -24,7 +25,9 @@ function Start-Sentry
             $Options.Debug = $true
         }
 
+        $options.ReportAssembliesMode = [Sentry.ReportAssembliesMode]::None
         [Sentry.sentryOptionsExtensions]::AddIntegration($options, [ScopeIntegration]::new())
+        [Sentry.sentryOptionsExtensions]::AddEventProcessor($options, [EventUpdater]::new())
     }
     process
     {
