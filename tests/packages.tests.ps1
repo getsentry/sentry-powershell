@@ -54,4 +54,8 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
         $package = $event.Sdk.Packages | Where-Object -Property Name -EQ "ps:$($pesterModule.Name)"
         $package.Version | Should -Be $pesterModule.Version.ToString()
     }
+
+    It 'Sets powershell as the platform' {
+        $event.Platform | Should -Be 'powershell'
+    }
 }

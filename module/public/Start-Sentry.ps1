@@ -1,4 +1,5 @@
 . "$privateDir/ScopeIntegration.ps1"
+. "$privateDir/EventUpdater.ps1"
 
 function Start-Sentry
 {
@@ -25,6 +26,7 @@ function Start-Sentry
         }
 
         [Sentry.sentryOptionsExtensions]::AddIntegration($options, [ScopeIntegration]::new())
+        [Sentry.sentryOptionsExtensions]::AddEventProcessor($options, [EventUpdater]::new())
     }
     process
     {
