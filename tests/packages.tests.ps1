@@ -61,4 +61,20 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
     It 'Sets .NET modules present in stack traces as modules' {
         $event.Modules['Microsoft.PowerShell.EditorServices'] | Should -Match '^\d+\.\d+\.\d+\.\d+$'
     }
+
+    It 'Sets PowerShell as runtime' {
+        if ($PSVersionTable.PSVersion.Major -eq 5)
+        {
+            $event.Contexts.Runtime.Name | Should -Be 'Windows PowerShell'
+        }
+        else
+        {
+            $event.Contexts.Runtime.Name | Should -Be 'PowerShell'
+        }
+        $event.Contexts.Runtime.Version | Should -Be $PSVersionTable.PSVersion.ToString()
+    }
+    It 'Sets .NET as runtime' {
+        $event.Contexts["runtime.net"].Name | Should -Not -BeNullOrEmpty
+        $event.Contexts["runtime.net"].Version | Should -Match '^\d+\.\d+\.\d+$'
+    }
 }
