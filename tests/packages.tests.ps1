@@ -2,6 +2,7 @@ BeforeAll {
     . "$PSScriptRoot/utils.ps1"
     $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
     StartSentryForEventTests ([ref] $events)
+    $versionRegex = '^\d+\.\d+\.\d+(.\d+)?$'
 }
 
 AfterAll {
@@ -36,12 +37,12 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
 
     It 'Sets SDK info' {
         $event.Sdk.Name | Should -Be 'sentry.powershell'
-        $event.Sdk.Version | Should -Match '^\d+\.\d+\.\d+$'
+        $event.Sdk.Version | Should -Match $versionRegex
     }
 
     It 'Sets .NET SDK as a package' {
         $package = $event.Sdk.Packages | Where-Object -Property Name -EQ 'nuget:sentry.dotnet'
-        $package.Version | Should -Match '^\d+\.\d+\.\d+$'
+        $package.Version | Should -Match $versionRegex
     }
 
     It 'Sets PowerShell SDK as a package' {
@@ -59,8 +60,7 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
     }
 
     It 'Sets .NET modules present in stack traces as modules' {
-        $event.Modules | Out-Host
-        $event.Modules['Microsoft.PowerShell.EditorServices'] | Should -Match '^\d+\.\d+\.\d+\.\d+$'
+        $event.Modules['System.Management.Automation'] | Should -Match $versionRegex
     }
 
     It 'Sets PowerShell as runtime' {
@@ -77,6 +77,6 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
 
     It 'Sets .NET as runtime' {
         $event.Contexts['runtime.net'].Name | Should -Not -BeNullOrEmpty
-        $event.Contexts['runtime.net'].Version | Should -Match '^\d+\.\d+\.\d+$'
+        $event.Contexts['runtime.net'].Version | Should -Match $versionRegex
     }
 }
