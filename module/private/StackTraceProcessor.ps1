@@ -280,9 +280,11 @@ class StackTraceProcessor : SentryEventProcessor
                 {
                     $lines = $lines | Select-Object -Skip ($sentryFrame.LineNumber - 6)
                 }
-                # TODO currently these are read-only in sentry-dotnet. We should change that.
-                # $sentryFrame.PreContext = $lines | Select-Object -First 5
-                # $sentryFrame.PostContext = $lines | Select-Object -Last 5
+                # Note: these are read-only in sentry-dotnet so we just update the underlying lists instead of replacing.
+                $sentryFrame.PreContext.Clear()
+                $lines | Select-Object -First 5 | ForEach-Object { $sentryFrame.PreContext.Add($_) }
+                $sentryFrame.PostContext.Clear()
+                $lines | Select-Object -Last 5  | ForEach-Object { $sentryFrame.PostContext.Add($_) }
             }
             catch
             {
