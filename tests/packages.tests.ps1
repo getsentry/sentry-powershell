@@ -79,4 +79,8 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
         $event.Contexts['runtime.net'].Name | Should -Not -BeNullOrEmpty
         $event.Contexts['runtime.net'].Version | Should -Match $versionRegex
     }
+
+    It 'Does not set release automatically' {
+        $event.Release | Should -BeNullOrEmpty
+    }
 }
