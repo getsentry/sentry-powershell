@@ -49,21 +49,20 @@ function funcB($action, $param)
 
 function StartSentryForEventTests([ref]  $events)
 {
-    $options = [Sentry.SentryOptions]::new()
-    $options.Dsn = 'https://key@127.0.0.1/1'
+    Start-Sentry {
+        $_.Dsn = 'https://key@127.0.0.1/1'
 
-    # Capture all events in BeforeSend callback & drop them.
-    $options.SetBeforeSend([System.Func[Sentry.SentryEvent, Sentry.SentryEvent]] {
-            param([Sentry.SentryEvent]$e)
-            $events.Add($e)
-            return $null
-        });
+        # Capture all events in BeforeSend callback & drop them.
+        $_.SetBeforeSend([System.Func[Sentry.SentryEvent, Sentry.SentryEvent]] {
+                param([Sentry.SentryEvent]$e)
+                $events.Add($e)
+                return $null
+            });
 
-    # If events are not sent, there's a client report sent at the end and it blocks the process for the default flush
-    # timeout because it cannot connect to the server. Let's just replace the transport too.
-    $options.Transport = [RecordingTransport]::new()
-
-    Start-Sentry $options
+        # If events are not sent, there's a client report sent at the end and it blocks the process for the default flush
+        # timeout because it cannot connect to the server. Let's just replace the transport too.
+        $_.Transport = [RecordingTransport]::new()
+    }
 }
 
 function GetListItem($list, $index)

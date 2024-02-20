@@ -38,15 +38,13 @@ Describe 'SentrySdk' {
     }
 
     It 'Start-Sentry respects options' {
-        $options = [Sentry.SentryOptions]::new()
-        $options.Debug = $true
-        $options.Dsn = 'https://key@127.0.0.1/1'
         $testIntegration = [TestIntegration]::new()
-        [Sentry.sentryOptionsExtensions]::AddIntegration($options, $testIntegration)
-
-        Start-Sentry $options
+        Start-Sentry {
+            $_.Dsn = 'https://key@127.0.0.1/1'
+            [Sentry.sentryOptionsExtensions]::AddIntegration($_, $testIntegration)
+        }
         [Sentry.SentrySdk]::IsEnabled | Should -Be $true
-        $testIntegration.Options | Should -Be $options
+        $testIntegration.Options | Should -BeOfType [Sentry.SentryOptions]
         $testIntegration.Hub | Should -Not -Be $null
 
         [Sentry.SentrySdk]::close()
@@ -65,11 +63,10 @@ Describe 'SentrySdk' {
         }
         try
         {
-            $options = [Sentry.SentryOptions]::new()
-            $options.Dsn = 'https://key@127.0.0.1/1'
-            $options.Debug | Should -Be $false
-            Start-Sentry $options
-            $options.Debug | Should -Be $value
+            Start-Sentry {
+                $_.Dsn = 'https://key@127.0.0.1/1'
+                $_.Debug | Should -Be $value
+            }
         }
         finally
         {
@@ -79,10 +76,17 @@ Describe 'SentrySdk' {
 
     It 'Start-Sentry sets Debug based on Debug automatic parameter' -ForEach @($true, $false) {
         $value = $_
-        $options = [Sentry.SentryOptions]::new()
-        $options.Dsn = 'https://key@127.0.0.1/1'
-        $options.Debug | Should -Be $false
-        Start-Sentry $options -Debug:$_
-        $options.Debug | Should -Be $value
+        Start-Sentry -Debug:$_ {
+            $_.Dsn = 'https://key@127.0.0.1/1'
+            $_.Debug | Should -Be $value
+        }
+    }
+
+    It 'Start-Sentry sets the expected default options' {
+        Start-Sentry {
+            $_.Dsn = 'https://key@127.0.0.1/1'
+            $_.IsGlobalModeEnabled | Should -Be $true
+            $_.ReportAssembliesMode | Should -Be 'None'
+        }
     }
 }
