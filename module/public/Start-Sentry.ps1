@@ -9,25 +9,31 @@ function Start-Sentry
         [Uri] $Dsn,
 
         [Parameter(Mandatory, ParameterSetName = 'Options', Position = 0)]
-        [Sentry.SentryOptions] $Options
+        [scriptblock] $OptionsSetup
     )
 
     begin
     {
-        if ($Options -eq $null)
-        {
-            $Options = [Sentry.SentryOptions]::new()
-            $Options.Dsn = $Dsn
-        }
+        $options = [Sentry.SentryOptions]::new()
+        $options.ReportAssembliesMode = [Sentry.ReportAssembliesMode]::None
+        $options.IsGlobalModeEnabled = $true
+        [Sentry.sentryOptionsExtensions]::AddIntegration($options, [ScopeIntegration]::new())
+        [Sentry.sentryOptionsExtensions]::AddEventProcessor($options, [EventUpdater]::new())
 
         if ($DebugPreference -ne 'SilentlyContinue')
         {
             $Options.Debug = $true
         }
 
-        $options.ReportAssembliesMode = [Sentry.ReportAssembliesMode]::None
-        [Sentry.sentryOptionsExtensions]::AddIntegration($options, [ScopeIntegration]::new())
-        [Sentry.sentryOptionsExtensions]::AddEventProcessor($options, [EventUpdater]::new())
+        if ($OptionsSetup -eq $null)
+        {
+            $options.Dsn = $Dsn
+        }
+        else
+        {
+            # Execute the script block in the caller's scope & set the automatic $_ variable to the options object.
+            $options | ForEach-Object $OptionsSetup
+        }
     }
     process
     {
