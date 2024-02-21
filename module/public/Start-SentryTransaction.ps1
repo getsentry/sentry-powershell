@@ -18,14 +18,17 @@ function Start-SentryTransaction
         [Parameter(ParameterSetName = 'Basic', Position = 2)]
         [Parameter(ParameterSetName = 'BasicWithDescription', Position = 3)]
         [Parameter(ParameterSetName = 'TransactionContext', Position = 1)]
-        [hashtable] $CustomSamplingContext
+        [hashtable] $CustomSamplingContext,
+
+        [Parameter()]
+        [switch] $ForceSampled = $false
     )
 
     begin
     {
         if ($null -eq $TransactionContext)
         {
-            $TransactionContext = [Sentry.TransactionContext]::new($Name, $Operation, $null, $null, $null, $Description)
+            $TransactionContext = [Sentry.TransactionContext]::new($Name, $Operation, $null, $null, $null, $Description, $null, $ForceSampled)
         }
 
     }
