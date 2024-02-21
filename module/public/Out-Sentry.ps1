@@ -1,17 +1,19 @@
 . "$privateDir/StackTraceProcessor.ps1"
+. "$privateDir/Get-CurrentOptions.ps1"
 
 function Out-Sentry
 {
+    [CmdletBinding(DefaultParameterSetName = 'ErrorRecord')]
     param(
-        [Parameter(ValueFromPipeline = $true)]
+        [Parameter(ValueFromPipeline = $true, ParameterSetName = 'ErrorRecord')]
         [System.Management.Automation.ErrorRecord]
         $ErrorRecord,
 
-        [Parameter(ValueFromPipeline = $true)]
+        [Parameter(ValueFromPipeline = $true, ParameterSetName = 'Exception')]
         [System.Exception]
         $Exception,
 
-        [Parameter(ValueFromPipeline = $true)]
+        [Parameter(ValueFromPipeline = $true, ParameterSetName = 'Message')]
         [string]
         $Message
     )
@@ -19,6 +21,12 @@ function Out-Sentry
     begin {}
     process
     {
+        if (-not [Sentry.SentrySdk]::IsEnabled)
+        {
+            return
+        }
+
+        $options = Get-CurrentOptions
         [Sentry.SentryEvent]$event_
         $processor = [StackTraceProcessor]::new()
 
@@ -37,22 +45,31 @@ function Out-Sentry
                 $processor.SentryException.Value = $ErrorRecord.Exception.Message
             }
 
-            # Note: we use ScriptStackTrace even though we need to parse it, becaause it contains actual stack trace
-            # to the throw, not just the trace to the call to this function.
-            $processor.StackTraceString = $ErrorRecord.ScriptStackTrace -split "[`r`n]+" | Where-Object { $_ -ne 'at <ScriptBlock>, <No file>: line 1' }
+            if ($options.AttachStackTrace)
+            {
+                # Note: we use ScriptStackTrace even though we need to parse it, becaause it contains actual stack trace
+                # to the throw, not just the trace to the call to this function.
+                $processor.StackTraceString = $ErrorRecord.ScriptStackTrace -split "[`r`n]+" | Where-Object { $_ -ne 'at <ScriptBlock>, <No file>: line 1' }
+            }
+
         }
-        elseif ($Exception -ne $null -and ($Message -eq $null -or "$Exception" -eq "$Message"))
+        elseif ($Exception -ne $null)
         {
             $event_ = [Sentry.SentryEvent]::new($Exception)
             $processor.SentryException = [Sentry.Protocol.SentryException]::new()
             $processor.SentryException.Type = $Exception.GetType().FullName
             $processor.SentryException.Value = $Exception.Message
         }
-        elseif ("$message" -ne '')
+        elseif ($Message -ne $null)
         {
             $event_ = [Sentry.SentryEvent]::new()
             $event_.Message = $Message
             $event_.Level = [Sentry.SentryLevel]::Info
+        }
+        else
+        {
+            Write-Warning 'Out-Sentry: No argument matched, nothing to do'
+            return
         }
 
         if ($null -eq $event_)
@@ -61,12 +78,12 @@ function Out-Sentry
             return
         }
 
-        if ($null -eq $processor.StackTraceFrames -and $null -eq $processor.StackTraceString)
+        if ($options.AttachStackTrace -and $null -eq $processor.StackTraceFrames -and $null -eq $processor.StackTraceString)
         {
             $processor.StackTraceFrames = Get-PSCallStack | Select-Object -Skip 1
         }
 
-        [Sentry.SentrySdk]::CaptureEvent($event_, [System.Action[Sentry.Scope]] {
+        return [Sentry.SentrySdk]::CaptureEvent($event_, [System.Action[Sentry.Scope]] {
                 param([Sentry.Scope]$scope)
                 [Sentry.ScopeExtensions]::AddEventProcessor($scope, $processor)
             })
