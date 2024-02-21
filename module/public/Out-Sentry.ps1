@@ -3,16 +3,17 @@
 
 function Out-Sentry
 {
+    [CmdletBinding(DefaultParameterSetName = 'ErrorRecord')]
     param(
-        [Parameter(ValueFromPipeline = $true)]
+        [Parameter(ValueFromPipeline = $true, ParameterSetName = 'ErrorRecord')]
         [System.Management.Automation.ErrorRecord]
         $ErrorRecord,
 
-        [Parameter(ValueFromPipeline = $true)]
+        [Parameter(ValueFromPipeline = $true, ParameterSetName = 'Exception')]
         [System.Exception]
         $Exception,
 
-        [Parameter(ValueFromPipeline = $true)]
+        [Parameter(ValueFromPipeline = $true, ParameterSetName = 'Message')]
         [string]
         $Message
     )
@@ -53,18 +54,23 @@ function Out-Sentry
             }
 
         }
-        elseif ($Exception -ne $null -and ($Message -eq $null -or "$Exception" -eq "$Message"))
+        elseif ($Exception -ne $null)
         {
             $event_ = [Sentry.SentryEvent]::new($Exception)
             $processor.SentryException = [Sentry.Protocol.SentryException]::new()
             $processor.SentryException.Type = $Exception.GetType().FullName
             $processor.SentryException.Value = $Exception.Message
         }
-        elseif ("$message" -ne '')
+        elseif ($Message -ne $null)
         {
             $event_ = [Sentry.SentryEvent]::new()
             $event_.Message = $Message
             $event_.Level = [Sentry.SentryLevel]::Info
+        }
+        else
+        {
+            Write-Warning 'Out-Sentry: No argument matched, nothing to do'
+            return
         }
 
         if ($null -eq $event_)
