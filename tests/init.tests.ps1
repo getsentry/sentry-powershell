@@ -89,4 +89,16 @@ Describe 'SentrySdk' {
             $_.ReportAssembliesMode | Should -Be 'None'
         }
     }
+
+    It 'Out-Sentry does not crash when Sentry is not enabled' {
+        'message' | Out-Sentry -Debug
+    }
+
+    It 'Out-Sentry does not capture when Sentry is not enabled' {
+        $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
+        StartSentryForEventTests ([ref] $events)
+        Stop-Sentry
+        'message' | Out-Sentry -Debug
+        $events.Count | Should -Be 0
+    }
 }

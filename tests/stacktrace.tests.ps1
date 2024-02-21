@@ -128,6 +128,75 @@ Describe 'Out-Sentry' {
         # A module-based frame should be in-app=false
         $frames | Where-Object -Property Module | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $false
     }
+
+    It 'does not add stack trace to message when AttachStacktrace=false' {
+        $bindingFlags = [System.Reflection.BindingFlags]::Static + [System.Reflection.BindingFlags]::NonPublic + [System.Reflection.BindingFlags]::Public
+        $currentOptionsProperty = [Sentry.SentrySdk].GetProperty('CurrentOptions', $bindingFlags)
+        if ($null -eq $currentOptionsProperty)
+        {
+            return $null
+        }
+
+        [Sentry.SentryOptions] $options = $currentOptionsProperty.GetValue($null)
+        $options.AttachStacktrace = $false
+        try
+        {
+            FuncA ' ' 'message'
+            $events.Count | Should -Be 1
+            [Sentry.SentryEvent]$event = $events.ToArray()[0]
+            $event.SentryExceptions | Should -Be @()
+            $event.Message.Message | Should -Be 'message'
+            $event.SentryThreads.Count | Should -Be 1
+            $event.SentryThreads[0].Stacktrace.Frames.Count | Should -Be 0
+        }
+        finally
+        {
+            $options.AttachStacktrace = $true
+        }
+    }
+
+    It 'does not add stack trace to error when AttachStacktrace=false' {
+        $bindingFlags = [System.Reflection.BindingFlags]::Static + [System.Reflection.BindingFlags]::NonPublic + [System.Reflection.BindingFlags]::Public
+        $currentOptionsProperty = [Sentry.SentrySdk].GetProperty('CurrentOptions', $bindingFlags)
+        if ($null -eq $currentOptionsProperty)
+        {
+            return $null
+        }
+
+        [Sentry.SentryOptions] $options = $currentOptionsProperty.GetValue($null)
+        $options.AttachStacktrace = $false
+        try
+        {
+
+            try
+            {
+                funcA 'throw' 'error'
+            }
+            catch
+            {
+                $_ | Out-Sentry
+            }
+            $events.Count | Should -Be 1
+            [Sentry.SentryEvent]$event = $events.ToArray()[0]
+            $event.SentryExceptions.Count | Should -Be 2
+
+            $event.SentryExceptions[1].Type | Should -Be 'error'
+            $event.SentryExceptions[1].Value | Should -Be 'error'
+            $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
+
+            $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
+            $event.SentryExceptions[0].Value | Should -Be 'error'
+            $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
+            $event.SentryExceptions[0].Stacktrace | Should -BeNullOrEmpty
+
+            $event.SentryThreads.Count | Should -Be 1
+            $event.SentryThreads[0].Stacktrace.Frames.Count | Should -Be 0
+        }
+        finally
+        {
+            $options.AttachStacktrace = $true
+        }
+    }
 }
 
 Describe 'Invoke-WithSentry' {

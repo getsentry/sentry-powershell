@@ -1,4 +1,5 @@
 . "$privateDir/StackTraceProcessor.ps1"
+. "$privateDir/Get-CurrentOptions.ps1"
 
 function Out-Sentry
 {
@@ -19,6 +20,13 @@ function Out-Sentry
     begin {}
     process
     {
+        if (-not [Sentry.SentrySdk]::IsEnabled)
+        {
+            Write-Debug 'Out-Sentry: Sentry is not enabled, skipping'
+            return
+        }
+
+        $options = Get-CurrentOptions
         [Sentry.SentryEvent]$event_
         $processor = [StackTraceProcessor]::new()
 
@@ -37,9 +45,13 @@ function Out-Sentry
                 $processor.SentryException.Value = $ErrorRecord.Exception.Message
             }
 
-            # Note: we use ScriptStackTrace even though we need to parse it, becaause it contains actual stack trace
-            # to the throw, not just the trace to the call to this function.
-            $processor.StackTraceString = $ErrorRecord.ScriptStackTrace -split "[`r`n]+" | Where-Object { $_ -ne 'at <ScriptBlock>, <No file>: line 1' }
+            if ($options.AttachStackTrace)
+            {
+                # Note: we use ScriptStackTrace even though we need to parse it, becaause it contains actual stack trace
+                # to the throw, not just the trace to the call to this function.
+                $processor.StackTraceString = $ErrorRecord.ScriptStackTrace -split "[`r`n]+" | Where-Object { $_ -ne 'at <ScriptBlock>, <No file>: line 1' }
+            }
+
         }
         elseif ($Exception -ne $null -and ($Message -eq $null -or "$Exception" -eq "$Message"))
         {
@@ -61,12 +73,12 @@ function Out-Sentry
             return
         }
 
-        if ($null -eq $processor.StackTraceFrames -and $null -eq $processor.StackTraceString)
+        if ($options.AttachStackTrace -and $null -eq $processor.StackTraceFrames -and $null -eq $processor.StackTraceString)
         {
             $processor.StackTraceFrames = Get-PSCallStack | Select-Object -Skip 1
         }
 
-        [Sentry.SentrySdk]::CaptureEvent($event_, [System.Action[Sentry.Scope]] {
+        return [Sentry.SentrySdk]::CaptureEvent($event_, [System.Action[Sentry.Scope]] {
                 param([Sentry.Scope]$scope)
                 [Sentry.ScopeExtensions]::AddEventProcessor($scope, $processor)
             })
