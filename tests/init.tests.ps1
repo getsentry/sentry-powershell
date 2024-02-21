@@ -4,7 +4,7 @@ BeforeAll {
 
 Describe 'SentrySdk' {
     AfterEach {
-        [Sentry.SentrySdk]::close()
+        Stop-Sentry
     }
 
     It 'type exists' {
@@ -21,7 +21,7 @@ Describe 'SentrySdk' {
         $handle = [Sentry.SentrySdk]::init('https://key@host/1')
         $handle | Should -Be Sentry.SentrySdk+DisposeHandle
         [Sentry.SentrySdk]::IsEnabled | Should -Be $true
-        [Sentry.SentrySdk]::close()
+        Stop-Sentry
         [Sentry.SentrySdk]::IsEnabled | Should -Be $false
     }
 
@@ -47,7 +47,7 @@ Describe 'SentrySdk' {
         $testIntegration.Options | Should -BeOfType [Sentry.SentryOptions]
         $testIntegration.Hub | Should -Not -Be $null
 
-        [Sentry.SentrySdk]::close()
+        Stop-Sentry
     }
 
     It 'Start-Sentry sets Debug based on DebugPreference (<_>)' -ForEach @($true, $false) {

@@ -5,7 +5,7 @@ BeforeAll {
 }
 
 AfterAll {
-    [Sentry.SentrySdk]::Close()
+    Stop-Sentry
 }
 
 Describe 'Out-Sentry' {
