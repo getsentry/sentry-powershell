@@ -23,7 +23,7 @@ function Out-Sentry
     {
         if (-not [Sentry.SentrySdk]::IsEnabled)
         {
-            Write-Debug 'Out-Sentry: Sentry is not enabled, skipping'
+            # Write-Debug 'Out-Sentry: Sentry is not enabled, skipping'
             return
         }
 
