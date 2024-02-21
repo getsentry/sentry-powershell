@@ -1,7 +1,8 @@
 BeforeAll {
     . "$PSScriptRoot/utils.ps1"
     $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
-    StartSentryForEventTests ([ref] $events)
+    $transport = [RecordingTransport]::new()
+    StartSentryForEventTests ([ref] $events) ([ref] $transport)
     $versionRegex = '^\d+\.\d+\.\d+(.\d+)?(-.*)?$'
 }
 

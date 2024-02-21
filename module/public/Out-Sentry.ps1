@@ -15,7 +15,12 @@ function Out-Sentry
 
         [Parameter(ValueFromPipeline = $true, ParameterSetName = 'Message')]
         [string]
-        $Message
+        $Message,
+
+        [Parameter(ParameterSetName = 'ErrorRecord')]
+        [Parameter(ParameterSetName = 'Exception')]
+        [Parameter(ParameterSetName = 'Message')]
+        [scriptblock] $EditScope
     )
 
     begin {}
@@ -86,6 +91,9 @@ function Out-Sentry
         return [Sentry.SentrySdk]::CaptureEvent($event_, [System.Action[Sentry.Scope]] {
                 param([Sentry.Scope]$scope)
                 [Sentry.ScopeExtensions]::AddEventProcessor($scope, $processor)
+
+                # Execute the script block in the caller's scope (nothing to do $scope) & set the automatic $_ variable to the $scope object.
+                $scope | ForEach-Object $EditScope
             })
     }
     end {}

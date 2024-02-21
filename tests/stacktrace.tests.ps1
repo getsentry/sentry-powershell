@@ -1,7 +1,8 @@
 BeforeAll {
     . "$PSScriptRoot/utils.ps1"
     $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
-    StartSentryForEventTests ([ref] $events)
+    $transport = [RecordingTransport]::new()
+    StartSentryForEventTests ([ref] $events) ([ref] $transport)
 }
 
 AfterAll {
@@ -30,7 +31,7 @@ Describe 'Out-Sentry' {
         (GetListItem $frames -1).InApp | Should -Be $true
         (GetListItem $frames -1).PreContext | Should -Be @('    {', '        throw $param', '    }', '    else', '    {')
         (GetListItem $frames -1).ContextLine | Should -Be '        $param | Out-Sentry'
-        (GetListItem $frames -1).PostContext | Should -Be @('    }', '}', '', 'function StartSentryForEventTests([ref]  $events)', '{')
+        (GetListItem $frames -1).PostContext | Should -Be @('    }', '}', '', 'function StartSentryForEventTests([ref] $events, [ref] $transport)', '{')
 
         (GetListItem $frames -2).Function | Should -Be 'funcA'
         (GetListItem $frames -2).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
