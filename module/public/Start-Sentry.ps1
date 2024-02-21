@@ -9,7 +9,7 @@ function Start-Sentry
         [Uri] $Dsn,
 
         [Parameter(Mandatory, ParameterSetName = 'Options', Position = 0)]
-        [scriptblock] $OptionsSetup
+        [scriptblock] $EditOptions
     )
 
     begin
@@ -25,14 +25,14 @@ function Start-Sentry
             $Options.Debug = $true
         }
 
-        if ($OptionsSetup -eq $null)
+        if ($EditOptions -eq $null)
         {
             $options.Dsn = $Dsn
         }
         else
         {
             # Execute the script block in the caller's scope & set the automatic $_ variable to the options object.
-            $options | ForEach-Object $OptionsSetup
+            $options | ForEach-Object $EditOptions
         }
     }
     process

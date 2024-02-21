@@ -96,7 +96,8 @@ Describe 'SentrySdk' {
 
     It 'Out-Sentry does not capture when Sentry is not enabled' {
         $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
-        StartSentryForEventTests ([ref] $events)
+        $transport = [RecordingTransport]::new()
+        StartSentryForEventTests ([ref] $events) ([ref] $transport)
         Stop-Sentry
         'message' | Out-Sentry -Debug
         $events.Count | Should -Be 0

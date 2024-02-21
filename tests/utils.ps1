@@ -47,7 +47,7 @@ function funcB($action, $param)
     }
 }
 
-function StartSentryForEventTests([ref]  $events)
+function StartSentryForEventTests([ref] $events, [ref] $transport)
 {
     Start-Sentry {
         $_.Dsn = 'https://key@127.0.0.1/1'
@@ -56,12 +56,12 @@ function StartSentryForEventTests([ref]  $events)
         $_.SetBeforeSend([System.Func[Sentry.SentryEvent, Sentry.SentryEvent]] {
                 param([Sentry.SentryEvent]$e)
                 $events.Add($e)
-                return $null
+                return $e
             });
 
         # If events are not sent, there's a client report sent at the end and it blocks the process for the default flush
         # timeout because it cannot connect to the server. Let's just replace the transport too.
-        $_.Transport = [RecordingTransport]::new()
+        $_.Transport = $transport.Value
     }
 }
 
