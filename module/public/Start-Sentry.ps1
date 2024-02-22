@@ -21,9 +21,15 @@ function Start-Sentry
         [Sentry.sentryOptionsExtensions]::AddIntegration($options, [ScopeIntegration]::new())
         [Sentry.sentryOptionsExtensions]::AddEventProcessor($options, [EventUpdater]::new())
 
-        if ($DebugPreference -ne 'SilentlyContinue')
+        if ($DebugPreference -eq 'SilentlyContinue')
+        {
+            $Options.Debug = $false
+            $options.DiagnosticLevel = [Sentry.SentryLevel]::Info
+        }
+        else
         {
             $Options.Debug = $true
+            $options.DiagnosticLevel = [Sentry.SentryLevel]::Debug
         }
 
         if ($EditOptions -eq $null)

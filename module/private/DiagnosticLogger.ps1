@@ -35,23 +35,23 @@ class DiagnosticLogger : Sentry.Extensibility.IDiagnosticLogger
         {
             ([Sentry.SentryLevel]::Debug)
             {
-                Write-Debug $message
+                Write-Debug $message -Debug:$true
             }
             ([Sentry.SentryLevel]::Info)
             {
-                Write-Verbose $message
+                Write-Verbose $message -Verbose:$true
             }
             ([Sentry.SentryLevel]::Warning)
             {
-                Write-Warning $message
+                Write-Warning $message -WarningAction:Continue
             }
             ([Sentry.SentryLevel]::Error)
             {
-                Write-Error $message
+                Write-Error $message -ErrorAction:Continue
             }
             ([Sentry.SentryLevel]::Fatal)
             {
-                Write-Error $message
+                Write-Error $message -ErrorAction:Continue
             }
             default
             {
