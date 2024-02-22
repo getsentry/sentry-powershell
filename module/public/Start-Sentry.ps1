@@ -1,3 +1,4 @@
+. "$privateDir/DiagnosticLogger.ps1"
 . "$privateDir/ScopeIntegration.ps1"
 . "$privateDir/EventUpdater.ps1"
 
@@ -34,9 +35,12 @@ function Start-Sentry
             # Execute the script block in the caller's scope & set the automatic $_ variable to the options object.
             $options | ForEach-Object $EditOptions
         }
+
+        $options.DiagnosticLogger = [DiagnosticLogger]::new($options.DiagnosticLevel)
     }
     process
     {
         [Sentry.SentrySdk]::init($options) | Out-Null
     }
 }
+
