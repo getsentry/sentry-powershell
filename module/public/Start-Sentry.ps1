@@ -37,6 +37,9 @@ function Start-Sentry
         }
 
         $options.DiagnosticLogger = [DiagnosticLogger]::new($options.DiagnosticLevel)
+
+        # Workaround for https://github.com/getsentry/sentry-dotnet/issues/3141
+        [Sentry.SentryOptionsExtensions]::DisableAppDomainProcessExitFlush($options)
     }
     process
     {
