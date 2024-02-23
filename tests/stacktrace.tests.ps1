@@ -237,8 +237,13 @@ Describe 'Invoke-WithSentry' {
 }
 
 Describe 'trap' {
+    BeforeEach {
+        $eap = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+    }
     AfterEach {
         $events.Clear()
+        $ErrorActionPreference = $eap
     }
 
     It 'gets triggered by throw' {
