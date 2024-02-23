@@ -37,14 +37,23 @@ function funcA($action, $param)
 
 function funcB($action, $param)
 {
-    if ($action -eq 'throw')
+    switch ($action)
     {
-        throw $param
+        'throw' { throw $param }
+        'write' { Write-Error $param -ErrorAction Stop }
+        'terminating' { $PSCmdlet.ThrowTerminatingError($param) }
+        'pass' { $param | Out-Sentry }
     }
-    else
+}
+
+function ContextLines($start, $lines, $path = $null)
+{
+    if ($null -eq $path)
     {
-        $param | Out-Sentry
+        $path = $PSCommandPath
     }
+
+    Get-Content $path | Select-Object -Skip ($start - 1) -First $lines
 }
 
 function StartSentryForEventTests([ref] $events, [ref] $transport)
