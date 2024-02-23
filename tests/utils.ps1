@@ -35,14 +35,28 @@ function funcA($action, $param)
     funcB $action $param
 }
 
-function funcB($action, $param)
+function funcB
 {
+    [CmdletBinding()]
+    param([string]$action, [string] $value)
+
     switch ($action)
     {
-        'throw' { throw $param }
-        'write' { Write-Error $param -ErrorAction Stop }
-        'terminating' { $PSCmdlet.ThrowTerminatingError($param) }
-        'pass' { $param | Out-Sentry }
+        'throw' { throw $value }
+        'write' { Write-Error $value -ErrorAction Stop }
+        'pass' { $value | Out-Sentry }
+        'pipeline'
+        {
+            try
+            {
+                throw $value
+            }
+            catch
+            {
+                [System.Management.Automation.ErrorRecord]$ErrorRecord = $_
+                $PSCmdlet.ThrowTerminatingError($ErrorRecord)
+            }
+        }
     }
 }
 

@@ -20,23 +20,47 @@ BeforeAll {
         [Sentry.SentryEvent]$event = $events.ToArray()[0]
         $event.SentryExceptions.Count | Should -Be 2
 
-        $event.SentryExceptions[1].Type | Should -Be 'error'
+        $event.SentryExceptions[1].Type | Should -Match 'error|error,funcB|write-error'
         $event.SentryExceptions[1].Value | Should -Be 'error'
         $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
         [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
 
-        $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 42)
-        $(GetListItem $frames -1).ColumnNumber | Should -BeGreaterThan 0
+        if ($event.SentryExceptions[1].Type -eq 'Write-Error')
+        {
+            $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 46)
+            $event.SentryExceptions[0].Type | Should -Be 'Microsoft.PowerShell.Commands.WriteErrorException'
+            $event.SentryExceptions[0].Module | Should -Match 'Microsoft.PowerShell.Commands.Utility'
+        }
+        else
+        {
+            if ($event.SentryExceptions[1].Type -eq 'error')
+            {
+                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 45)
+                $(GetListItem $frames -1).ColumnNumber | Should -BeGreaterThan 0
+            }
+            else
+            {
+                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 52)
+            }
+            $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
+            $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
+        }
 
         $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 35)
 
-        $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
         $event.SentryExceptions[0].Value | Should -Be 'error'
-        $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
-        $event.SentryExceptions[0].Stacktrace | Should -BeNullOrEmpty
+        if ($event.SentryExceptions[1].Type -eq 'error,funcB')
+        {
+            $event.SentryExceptions[0].Stacktrace.Frames[0].Function | Should -Be 'void MshCommandRuntime.ThrowTerminatingError(ErrorRecord errorRecord)'
+            $event.SentryThreads.Count | Should -Be 1
+        }
+        else
+        {
+            $event.SentryExceptions[0].Stacktrace | Should -BeNullOrEmpty
+            $event.SentryThreads.Count | Should -Be 2
+        }
 
-        $event.SentryThreads.Count | Should -Be 2
         $event.SentryThreads[0].Stacktrace.Frames | Should -BeExactly $frames
 
         # A module-based frame should be in-app=false
@@ -64,7 +88,7 @@ Describe 'Out-Sentry' {
         $event.SentryThreads.Count | Should -Be 2
         [Sentry.SentryStackFrame[]] $frames = $event.SentryThreads[0].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 45)
+        $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 47)
         $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 35)
 
         # A module-based frame should be in-app=false
@@ -209,5 +233,94 @@ Describe 'Invoke-WithSentry' {
         $event.SentryExceptions.Count | Should -Be 2
 
         @($null) | ForEach-Object $checkErrorRecord
+    }
+}
+
+Describe 'trap' {
+    AfterEach {
+        $events.Clear()
+    }
+
+    It 'gets triggered by throw' {
+        $info = @{'triggers' = 0 }
+
+        # We need to have Trap inside another function because it lets the function continue and as such, it would also
+        # override any test failures so the test would show up as passed.
+        # https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_trap?view=powershell-7.4#trapping-errors-and-scope
+        function TestFunction
+        {
+            trap
+            {
+                $_ | Out-Sentry
+                $info['triggers'] = $info['triggers'] + 1
+            }
+
+            funcA 'throw' 'error'
+        }
+
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+        $info['triggers'] | Should -Be 1
+
+        # and because the execution continues, the same trap must work again:
+        $events.Clear()
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+        $info['triggers'] | Should -Be 2
+    }
+
+    It 'gets triggered by a Write-Error' {
+        $info = @{'triggers' = 0 }
+
+        # We need to have Trap inside another function because it lets the function continue and as such, it would also
+        # override any test failures so the test would show up as passed.
+        # https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_trap?view=powershell-7.4#trapping-errors-and-scope
+        function TestFunction
+        {
+            trap
+            {
+                $_ | Out-Sentry
+                $info['triggers'] = $info['triggers'] + 1
+            }
+
+            funcA 'write' 'error' -ErrorAction Stop
+        }
+
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+        $info['triggers'] | Should -Be 1
+
+        # and because the execution continues, the same trap must work again:
+        $events.Clear()
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+        $info['triggers'] | Should -Be 2
+    }
+
+    It 'gets triggered by ThrowTerminatingError' {
+        $info = @{'triggers' = 0 }
+
+        # We need to have Trap inside another function because it lets the function continue and as such, it would also
+        # override any test failures so the test would show up as passed.
+        # https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_trap?view=powershell-7.4#trapping-errors-and-scope
+        function TestFunction
+        {
+            trap
+            {
+                $_ | Out-Sentry
+                $info['triggers'] = $info['triggers'] + 1
+            }
+
+            funcA 'pipeline' 'error' -ErrorAction Stop
+        }
+
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+
+        # and because the execution continues, the same trap must work again:
+        $events.Clear()
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+        $info['triggers'] | Should -Be 2
     }
 }
