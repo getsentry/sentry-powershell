@@ -64,6 +64,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: Sentry
+          path: module
 
       - name: Setup PowerShell ${{ matrix.version }}
         if: ${{ matrix.version != '' }}
