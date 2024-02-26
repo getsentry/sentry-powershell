@@ -38,10 +38,19 @@ function Out-Sentry
         if ($ErrorRecord -ne $null)
         {
             $event_ = [Sentry.SentryEvent]::new($ErrorRecord.Exception)
-            $processor.InvocationInfo = $ErrorRecord.InvocationInfo
             $processor.SentryException = [Sentry.Protocol.SentryException]::new()
-            $processor.SentryException.Type = $ErrorRecord.FullyQualifiedErrorId
-            if ($details = $ErrorRecord.ErrorDetails -and $null -ne $details.Message)
+
+            if ($($ErrorRecord.CategoryInfo.Activity) -eq 'Write-Error')
+            {
+                # FullyQualifiedErrorId would be "Microsoft.PowerShell.Commands.WriteErrorException,funcB"
+                $processor.SentryException.Type = 'Write-Error'
+            }
+            else
+            {
+                $processor.SentryException.Type = $ErrorRecord.FullyQualifiedErrorId
+            }
+
+            if (($details = $ErrorRecord.ErrorDetails) -and $null -ne $details.Message)
             {
                 $processor.SentryException.Value = $details.Message
             }
@@ -55,6 +64,7 @@ function Out-Sentry
                 # Note: we use ScriptStackTrace even though we need to parse it, becaause it contains actual stack trace
                 # to the throw, not just the trace to the call to this function.
                 $processor.StackTraceString = $ErrorRecord.ScriptStackTrace -split "[`r`n]+" | Where-Object { $_ -ne 'at <ScriptBlock>, <No file>: line 1' }
+                $processor.InvocationInfo = $ErrorRecord.InvocationInfo
             }
 
         }

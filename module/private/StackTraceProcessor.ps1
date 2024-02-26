@@ -141,25 +141,35 @@ class StackTraceProcessor : SentryEventProcessor
         }
         else
         {
+            # Note: if InvocationInfo is present, use it to update:
+            #  - the first frame (in case of `$_ | Out-Sentry` in a catch clause).
+            #  - the second frame (in case of `write-error` and `$_ | Out-Sentry` in a trap).
+            if ($null -ne $this.InvocationInfo)
+            {
+                $sentryFrameInitial = $this.CreateFrame($this.InvocationInfo)
+            }
+            else
+            {
+                $sentryFrameInitial = $null
+            }
+
             foreach ($frame in $this.StackTraceString)
             {
                 $sentryFrame = $this.CreateFrame($frame)
-                # Note: if InvocationInfo is present, use it to update the first frame. This is the case for ErrroRecord handling
-                # and has the information about the actual script file and line that have thrown the exception.
-                if ($sentryFrames.Count -eq 0 -and $null -ne $this.InvocationInfo)
+                if ($null -ne $sentryFrameInitial -and $sentryFrames.Count -lt 2)
                 {
-                    $sentryFrameInitial = $this.CreateFrame($this.InvocationInfo)
                     if ($sentryFrameInitial.AbsolutePath -eq $sentryFrame.AbsolutePath -and $sentryFrameInitial.LineNumber -eq $sentryFrame.LineNumber)
                     {
                         $sentryFrame.ContextLine = $sentryFrameInitial.ContextLine
                         $sentryFrame.ColumnNumber = $sentryFrameInitial.ColumnNumber
-                    }
-                    else
-                    {
-                        $sentryFrames.Add($sentryFrameInitial)
+                        $sentryFrameInitial = $null
                     }
                 }
                 $sentryFrames.Add($sentryFrame)
+            }
+            if ($null -ne $sentryFrameInitial)
+            {
+                $sentryFrames.Insert(0, $sentryFrameInitial)
             }
         }
 

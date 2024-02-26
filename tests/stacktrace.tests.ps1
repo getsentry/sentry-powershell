@@ -3,6 +3,69 @@ BeforeAll {
     $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
     $transport = [RecordingTransport]::new()
     StartSentryForEventTests ([ref] $events) ([ref] $transport)
+
+    $checkFrame = {
+        param([Sentry.SentryStackFrame] $frame, [string] $funcName, [int] $funcLine)
+        $frame.Function | Should -Be $funcName
+        $frame.AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
+        $frame.LineNumber | Should -BeGreaterThan 0
+        $frame.InApp | Should -Be $true
+        $frame.PreContext  | Should -Be (ContextLines -Start ($funcLine - 5) -Lines 5)
+        $frame.ContextLine | Should -Be (ContextLines -Start $funcLine -Lines 1)
+        $frame.PostContext | Should -Be (ContextLines -Start ($funcLine + 1) -Lines 5)
+    }
+
+    $checkErrorRecord = {
+        $events.Count | Should -Be 1
+        [Sentry.SentryEvent]$event = $events.ToArray()[0]
+        $event.SentryExceptions.Count | Should -Be 2
+
+        $event.SentryExceptions[1].Type | Should -Match 'error|error,funcB|write-error'
+        $event.SentryExceptions[1].Value | Should -Be 'error'
+        $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
+        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
+        $frames.Count | Should -BeGreaterThan 0
+
+        if ($event.SentryExceptions[1].Type -eq 'Write-Error')
+        {
+            $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 46)
+            $event.SentryExceptions[0].Type | Should -Be 'Microsoft.PowerShell.Commands.WriteErrorException'
+            $event.SentryExceptions[0].Module | Should -Match 'Microsoft.PowerShell.Commands.Utility'
+        }
+        else
+        {
+            if ($event.SentryExceptions[1].Type -eq 'error')
+            {
+                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 45)
+                $(GetListItem $frames -1).ColumnNumber | Should -BeGreaterThan 0
+            }
+            else
+            {
+                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 52)
+            }
+            $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
+            $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
+        }
+
+        $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 35)
+
+        $event.SentryExceptions[0].Value | Should -Be 'error'
+        if ($event.SentryExceptions[1].Type -eq 'error,funcB')
+        {
+            $event.SentryExceptions[0].Stacktrace.Frames[0].Function | Should -Be 'void MshCommandRuntime.ThrowTerminatingError(ErrorRecord errorRecord)'
+            $event.SentryThreads.Count | Should -Be 1
+        }
+        else
+        {
+            $event.SentryExceptions[0].Stacktrace | Should -BeNullOrEmpty
+            $event.SentryThreads.Count | Should -Be 2
+        }
+
+        $event.SentryThreads[0].Stacktrace.Frames | Should -BeExactly $frames
+
+        # A module-based frame should be in-app=false
+        $frames | Where-Object -Property Module | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $false
+    }
 }
 
 AfterAll {
@@ -15,7 +78,7 @@ Describe 'Out-Sentry' {
     }
 
     It 'captures message' {
-        FuncA ' ' 'message'
+        FuncA 'pass' 'message'
         $events.Count | Should -Be 1
         [Sentry.SentryEvent]$event = $events.ToArray()[0]
         $event.SentryExceptions | Should -Be @()
@@ -25,21 +88,8 @@ Describe 'Out-Sentry' {
         $event.SentryThreads.Count | Should -Be 2
         [Sentry.SentryStackFrame[]] $frames = $event.SentryThreads[0].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        (GetListItem $frames -1).Function | Should -Be 'funcB'
-        (GetListItem $frames -1).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        (GetListItem $frames -1).LineNumber | Should -BeGreaterThan 0
-        (GetListItem $frames -1).InApp | Should -Be $true
-        (GetListItem $frames -1).PreContext | Should -Be @('    {', '        throw $param', '    }', '    else', '    {')
-        (GetListItem $frames -1).ContextLine | Should -Be '        $param | Out-Sentry'
-        (GetListItem $frames -1).PostContext | Should -Be @('    }', '}', '', 'function StartSentryForEventTests([ref] $events, [ref] $transport)', '{')
-
-        (GetListItem $frames -2).Function | Should -Be 'funcA'
-        (GetListItem $frames -2).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        (GetListItem $frames -2).LineNumber | Should -BeGreaterThan 0
-        (GetListItem $frames -2).InApp | Should -Be $true
-        (GetListItem $frames -2).PreContext | Should -Be @('    }', '}', '', 'function funcA($action, $param)', '{')
-        (GetListItem $frames -2).ContextLine | Should -Be '    funcB $action $param'
-        (GetListItem $frames -2).PostContext | Should -Be @('}', '', 'function funcB($action, $param)', '{', "    if (`$action -eq 'throw')")
+        $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 47)
+        $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 35)
 
         # A module-based frame should be in-app=false
         $frames | Where-Object -Property Module | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $false
@@ -54,42 +104,8 @@ Describe 'Out-Sentry' {
         {
             $_ | Out-Sentry
         }
-        $events.Count | Should -Be 1
-        [Sentry.SentryEvent]$event = $events.ToArray()[0]
-        $event.SentryExceptions.Count | Should -Be 2
 
-        $event.SentryExceptions[1].Type | Should -Be 'error'
-        $event.SentryExceptions[1].Value | Should -Be 'error'
-        $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
-        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
-        $frames.Count | Should -BeGreaterThan 0
-        (GetListItem $frames -1).Function | Should -Be 'funcB'
-        (GetListItem $frames -1).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        (GetListItem $frames -1).LineNumber | Should -BeGreaterThan 0
-        (GetListItem $frames -1).ColumnNumber | Should -BeGreaterThan 0
-        (GetListItem $frames -1).InApp | Should -Be $true
-        (GetListItem $frames -1).PreContext | Should -Be @('', 'function funcB($action, $param)', '{', "    if (`$action -eq 'throw')", '    {')
-        (GetListItem $frames -1).ContextLine | Should -Be '        throw $param'
-        (GetListItem $frames -1).PostContext | Should -Be @('    }', '    else', '    {', '        $param | Out-Sentry', '    }')
-
-        (GetListItem $frames -2).Function | Should -Be 'funcA'
-        (GetListItem $frames -2).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        (GetListItem $frames -2).LineNumber | Should -BeGreaterThan 0
-        (GetListItem $frames -2).InApp | Should -Be $true
-        (GetListItem $frames -2).PreContext | Should -Be @('    }', '}', '', 'function funcA($action, $param)', '{')
-        (GetListItem $frames -2).ContextLine | Should -Be '    funcB $action $param'
-        (GetListItem $frames -2).PostContext | Should -Be @('}', '', 'function funcB($action, $param)', '{', "    if (`$action -eq 'throw')")
-
-        $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
-        $event.SentryExceptions[0].Value | Should -Be 'error'
-        $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
-        $event.SentryExceptions[0].Stacktrace | Should -BeNullOrEmpty
-
-        $event.SentryThreads.Count | Should -Be 2
-        $event.SentryThreads[0].Stacktrace.Frames | Should -BeExactly $frames
-
-        # A module-based frame should be in-app=false
-        $frames | Where-Object -Property Module | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $false
+        @($null) | ForEach-Object $checkErrorRecord
     }
 
     It 'captures exception' {
@@ -142,7 +158,7 @@ Describe 'Out-Sentry' {
         $options.AttachStacktrace = $false
         try
         {
-            FuncA ' ' 'message'
+            FuncA 'pass' 'message'
             $events.Count | Should -Be 1
             [Sentry.SentryEvent]$event = $events.ToArray()[0]
             $event.SentryExceptions | Should -Be @()
@@ -208,7 +224,7 @@ Describe 'Invoke-WithSentry' {
     It 'captures error record' {
         try
         {
-            Invoke-WithSentry { funcA 'throw' 'inside invoke' }
+            Invoke-WithSentry { funcA 'throw' 'error' }
         }
         catch {}
 
@@ -216,37 +232,100 @@ Describe 'Invoke-WithSentry' {
         [Sentry.SentryEvent]$event = $events.ToArray()[0]
         $event.SentryExceptions.Count | Should -Be 2
 
-        $event.SentryExceptions[1].Type | Should -Be 'inside invoke'
-        $event.SentryExceptions[1].Value | Should -Be 'inside invoke'
-        $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
-        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
-        $frames.Count | Should -BeGreaterThan 0
-        (GetListItem $frames -1).Function | Should -Be 'funcB'
-        (GetListItem $frames -1).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        (GetListItem $frames -1).LineNumber | Should -BeGreaterThan 0
-        (GetListItem $frames -1).ColumnNumber | Should -BeGreaterThan 0
-        (GetListItem $frames -1).InApp | Should -Be $true
-        (GetListItem $frames -1).PreContext | Should -Be @('', 'function funcB($action, $param)', '{', "    if (`$action -eq 'throw')", '    {')
-        (GetListItem $frames -1).ContextLine | Should -Be '        throw $param'
-        (GetListItem $frames -1).PostContext | Should -Be @('    }', '    else', '    {', '        $param | Out-Sentry', '    }')
+        @($null) | ForEach-Object $checkErrorRecord
+    }
+}
 
-        (GetListItem $frames -2).Function | Should -Be 'funcA'
-        (GetListItem $frames -2).AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
-        (GetListItem $frames -2).LineNumber | Should -BeGreaterThan 0
-        (GetListItem $frames -2).InApp | Should -Be $true
-        (GetListItem $frames -2).PreContext | Should -Be @('    }', '}', '', 'function funcA($action, $param)', '{')
-        (GetListItem $frames -2).ContextLine | Should -Be '    funcB $action $param'
-        (GetListItem $frames -2).PostContext | Should -Be @('}', '', 'function funcB($action, $param)', '{', "    if (`$action -eq 'throw')")
+Describe 'trap' {
+    BeforeEach {
+        $eap = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+    }
+    AfterEach {
+        $events.Clear()
+        $ErrorActionPreference = $eap
+    }
 
-        $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
-        $event.SentryExceptions[0].Value | Should -Be 'inside invoke'
-        $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
-        $event.SentryExceptions[0].Stacktrace | Should -BeNullOrEmpty
+    It 'gets triggered by throw' {
+        $info = @{'triggers' = 0 }
 
-        $event.SentryThreads.Count | Should -Be 2
-        $event.SentryThreads[0].Stacktrace.Frames | Should -BeExactly $frames
+        # We need to have Trap inside another function because it lets the function continue and as such, it would also
+        # override any test failures so the test would show up as passed.
+        # https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_trap?view=powershell-7.4#trapping-errors-and-scope
+        function TestFunction
+        {
+            trap
+            {
+                $_ | Out-Sentry
+                $info['triggers'] = $info['triggers'] + 1
+            }
 
-        # A module-based frame should be in-app=false
-        $frames | Where-Object -Property Module | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $false
+            funcA 'throw' 'error'
+        }
+
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+        $info['triggers'] | Should -Be 1
+
+        # and because the execution continues, the same trap must work again:
+        $events.Clear()
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+        $info['triggers'] | Should -Be 2
+    }
+
+    It 'gets triggered by a Write-Error' {
+        $info = @{'triggers' = 0 }
+
+        # We need to have Trap inside another function because it lets the function continue and as such, it would also
+        # override any test failures so the test would show up as passed.
+        # https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_trap?view=powershell-7.4#trapping-errors-and-scope
+        function TestFunction
+        {
+            trap
+            {
+                $_ | Out-Sentry
+                $info['triggers'] = $info['triggers'] + 1
+            }
+
+            funcA 'write' 'error' -ErrorAction Stop
+        }
+
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+        $info['triggers'] | Should -Be 1
+
+        # and because the execution continues, the same trap must work again:
+        $events.Clear()
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+        $info['triggers'] | Should -Be 2
+    }
+
+    It 'gets triggered by ThrowTerminatingError' {
+        $info = @{'triggers' = 0 }
+
+        # We need to have Trap inside another function because it lets the function continue and as such, it would also
+        # override any test failures so the test would show up as passed.
+        # https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_trap?view=powershell-7.4#trapping-errors-and-scope
+        function TestFunction
+        {
+            trap
+            {
+                $_ | Out-Sentry
+                $info['triggers'] = $info['triggers'] + 1
+            }
+
+            funcA 'pipeline' 'error' -ErrorAction Stop
+        }
+
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+
+        # and because the execution continues, the same trap must work again:
+        $events.Clear()
+        TestFunction
+        @($null) | ForEach-Object $checkErrorRecord
+        $info['triggers'] | Should -Be 2
     }
 }
