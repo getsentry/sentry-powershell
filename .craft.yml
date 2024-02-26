@@ -1,0 +1,8 @@
+minVersion: 1.11.0
+changelogPolicy: auto
+targets:
+  - name: powershell
+    module: Sentry
+  - name: registry
+    sdks:
+      powershell:Sentry:
