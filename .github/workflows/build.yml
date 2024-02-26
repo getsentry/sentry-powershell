@@ -27,6 +27,7 @@ jobs:
   test:
     name: ${{ matrix.os }} - ${{ matrix.shell }} ${{ matrix.version }}
     runs-on: ${{ matrix.os == 'ubuntu' && 'ubuntu-latest' || matrix.os == 'macos' && 'macos-latest' || matrix.os == 'windows' && 'windows-latest' || matrix.os }}
+    needs: build
 
     strategy:
       fail-fast: false
