@@ -1,4 +1,4 @@
-name: Test
+name: Build and Test
 
 on:
   push:
@@ -9,6 +9,21 @@ on:
       - '**.md'
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup dependencies
+        uses: ./.github/actions/setup-dependencies
+
+      - name: Create module archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sentry
+          path: module
+
   test:
     name: ${{ matrix.os }} - ${{ matrix.shell }} ${{ matrix.version }}
     runs-on: ${{ matrix.os == 'ubuntu' && 'ubuntu-latest' || matrix.os == 'macos' && 'macos-latest' || matrix.os == 'windows' && 'windows-latest' || matrix.os }}
@@ -42,8 +57,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup dependencies
-        uses: ./.github/actions/setup-dependencies
+      - run: Remove-Item -Recurse -Force module
+
+      - name: Download module archive
+        uses: actions/download-artifact@v4
+        with:
+          name: Sentry
 
       - name: Setup PowerShell ${{ matrix.version }}
         if: ${{ matrix.version != '' }}
