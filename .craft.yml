@@ -3,6 +3,6 @@ changelogPolicy: auto
 targets:
   - name: powershell
     module: Sentry
-  - name: registry
-    sdks:
-      powershell:Sentry:
+  # - name: registry
+  #   sdks:
+  #     powershell:Sentry:

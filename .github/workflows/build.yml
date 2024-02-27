@@ -20,8 +20,8 @@ jobs:
         uses: ./.github/actions/setup-dependencies
 
       - name: Create module archive
-        run: zip -r ../Sentry.zip ./
-        working-directory: modules/Sentry
+        run: Compress-Archive -Path modules/Sentry/* -DestinationPath modules/Sentry.zip
+        shell: pwsh
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v4

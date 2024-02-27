@@ -25,7 +25,7 @@
     Description          = 'An error reporting module that sends reports to Sentry.io'
 
     # Minimum version of the PowerShell engine required by this module
-    PowerShellVersion    = '5.0'
+    PowerShellVersion    = '5.1'
 
     # Script files (.ps1) that are run in the caller's environment prior to importing this module.
     ScriptsToProcess     = @('assemblies-loader.ps1')
