@@ -20,10 +20,14 @@ jobs:
         uses: ./.github/actions/setup-dependencies
 
       - name: Create module archive
+        run: Compress-Archive -Path modules/Sentry/* -DestinationPath modules/Sentry.zip
+        shell: pwsh
+
+      - name: Upload release artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.sha }}
-          path: modules
+          path: modules/*.zip
 
   test:
     name: ${{ matrix.os }} - ${{ matrix.shell }} ${{ matrix.version }}
@@ -59,13 +63,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: Remove-Item -Recurse -Force modules
-
-      - name: Download module archive
+      - name: Download release artifact
         uses: actions/download-artifact@v4
         with:
           name: ${{ github.sha }}
-          path: modules
+
+      - name: Extract module archives
+        run: |
+          Remove-Item -Recurse -Force modules/Sentry
+          Expand-Archive -Path Sentry.zip -DestinationPath modules/Sentry
 
       - name: Setup PowerShell ${{ matrix.version }}
         if: ${{ matrix.version != '' }}
