@@ -30,7 +30,7 @@ jobs:
         run: |
           Install-Module -Name ConvertToSARIF -Force
           Import-Module -Name ConvertToSARIF -Force
-          Get-Item ./module/Sentry.psd1 | Import-Module
+          Get-Item ./modules/Sentry/Sentry.psd1 | Import-Module
           Invoke-ScriptAnalyzer -Path . -Recurse -Settings PSGallery | ConvertTo-SARIF -FilePath results.sarif
 
       - uses: github/codeql-action/upload-sarif@v3

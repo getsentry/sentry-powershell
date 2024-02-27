@@ -22,8 +22,8 @@ jobs:
       - name: Create module archive
         uses: actions/upload-artifact@v4
         with:
-          name: Sentry
-          path: module
+          name: ${{ github.sha }}
+          path: modules
 
   test:
     name: ${{ matrix.os }} - ${{ matrix.shell }} ${{ matrix.version }}
@@ -59,13 +59,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - run: Remove-Item -Recurse -Force module
+      - run: Remove-Item -Recurse -Force modules
 
       - name: Download module archive
         uses: actions/download-artifact@v4
         with:
-          name: Sentry
-          path: module
+          name: ${{ github.sha }}
+          path: modules
 
       - name: Setup PowerShell ${{ matrix.version }}
         if: ${{ matrix.version != '' }}
@@ -81,18 +81,18 @@ jobs:
         run: |
           . ./tools/settings.ps1
           # Loading the first time
-          Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
+          Get-Item ./modules/Sentry/Sentry.psd1 | Import-Module -PassThru
           # This needs to return actual types (method overloads)
           [Sentry.SentrySdk]::init
           # Loading the second time must be possible, without errors
-          Get-Item ./module/Sentry.psd1 | Import-Module
+          Get-Item ./modules/Sentry/Sentry.psd1 | Import-Module
           # And accessing APIs must still work too
           [Sentry.SentrySdk]::init
 
       - name: Unit tests
         run: |
           . ./tools/settings.ps1
-          Get-Item ./module/Sentry.psd1 | Import-Module
+          Get-Item ./modules/Sentry/Sentry.psd1 | Import-Module
           $config = New-PesterConfiguration
           $config.Run.Path = "tests"
           $config.TestResult.Enabled = $true

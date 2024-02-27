@@ -16,7 +16,7 @@
 param([string]$City = '')
 
 # Import the Sentry module. In your code, you would just use `Import-Module Sentry`.
-Import-Module $PSScriptRoot/../module/Sentry.psd1
+Import-Module $PSScriptRoot/../modules/Sentry/Sentry.psd1
 
 # Start the Sentry client.
 Start-Sentry 'https://eb18e953812b41c3aeb042e666fd3b5c@o447951.ingest.sentry.io/5428537'
