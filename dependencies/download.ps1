@@ -1,7 +1,7 @@
 . "$PSScriptRoot/../tools/settings.ps1"
 $downloadDir = "$PSScriptRoot/downloads"
 $propsDir = "$PSScriptRoot"
-$moduleDir = "$PSScriptRoot/../module"
+$moduleDir = "$PSScriptRoot/../modules/Sentry"
 $libDir = "$moduleDir/lib"
 
 New-Item $libDir -ItemType Directory -Force | Out-Null

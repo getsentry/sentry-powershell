@@ -7,7 +7,7 @@ runs:
     - name: Cache lib directory
       uses: actions/cache@v4
       with:
-        path: module/lib
+        path: modules/Sentry/lib
         key: dependencies-${{ hashFiles('dependencies/**') }}
 
     - run: ./dependencies/download.ps1

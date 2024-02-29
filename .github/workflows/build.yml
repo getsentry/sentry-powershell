@@ -1,17 +1,38 @@
-name: Test
+name: Build and Test
 
 on:
   push:
     branches:
       - 'main'
+      - 'release/**'
   pull_request:
     paths-ignore:
       - '**.md'
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup dependencies
+        uses: ./.github/actions/setup-dependencies
+
+      - name: Create module archive
+        run: Compress-Archive -Path modules/Sentry/* -DestinationPath modules/Sentry.zip
+        shell: pwsh
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.sha }}
+          path: modules/*.zip
+
   test:
     name: ${{ matrix.os }} - ${{ matrix.shell }} ${{ matrix.version }}
     runs-on: ${{ matrix.os == 'ubuntu' && 'ubuntu-latest' || matrix.os == 'macos' && 'macos-latest' || matrix.os == 'windows' && 'windows-latest' || matrix.os }}
+    needs: build
 
     strategy:
       fail-fast: false
@@ -42,8 +63,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup dependencies
-        uses: ./.github/actions/setup-dependencies
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.sha }}
+
+      - name: Extract module archives
+        run: |
+          Remove-Item -Recurse -Force modules/Sentry
+          Expand-Archive -Path Sentry.zip -DestinationPath modules/Sentry
 
       - name: Setup PowerShell ${{ matrix.version }}
         if: ${{ matrix.version != '' }}
@@ -59,18 +87,18 @@ jobs:
         run: |
           . ./tools/settings.ps1
           # Loading the first time
-          Get-Item ./module/Sentry.psd1 | Import-Module -PassThru
+          Get-Item ./modules/Sentry/Sentry.psd1 | Import-Module -PassThru
           # This needs to return actual types (method overloads)
           [Sentry.SentrySdk]::init
           # Loading the second time must be possible, without errors
-          Get-Item ./module/Sentry.psd1 | Import-Module
+          Get-Item ./modules/Sentry/Sentry.psd1 | Import-Module
           # And accessing APIs must still work too
           [Sentry.SentrySdk]::init
 
       - name: Unit tests
         run: |
           . ./tools/settings.ps1
-          Get-Item ./module/Sentry.psd1 | Import-Module
+          Get-Item ./modules/Sentry/Sentry.psd1 | Import-Module
           $config = New-PesterConfiguration
           $config.Run.Path = "tests"
           $config.TestResult.Enabled = $true
