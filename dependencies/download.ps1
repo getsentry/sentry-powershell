@@ -1,4 +1,4 @@
-. "$PSScriptRoot/../tools/settings.ps1"
+. "$PSScriptRoot/../scripts/settings.ps1"
 $downloadDir = "$PSScriptRoot/downloads"
 $propsDir = "$PSScriptRoot"
 $moduleDir = "$PSScriptRoot/../modules/Sentry"
