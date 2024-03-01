@@ -58,16 +58,16 @@
 
 
             # A URL to the license for this module.
-            LicenseUri   = 'https://raw.githubusercontent.com/getsentry/sentry-dotnet/main/LICENSE'
+            LicenseUri   = 'https://raw.githubusercontent.com/getsentry/sentry-powershell/main/LICENSE'
 
             # A URL to the main website for this project.
-            ProjectUri   = 'https://github.com/getsentry/sentry-dotnet'
+            ProjectUri   = 'https://github.com/getsentry/sentry-powershell'
 
             # A URL to an icon representing this module.
-            IconUri      = 'https://raw.githubusercontent.com/getsentry/sentry-unity/main/.github/sentry-wordmark-dark-400x119.svg'
+            IconUri      = 'https://raw.githubusercontent.com/getsentry/platformicons/4e407e832f1a2a95d77ca8ca0ea2a195a38eec24/svg/sentry.svg'
 
             # ReleaseNotes of this module
-            ReleaseNotes = 'https://raw.githubusercontent.com/getsentry/sentry-dotnet/main/CHANGELOG.md'
+            ReleaseNotes = 'https://raw.githubusercontent.com/getsentry/sentry-powershell/main/CHANGELOG.md'
 
             # Prerelease string of this module
             Prerelease   = 'dev'
@@ -81,5 +81,5 @@
     } # End of PrivateData hashtable
 
     # HelpInfo URI of this module
-    HelpInfoURI          = 'https://docs.sentry.io/platforms/dotnet'
+    HelpInfoURI          = 'https://docs.sentry.io/platforms/powershell'
 }
