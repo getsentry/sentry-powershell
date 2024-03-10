@@ -5,4 +5,4 @@ targets:
     module: Sentry
   - name: registry
     sdks:
-      powershell:Sentry:
+      psgallery:Sentry:
