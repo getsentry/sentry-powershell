@@ -30,46 +30,6 @@ class TestIntegration : Sentry.Integrations.ISdkIntegration
     }
 }
 
-function funcA($action, $param)
-{
-    funcB $action $param
-}
-
-function funcB
-{
-    [CmdletBinding()]
-    param([string]$action, [string] $value)
-
-    switch ($action)
-    {
-        'throw' { throw $value }
-        'write' { Write-Error $value -ErrorAction Stop }
-        'pass' { $value | Out-Sentry }
-        'pipeline'
-        {
-            try
-            {
-                throw $value
-            }
-            catch
-            {
-                [System.Management.Automation.ErrorRecord]$ErrorRecord = $_
-                $PSCmdlet.ThrowTerminatingError($ErrorRecord)
-            }
-        }
-    }
-}
-
-function ContextLines($start, $lines, $path = $null)
-{
-    if ($null -eq $path)
-    {
-        $path = $PSCommandPath
-    }
-
-    Get-Content $path | Select-Object -Skip ($start - 1) -First $lines
-}
-
 function StartSentryForEventTests([ref] $events, [ref] $transport)
 {
     Start-Sentry {
