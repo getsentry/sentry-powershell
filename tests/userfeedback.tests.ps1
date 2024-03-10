@@ -11,7 +11,7 @@ Describe 'UserFeedback' {
 
     AfterEach {
         $events.Clear()
-        $transport.Envelopes.Clear()
+        $transport.Clear()
         Stop-Sentry
     }
 
