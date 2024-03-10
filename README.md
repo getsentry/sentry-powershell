@@ -16,6 +16,10 @@ _Bad software is everywhere, and we're tired of it. Sentry is on a mission to he
 PowerShell Sentry SDK is a thin wrapper on top of [Sentry .NET SDK](https://github.com/getsentry/sentry-dotnet) with some quality of life improvements for PowerShell users.
 Although the underlying .NET SDK is proven in production, the PowerShell Sentry SDK is in its very early stages and is not recommended for production use.
 
+## Packages
+
+* [Sentry on PSGallery](https://www.powershellgallery.com/packages/Sentry/)
+
 ## Compatiblity
 
 The PowerShell Sentry SDK is tested to work with:
