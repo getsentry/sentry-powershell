@@ -3,6 +3,7 @@
 
 function Out-Sentry
 {
+    [OutputType([Sentry.SentryId])]
     [CmdletBinding(DefaultParameterSetName = 'ErrorRecord')]
     param(
         [Parameter(ValueFromPipeline = $true, ParameterSetName = 'ErrorRecord')]
@@ -32,7 +33,7 @@ function Out-Sentry
         }
 
         $options = Get-CurrentOptions
-        [Sentry.SentryEvent]$event_
+        [Sentry.SentryEvent]$event_ = $null
         $processor = [StackTraceProcessor]::new()
 
         if ($ErrorRecord -ne $null)
@@ -106,5 +107,4 @@ function Out-Sentry
                 $scope | ForEach-Object $EditScope
             })
     }
-    end {}
 }
