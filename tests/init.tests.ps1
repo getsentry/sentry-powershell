@@ -91,7 +91,8 @@ Describe 'SentrySdk' {
     }
 
     It 'Out-Sentry does not crash when Sentry is not enabled' {
-        'message' | Out-Sentry -Debug
+        $eventId = 'message' | Out-Sentry -Debug
+        $eventId | Should -Be $null
     }
 
     It 'Out-Sentry does not capture when Sentry is not enabled' {
@@ -99,7 +100,8 @@ Describe 'SentrySdk' {
         $transport = [RecordingTransport]::new()
         StartSentryForEventTests ([ref] $events) ([ref] $transport)
         Stop-Sentry
-        'message' | Out-Sentry -Debug
+        $eventId = 'message' | Out-Sentry -Debug
+        $eventId | Should -Be $null
         $events.Count | Should -Be 0
     }
 }

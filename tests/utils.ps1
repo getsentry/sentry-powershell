@@ -7,6 +7,11 @@ class RecordingTransport:Sentry.Extensibility.ITransport
         $this.envelopes.Enqueue($envelope);
         return [System.Threading.Tasks.Task]::CompletedTask;
     }
+
+    [void] Clear()
+    {
+        $this.envelopes = [System.Collections.Concurrent.ConcurrentQueue[Sentry.Protocol.Envelopes.Envelope]]::new()
+    }
 }
 
 class TestLogger:Sentry.Infrastructure.DiagnosticLogger
