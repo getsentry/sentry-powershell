@@ -1,13 +1,24 @@
 BeforeAll {
     . "$PSScriptRoot/utils.ps1"
+    . "$PSScriptRoot/throwing.ps1"
     $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
     $transport = [RecordingTransport]::new()
     StartSentryForEventTests ([ref] $events) ([ref] $transport)
 
+    function ContextLines($start, $lines, $path = $null)
+    {
+        if ($null -eq $path)
+        {
+            $path = "$PSScriptRoot/throwing.ps1"
+        }
+
+        Get-Content $path | Select-Object -Skip ($start - 1) -First $lines
+    }
+
     $checkFrame = {
         param([Sentry.SentryStackFrame] $frame, [string] $funcName, [int] $funcLine)
         $frame.Function | Should -Be $funcName
-        $frame.AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'utils.ps1')
+        $frame.AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'throwing.ps1')
         $frame.LineNumber | Should -BeGreaterThan 0
         $frame.InApp | Should -Be $true
         $frame.PreContext  | Should -Be (ContextLines -Start ($funcLine - 5) -Lines 5)
@@ -28,7 +39,7 @@ BeforeAll {
 
         if ($event.SentryExceptions[1].Type -eq 'Write-Error')
         {
-            $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 46)
+            $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 18)
             $event.SentryExceptions[0].Type | Should -Be 'Microsoft.PowerShell.Commands.WriteErrorException'
             $event.SentryExceptions[0].Module | Should -Match 'Microsoft.PowerShell.Commands.Utility'
         }
@@ -36,18 +47,18 @@ BeforeAll {
         {
             if ($event.SentryExceptions[1].Type -eq 'error')
             {
-                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 45)
+                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 17)
                 $(GetListItem $frames -1).ColumnNumber | Should -BeGreaterThan 0
             }
             else
             {
-                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 52)
+                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 24)
             }
             $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
             $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
         }
 
-        $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 35)
+        $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 7)
 
         $event.SentryExceptions[0].Value | Should -Be 'error'
         if ($event.SentryExceptions[1].Type -eq 'error,funcB')
@@ -88,8 +99,8 @@ Describe 'Out-Sentry' {
         $event.SentryThreads.Count | Should -Be 2
         [Sentry.SentryStackFrame[]] $frames = $event.SentryThreads[0].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 47)
-        $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 35)
+        $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 19)
+        $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 7)
 
         # A module-based frame should be in-app=false
         $frames | Where-Object -Property Module | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $false
