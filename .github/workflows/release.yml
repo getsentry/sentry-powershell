@@ -26,7 +26,6 @@ jobs:
         uses: getsentry/action-prepare-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GH_RELEASE_PAT }}
-          CRAFT_LOG_LEVEL: trace
         with:
           version: ${{ github.event.inputs.version }}
           force: ${{ github.event.inputs.force }}
