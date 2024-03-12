@@ -16,6 +16,8 @@ function Start-Sentry
     begin
     {
         $options = [Sentry.SentryOptions]::new()
+        $options.FlushTimeout = [System.TimeSpan]::FromSeconds(10)
+        $options.ShutDownTimeout = $options.FlushTimeout
         $options.ReportAssembliesMode = [Sentry.ReportAssembliesMode]::None
         $options.IsGlobalModeEnabled = $true
         [Sentry.sentryOptionsExtensions]::AddIntegration($options, [ScopeIntegration]::new())
@@ -52,4 +54,3 @@ function Start-Sentry
         [Sentry.SentrySdk]::init($options) | Out-Null
     }
 }
-

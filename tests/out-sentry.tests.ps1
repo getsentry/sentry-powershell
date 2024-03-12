@@ -2,7 +2,7 @@ BeforeAll {
     . "$PSScriptRoot/utils.ps1"
 }
 
-Describe 'UserFeedback' {
+Describe 'Out-Sentry' {
     BeforeEach {
         $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
         $transport = [RecordingTransport]::new()
@@ -15,13 +15,13 @@ Describe 'UserFeedback' {
         Stop-Sentry
     }
 
-    It 'Out-Sentry returns an event ID for messages' {
+    It 'returns an event ID for messages' {
         $eventId = 'msg' | Out-Sentry
         $eventId | Should -BeOfType [Sentry.SentryId]
         $eventId.ToString().Length | Should -Be 32
     }
 
-    It 'Out-Sentry returns an event ID for an error record' {
+    It 'returns an event ID for an error record' {
         try
         {
             throw 'error'
@@ -34,11 +34,10 @@ Describe 'UserFeedback' {
         $eventId.ToString().Length | Should -Be 32
     }
 
-    It 'Feedback gets captured' {
+    It 'captures feedback' {
         $eventId = 'msg' | Out-Sentry
 
         $eventId | Should -BeOfType [Sentry.SentryId]
-        [Sentry.SentrySdk]::Flush()
         $transport.Envelopes.Count | Should -Be 1
 
         [Sentry.SentrySdk]::CaptureUserFeedback($eventId, 'email@example.com', 'comments', 'name')
@@ -52,4 +51,23 @@ Describe 'UserFeedback' {
         $envelopeItem.Payload.Source.Comments | Should -Be 'comments'
     }
 
+    It 'sends synchronously' {
+        $eventId = 'msg' | Out-Sentry
+        $eventId | Should -Not -Be $null
+        $transport.Envelopes.Count | Should -Be 1
+    }
+
+    It 'sends synchronously when Async flag is passed' {
+        $transport.enabled = $false
+        try
+        {
+            $eventId = 'msg' | Out-Sentry -Async
+            $eventId | Should -Not -Be $null
+            $transport.Envelopes.Count | Should -Be 0
+        }
+        finally
+        {
+            $transport.enabled = $true
+        }
+    }
 }

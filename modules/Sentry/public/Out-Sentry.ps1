@@ -21,7 +21,12 @@ function Out-Sentry
         [Parameter(ParameterSetName = 'ErrorRecord')]
         [Parameter(ParameterSetName = 'Exception')]
         [Parameter(ParameterSetName = 'Message')]
-        [scriptblock] $EditScope
+        [scriptblock] $EditScope,
+
+        [Parameter(ParameterSetName = 'ErrorRecord')]
+        [Parameter(ParameterSetName = 'Exception')]
+        [Parameter(ParameterSetName = 'Message')]
+        [switch] $Async
     )
 
     begin {}
@@ -99,12 +104,19 @@ function Out-Sentry
             $processor.StackTraceFrames = Get-PSCallStack | Select-Object -Skip 1
         }
 
-        return [Sentry.SentrySdk]::CaptureEvent($event_, [System.Action[Sentry.Scope]] {
+        $eventId = [Sentry.SentrySdk]::CaptureEvent($event_, [System.Action[Sentry.Scope]] {
                 param([Sentry.Scope]$scope)
                 [Sentry.ScopeExtensions]::AddEventProcessor($scope, $processor)
 
                 # Execute the script block in the caller's scope (nothing to do $scope) & set the automatic $_ variable to the $scope object.
                 $scope | ForEach-Object $EditScope
             })
+
+        if ($eventId -ne $null -and -not $Async)
+        {
+            [Sentry.SentrySdk]::Flush()
+        }
+
+        return $eventId
     }
 }
