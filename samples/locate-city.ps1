@@ -19,15 +19,26 @@ param([string]$City = '')
 Import-Module $PSScriptRoot/../modules/Sentry/Sentry.psd1
 
 # Start the Sentry client.
-Start-Sentry 'https://eb18e953812b41c3aeb042e666fd3b5c@o447951.ingest.sentry.io/5428537'
+Start-Sentry -Debug {
+    $_.Dsn = 'https://eb18e953812b41c3aeb042e666fd3b5c@o447951.ingest.sentry.io/5428537'
+    $_.TracesSampleRate = 1.0
+}
+
+# Transaction can be started by providing, at minimum, the name and the operation
+$transaction = Start-SentryTransaction 'transaction-name' 'transaction-operation'
 
 try
 {
+    $span = $transaction.StartChild('wait for input')
     if ($City -eq '' ) { $City = Read-Host 'Enter the city name' }
+    $span.Finish()
 
+    $span = $transaction.StartChild('read CSV')
     Write-Progress 'Reading worldcities.csv...'
     $Table = Import-Csv "$PSScriptRoot/../data/worldcities.csv"
+    $span.Finish()
 
+    $span = $transaction.StartChild('search')
     $FoundOne = 0
     foreach ($Row in $Table)
     {
@@ -42,6 +53,7 @@ try
             Write-Host "* $City ($Country, $Region, population $Population) is at $Lat°N, $Long°W"
         }
     }
+    $span.Finish()
 
     if ($FoundOne)
     {
@@ -54,5 +66,9 @@ catch
 {
     $_ | Out-Sentry
     "⚠️ Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
-    exit 1
+}
+finally
+{
+    # Mark the transaction as finished and send it to Sentry
+    $transaction.Finish()
 }
