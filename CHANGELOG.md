@@ -6,6 +6,10 @@
 
 - Send events synchronously so they're not lost when the script exits ([#39](https://github.com/getsentry/sentry-powershell/pull/39))
 
+### Fixes
+
+- Transaction sampling ([#38](https://github.com/getsentry/sentry-powershell/pull/41))
+
 ## 0.0.2
 
 ### Various fixes & improvements

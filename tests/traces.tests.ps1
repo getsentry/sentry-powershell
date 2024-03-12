@@ -97,4 +97,43 @@ Describe 'Start-SentryTransaction' {
 
         $global:TraceSamplerExecuted | Should -Be $true
     }
+
+    It 'sets IsSampled correctly based on ForceSampled, with tracing disabled' -ForEach @($true, $false) {
+        $ForceSampled = $_
+
+        Start-Sentry {
+            $_.Dsn = 'https://key@127.0.0.1/1'
+        }
+
+        if ($ForceSampled)
+        {
+            $transaction = Start-SentryTransaction 'foo' 'bar' -ForceSampled
+            $transaction.IsSampled | Should -Be $true
+        }
+        else
+        {
+            $transaction = Start-SentryTransaction 'foo' 'bar'
+            $transaction.IsSampled | Should -Be $false
+        }
+    }
+
+    It 'sets IsSampled correctly based on ForceSampled, with tracing enabled' -ForEach @($true, $false) {
+        $ForceSampled = $_
+
+        Start-Sentry {
+            $_.Dsn = 'https://key@127.0.0.1/1'
+            $_.TracesSampleRate = 1.0
+        }
+
+        if ($ForceSampled)
+        {
+            $transaction = Start-SentryTransaction 'foo' 'bar' -ForceSampled
+            $transaction.IsSampled | Should -Be $true
+        }
+        else
+        {
+            $transaction = Start-SentryTransaction 'foo' 'bar'
+            $transaction.IsSampled | Should -Be $true
+        }
+    }
 }

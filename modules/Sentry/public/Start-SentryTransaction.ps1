@@ -6,9 +6,11 @@ function Start-SentryTransaction
         [Parameter(Mandatory, ParameterSetName = 'Basic', Position = 0)]
         [Parameter(Mandatory, ParameterSetName = 'BasicWithDescription', Position = 0)]
         [string] $Name,
+
         [Parameter(Mandatory, ParameterSetName = 'Basic', Position = 1)]
         [Parameter(Mandatory, ParameterSetName = 'BasicWithDescription', Position = 1)]
         [string] $Operation,
+
         [Parameter(ParameterSetName = 'BasicWithDescription', Position = 2)]
         [string] $Description = $null,
 
@@ -20,15 +22,22 @@ function Start-SentryTransaction
         [Parameter(ParameterSetName = 'TransactionContext', Position = 1)]
         [hashtable] $CustomSamplingContext,
 
-        [Parameter()]
-        [switch] $ForceSampled = $false
+        [Parameter(ParameterSetName = 'Basic')]
+        [Parameter(ParameterSetName = 'BasicWithDescription')]
+        [Parameter(ParameterSetName = 'TransactionContext')]
+        [switch] $ForceSampled
     )
 
     begin
     {
         if ($null -eq $TransactionContext)
         {
-            $TransactionContext = [Sentry.TransactionContext]::new($Name, $Operation, $null, $null, $null, $Description, $null, $ForceSampled)
+            $IsSampled = $null
+            if ($ForceSampled)
+            {
+                $IsSampled = $true
+            }
+            $TransactionContext = [Sentry.TransactionContext]::new($Name, $Operation, $null, $null, $null, $Description, $null, $IsSampled)
         }
 
     }
