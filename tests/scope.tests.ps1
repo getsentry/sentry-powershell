@@ -15,9 +15,7 @@ Describe 'Edit-SentryScope' {
     }
 
     It 'adds a file attachment via global scope' {
-        Edit-SentryScope {
-            [Sentry.ScopeExtensions]::AddAttachment($_, $PSCommandPath)
-        }
+        Edit-SentryScope { $_.AddAttachment($PSCommandPath) }
         'message' | Out-Sentry
         $transport.Envelopes.Count | Should -Be 1
         [Sentry.Protocol.Envelopes.Envelope]$envelope = $transport.Envelopes.ToArray()[0]
@@ -29,7 +27,7 @@ Describe 'Edit-SentryScope' {
     It 'adds a byte attachment via local scope' {
         'message' | Out-Sentry -EditScope {
             [byte[]] $data = 1, 2, 3, 4, 5
-            [Sentry.ScopeExtensions]::AddAttachment($_, $data, 'filename.bin')
+            $_.AddAttachment($data, 'filename.bin')
         }
         $transport.Envelopes.Count | Should -Be 1
         [Sentry.Protocol.Envelopes.Envelope]$envelope = $transport.Envelopes.ToArray()[0]

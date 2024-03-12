@@ -101,7 +101,7 @@ function Out-Sentry
 
         return [Sentry.SentrySdk]::CaptureEvent($event_, [System.Action[Sentry.Scope]] {
                 param([Sentry.Scope]$scope)
-                [Sentry.ScopeExtensions]::AddEventProcessor($scope, $processor)
+                $scope.AddEventProcessor($processor)
 
                 # Execute the script block in the caller's scope (nothing to do $scope) & set the automatic $_ variable to the $scope object.
                 $scope | ForEach-Object $EditScope

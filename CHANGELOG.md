@@ -6,6 +6,12 @@
 
 - Send events synchronously so they're not lost when the script exits ([#39](https://github.com/getsentry/sentry-powershell/pull/39))
 
+### Dependencies
+
+- Bump Dotnet SDK from v4.1.2 to v4.2.1 ([#40](https://github.com/getsentry/sentry-powershell/pull/40))
+  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#421)
+  - [diff](https://github.com/getsentry/sentry-dotnet/compare/4.1.2...4.2.1)
+
 ## 0.0.2
 
 ### Various fixes & improvements
