@@ -1,5 +1,6 @@
 . "$privateDir/DiagnosticLogger.ps1"
 . "$privateDir/ScopeIntegration.ps1"
+. "$privateDir/SynchronousWorker.ps1"
 . "$privateDir/EventUpdater.ps1"
 
 function Start-Sentry
@@ -16,6 +17,8 @@ function Start-Sentry
     begin
     {
         $options = [Sentry.SentryOptions]::new()
+        $options.FlushTimeout = [System.TimeSpan]::FromSeconds(10)
+        $options.ShutDownTimeout = $options.FlushTimeout
         $options.ReportAssembliesMode = [Sentry.ReportAssembliesMode]::None
         $options.IsGlobalModeEnabled = $true
         [Sentry.sentryOptionsExtensions]::AddIntegration($options, [ScopeIntegration]::new())
@@ -42,7 +45,20 @@ function Start-Sentry
             $options | ForEach-Object $EditOptions
         }
 
-        $options.DiagnosticLogger = [DiagnosticLogger]::new($options.DiagnosticLevel)
+        $logger = [DiagnosticLogger]::new($options.DiagnosticLevel)
+        $options.DiagnosticLogger = $logger
+
+        if ($null -eq $options.BackgroundWorker)
+        {
+            try
+            {
+                $options.BackgroundWorker = [SynchronousWorker]::new($options)
+            }
+            catch
+            {
+                $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous worker', $_.Exception, @())
+            }
+        }
 
         # Workaround for https://github.com/getsentry/sentry-dotnet/issues/3141
         [Sentry.SentryOptionsExtensions]::DisableAppDomainProcessExitFlush($options)
@@ -52,4 +68,3 @@ function Start-Sentry
         [Sentry.SentrySdk]::init($options) | Out-Null
     }
 }
-
