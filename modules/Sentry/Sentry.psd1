@@ -4,7 +4,7 @@
     RootModule           = 'Sentry.psm1'
 
     # Version number of this module.
-    ModuleVersion        = '0.0.1'
+    ModuleVersion        = '0.0.2'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Desktop', 'Core')
@@ -70,7 +70,7 @@
             ReleaseNotes = 'https://raw.githubusercontent.com/getsentry/sentry-powershell/main/CHANGELOG.md'
 
             # Prerelease string of this module
-            Prerelease   = 'dev'
+            Prerelease   = ''
 
             # Flag to indicate whether the module requires explicit user acceptance for install/update/save
             # RequireLicenseAcceptance = $false
