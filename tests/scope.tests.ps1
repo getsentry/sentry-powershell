@@ -19,7 +19,6 @@ Describe 'Edit-SentryScope' {
             [Sentry.ScopeExtensions]::AddAttachment($_, $PSCommandPath)
         }
         'message' | Out-Sentry
-        [Sentry.SentrySdk]::Flush()
         $transport.Envelopes.Count | Should -Be 1
         [Sentry.Protocol.Envelopes.Envelope]$envelope = $transport.Envelopes.ToArray()[0]
         $envelope.Items.Count | Should -Be 2
@@ -32,7 +31,6 @@ Describe 'Edit-SentryScope' {
             [byte[]] $data = 1, 2, 3, 4, 5
             [Sentry.ScopeExtensions]::AddAttachment($_, $data, 'filename.bin')
         }
-        [Sentry.SentrySdk]::Flush()
         $transport.Envelopes.Count | Should -Be 1
         [Sentry.Protocol.Envelopes.Envelope]$envelope = $transport.Envelopes.ToArray()[0]
         $envelope.Items.Count | Should -Be 2
