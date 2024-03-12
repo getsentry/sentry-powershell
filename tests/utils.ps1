@@ -2,19 +2,9 @@ class RecordingTransport:Sentry.Extensibility.ITransport
 {
     $envelopes = [System.Collections.Concurrent.ConcurrentQueue[Sentry.Protocol.Envelopes.Envelope]]::new()
 
-    # This can be used to hold up the transport. For exmaple, to test whether Out-Sentry sends synchronously.
-    $enabled = $true
-
     [System.Threading.Tasks.Task]SendEnvelopeAsync([Sentry.Protocol.Envelopes.Envelope] $envelope, [System.Threading.CancellationToken] $cancellationToken)
     {
-        if ($this.enabled)
-        {
-            $this.envelopes.Enqueue($envelope)
-        }
-        else
-        {
-            Write-Debug 'Transport is currently disabled: this is OK in tests that do it explicitly.'
-        }
+        $this.envelopes.Enqueue($envelope)
         return [System.Threading.Tasks.Task]::CompletedTask
     }
 
