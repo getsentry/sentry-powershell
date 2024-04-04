@@ -5,7 +5,7 @@ class ScopeIntegration : Sentry.Integrations.ISdkIntegration
         $hub.ConfigureScope([System.Action[Sentry.Scope]] {
                 param([Sentry.Scope]$scope)
 
-                $scope.Sdk.Name = 'sentry.powershell'
+                $scope.Sdk.Name = 'sentry.dotnet.powershell'
                 $scope.Sdk.Version = $moduleInfo.ModuleVersion
                 $scope.Sdk.AddPackage("ps:$($scope.Sdk.Name)", $scope.Sdk.Version)
 
