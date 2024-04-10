@@ -37,7 +37,7 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
     }
 
     It 'Sets SDK info' {
-        $event.Sdk.Name | Should -Be 'sentry.powershell'
+        $event.Sdk.Name | Should -Be 'sentry.dotnet.powershell'
         $event.Sdk.Version | Should -Match $versionRegex
     }
 
