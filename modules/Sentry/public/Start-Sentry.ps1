@@ -21,8 +21,8 @@ function Start-Sentry
         $options.ShutDownTimeout = $options.FlushTimeout
         $options.ReportAssembliesMode = [Sentry.ReportAssembliesMode]::None
         $options.IsGlobalModeEnabled = $true
-        [Sentry.sentryOptionsExtensions]::AddIntegration($options, [ScopeIntegration]::new())
-        [Sentry.sentryOptionsExtensions]::AddEventProcessor($options, [EventUpdater]::new())
+        $options.AddIntegration([ScopeIntegration]::new())
+        $options.AddEventProcessor([EventUpdater]::new())
 
         if ($DebugPreference -eq 'SilentlyContinue')
         {
@@ -61,7 +61,7 @@ function Start-Sentry
         }
 
         # Workaround for https://github.com/getsentry/sentry-dotnet/issues/3141
-        [Sentry.SentryOptionsExtensions]::DisableAppDomainProcessExitFlush($options)
+        $options.DisableAppDomainProcessExitFlush()
     }
     process
     {

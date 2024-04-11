@@ -41,7 +41,7 @@ Describe 'SentrySdk' {
         $testIntegration = [TestIntegration]::new()
         Start-Sentry {
             $_.Dsn = 'https://key@127.0.0.1/1'
-            [Sentry.sentryOptionsExtensions]::AddIntegration($_, $testIntegration)
+            $_.AddIntegration($testIntegration)
         }
         [Sentry.SentrySdk]::IsEnabled | Should -Be $true
         $testIntegration.Options | Should -BeOfType [Sentry.SentryOptions]

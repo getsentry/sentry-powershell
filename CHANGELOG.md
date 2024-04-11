@@ -10,6 +10,12 @@
 
 - Transaction sampling ([#38](https://github.com/getsentry/sentry-powershell/pull/41))
 
+### Dependencies
+
+- Bump Dotnet SDK from v4.1.2 to v4.3.0 ([#44](https://github.com/getsentry/sentry-powershell/pull/44))
+  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#430)
+  - [diff](https://github.com/getsentry/sentry-dotnet/compare/4.1.2...4.3.0)
+
 ## 0.0.2
 
 ### Various fixes & improvements
