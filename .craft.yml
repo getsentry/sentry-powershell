@@ -3,6 +3,7 @@ changelogPolicy: auto
 targets:
   - name: powershell
     module: Sentry
+  - name: github
   - name: registry
     sdks:
       psgallery:Sentry:
