@@ -120,7 +120,7 @@ class StackTraceProcessor : SentryEventProcessor
         {
             $sentryFrames.Capacity = $this.StackTraceFrames.Count + 1
         }
-        else
+        elseif ($null -ne $this.StackTraceString)
         {
             $sentryFrames.Capacity = $this.StackTraceString.Count + 1
         }
@@ -139,7 +139,7 @@ class StackTraceProcessor : SentryEventProcessor
                 $sentryFrames.Add($this.CreateFrame($frame))
             }
         }
-        else
+        elseif ($null -ne $this.StackTraceString)
         {
             # Note: if InvocationInfo is present, use it to update:
             #  - the first frame (in case of `$_ | Out-Sentry` in a catch clause).
