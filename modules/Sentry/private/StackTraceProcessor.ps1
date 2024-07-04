@@ -120,7 +120,7 @@ class StackTraceProcessor : SentryEventProcessor
         {
             $sentryFrames.Capacity = $this.StackTraceFrames.Count + 1
         }
-        else
+        elseif ($null -ne $this.StackTraceString)
         {
             $sentryFrames.Capacity = $this.StackTraceString.Count + 1
         }
@@ -139,7 +139,7 @@ class StackTraceProcessor : SentryEventProcessor
                 $sentryFrames.Add($this.CreateFrame($frame))
             }
         }
-        else
+        elseif ($null -ne $this.StackTraceString)
         {
             # Note: if InvocationInfo is present, use it to update:
             #  - the first frame (in case of `$_ | Out-Sentry` in a catch clause).
@@ -177,7 +177,7 @@ class StackTraceProcessor : SentryEventProcessor
         {
             # Update module info
             $this.SetModule($sentryFrame)
-            $sentryFrame.InApp = $null -eq $sentryFrame.Module
+            $sentryFrame.InApp = [string]::IsNullOrEmpty($sentryFrame.Module)
             $this.SetContextLines($sentryFrame)
         }
 
@@ -210,7 +210,7 @@ class StackTraceProcessor : SentryEventProcessor
     {
         $sentryFrame = [Sentry.SentryStackFrame]::new()
         # at funcB, C:\dev\sentry-powershell\tests\capture.tests.ps1: line 363
-        $regex = 'at (?<Function>[^,]+), (?<AbsolutePath>.+): line (?<LineNumber>\d+)'
+        $regex = 'at (?<Function>[^,]*), (?<AbsolutePath>.*): line (?<LineNumber>\d*)'
         if ($frame -match $regex)
         {
             $sentryFrame.AbsolutePath = $Matches.AbsolutePath
@@ -226,12 +226,12 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetScriptInfo([Sentry.SentryStackFrame] $sentryFrame, [System.Management.Automation.CallStackFrame] $frame)
     {
-        if ($null -ne $frame.ScriptName)
+        if (![string]::IsNullOrEmpty($frame.ScriptName))
         {
             $sentryFrame.AbsolutePath = $frame.ScriptName
             $sentryFrame.LineNumber = $frame.ScriptLineNumber
         }
-        elseif ($null -ne $frame.Position -and $null -ne $frame.Position.File)
+        elseif (![string]::IsNullOrEmpty($frame.Position) -and ![string]::IsNullOrEmpty($frame.Position.File))
         {
             $sentryFrame.AbsolutePath = $frame.Position.File
             $sentryFrame.LineNumber = $frame.Position.StartLineNumber
@@ -241,7 +241,7 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetModule([Sentry.SentryStackFrame] $sentryFrame)
     {
-        if ($null -ne $sentryFrame.AbsolutePath)
+        if (![string]::IsNullOrEmpty($sentryFrame.AbsolutePath))
         {
             if ($prefix = $this.modulePaths | Where-Object { $sentryFrame.AbsolutePath.StartsWith($_) })
             {
@@ -265,7 +265,7 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetFunction([Sentry.SentryStackFrame] $sentryFrame, [System.Management.Automation.CallStackFrame] $frame)
     {
-        if ($null -eq $sentryFrame.AbsolutePath -and $frame.FunctionName -eq '<ScriptBlock>' -and $null -ne $frame.Position)
+        if ([string]::IsNullOrEmpty($sentryFrame.AbsolutePath) -and $frame.FunctionName -eq '<ScriptBlock>' -and ![string]::IsNullOrEmpty($frame.Position))
         {
             $sentryFrame.Function = $frame.Position.Text
         }
@@ -277,7 +277,12 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetContextLines([Sentry.SentryStackFrame] $sentryFrame)
     {
-        if ($null -ne $sentryFrame.AbsolutePath -and $sentryFrame.LineNumber -ge 1 -and (Test-Path $sentryFrame.AbsolutePath -PathType Leaf))
+        if ([string]::IsNullOrEmpty($sentryFrame.AbsolutePath) -or $sentryFrame.LineNumber -lt 1)
+        {
+            return
+        }
+
+        if ((Test-Path $sentryFrame.AbsolutePath -IsValid) -and (Test-Path $sentryFrame.AbsolutePath -PathType Leaf))
         {
             try
             {
