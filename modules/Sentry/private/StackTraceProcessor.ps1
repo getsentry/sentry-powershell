@@ -177,7 +177,7 @@ class StackTraceProcessor : SentryEventProcessor
         {
             # Update module info
             $this.SetModule($sentryFrame)
-            $sentryFrame.InApp = $null -eq $sentryFrame.Module
+            $sentryFrame.InApp = [string]::IsNullOrEmpty($sentryFrame.Module)
             $this.SetContextLines($sentryFrame)
         }
 
@@ -226,12 +226,12 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetScriptInfo([Sentry.SentryStackFrame] $sentryFrame, [System.Management.Automation.CallStackFrame] $frame)
     {
-        if ($null -ne $frame.ScriptName)
+        if (![string]::IsNullOrEmpty($frame.ScriptName))
         {
             $sentryFrame.AbsolutePath = $frame.ScriptName
             $sentryFrame.LineNumber = $frame.ScriptLineNumber
         }
-        elseif ($null -ne $frame.Position -and $null -ne $frame.Position.File)
+        elseif (![string]::IsNullOrEmpty($frame.Position) -and ![string]::IsNullOrEmpty($frame.Position.File))
         {
             $sentryFrame.AbsolutePath = $frame.Position.File
             $sentryFrame.LineNumber = $frame.Position.StartLineNumber
@@ -241,7 +241,7 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetModule([Sentry.SentryStackFrame] $sentryFrame)
     {
-        if ($null -ne $sentryFrame.AbsolutePath)
+        if (![string]::IsNullOrEmpty($sentryFrame.AbsolutePath))
         {
             if ($prefix = $this.modulePaths | Where-Object { $sentryFrame.AbsolutePath.StartsWith($_) })
             {
@@ -265,7 +265,7 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetFunction([Sentry.SentryStackFrame] $sentryFrame, [System.Management.Automation.CallStackFrame] $frame)
     {
-        if ($null -eq $sentryFrame.AbsolutePath -and $frame.FunctionName -eq '<ScriptBlock>' -and $null -ne $frame.Position)
+        if ([string]::IsNullOrEmpty($sentryFrame.AbsolutePath) -and $frame.FunctionName -eq '<ScriptBlock>' -and ![string]::IsNullOrEmpty($frame.Position))
         {
             $sentryFrame.Function = $frame.Position.Text
         }
@@ -277,7 +277,7 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetContextLines([Sentry.SentryStackFrame] $sentryFrame)
     {
-        if ($null -ne $sentryFrame.AbsolutePath -and $sentryFrame.LineNumber -ge 1 -and (Test-Path $sentryFrame.AbsolutePath -PathType Leaf))
+        if (![string]::IsNullOrEmpty($sentryFrame.AbsolutePath) -and $sentryFrame.LineNumber -ge 1 -and (Test-Path $sentryFrame.AbsolutePath -PathType Leaf))
         {
             try
             {
