@@ -210,7 +210,7 @@ class StackTraceProcessor : SentryEventProcessor
     {
         $sentryFrame = [Sentry.SentryStackFrame]::new()
         # at funcB, C:\dev\sentry-powershell\tests\capture.tests.ps1: line 363
-        $regex = 'at (?<Function>[^,]+), (?<AbsolutePath>.+): line (?<LineNumber>\d+)'
+        $regex = 'at (?<Function>[^,]*), (?<AbsolutePath>.*): line (?<LineNumber>\d*)'
         if ($frame -match $regex)
         {
             $sentryFrame.AbsolutePath = $Matches.AbsolutePath
