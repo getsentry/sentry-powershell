@@ -277,7 +277,12 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetContextLines([Sentry.SentryStackFrame] $sentryFrame)
     {
-        if (![string]::IsNullOrEmpty($sentryFrame.AbsolutePath) -and $sentryFrame.LineNumber -ge 1 -and (Test-Path $sentryFrame.AbsolutePath -PathType Leaf))
+        if ([string]::IsNullOrEmpty($sentryFrame.AbsolutePath) -or $sentryFrame.LineNumber -lt 1)
+        {
+            return
+        }
+
+        if ((Test-Path $sentryFrame.AbsolutePath -IsValid) -and (Test-Path $sentryFrame.AbsolutePath -PathType Leaf))
         {
             try
             {
