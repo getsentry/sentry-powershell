@@ -6,6 +6,12 @@
 
 - StackTrace parsing on Windows Powershell 5.1 ([#50](https://github.com/getsentry/sentry-powershell/pull/50))
 
+### Dependencies
+
+- Bump Dotnet SDK from v4.4.0 to v4.9.0 ([#47](https://github.com/getsentry/sentry-powershell/pull/47))
+  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#490)
+  - [diff](https://github.com/getsentry/sentry-dotnet/compare/4.4.0...4.9.0)
+
 ## 0.1.0
 
 ### Features
