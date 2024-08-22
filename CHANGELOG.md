@@ -8,9 +8,9 @@
 
 ### Dependencies
 
-- Bump Dotnet SDK from v4.4.0 to v4.10.1 ([#47](https://github.com/getsentry/sentry-powershell/pull/47), [#51](https://github.com/getsentry/sentry-powershell/pull/51), [#52](https://github.com/getsentry/sentry-powershell/pull/52))
-  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#4101)
-  - [diff](https://github.com/getsentry/sentry-dotnet/compare/4.4.0...4.10.1)
+- Bump Dotnet SDK from v4.4.0 to v4.10.2 ([#47](https://github.com/getsentry/sentry-powershell/pull/47), [#51](https://github.com/getsentry/sentry-powershell/pull/51), [#52](https://github.com/getsentry/sentry-powershell/pull/52), [#53](https://github.com/getsentry/sentry-powershell/pull/53))
+  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#4102)
+  - [diff](https://github.com/getsentry/sentry-dotnet/compare/4.4.0...4.10.2)
 
 ## 0.1.0
 
