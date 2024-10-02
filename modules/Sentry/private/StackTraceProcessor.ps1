@@ -291,15 +291,17 @@ class StackTraceProcessor : SentryEventProcessor
                 {
                     $sentryFrame.ContextLine = $lines[$sentryFrame.LineNumber - 1]
                 }
+                $preContextCount = [math]::Min(5, $sentryFrame.LineNumber - 1)
+                $postContextCount = [math]::Min(5, $lines.Count - $sentryFrame.LineNumber)
                 if ($sentryFrame.LineNumber -gt 6)
                 {
                     $lines = $lines | Select-Object -Skip ($sentryFrame.LineNumber - 6)
                 }
                 # Note: these are read-only in sentry-dotnet so we just update the underlying lists instead of replacing.
                 $sentryFrame.PreContext.Clear()
-                $lines | Select-Object -First 5 | ForEach-Object { $sentryFrame.PreContext.Add($_) }
+                $lines | Select-Object -First $preContextCount | ForEach-Object { $sentryFrame.PreContext.Add($_) }
                 $sentryFrame.PostContext.Clear()
-                $lines | Select-Object -Last 5  | ForEach-Object { $sentryFrame.PostContext.Add($_) }
+                $lines | Select-Object -Last $postContextCount  | ForEach-Object { $sentryFrame.PostContext.Add($_) }
             }
             catch
             {
