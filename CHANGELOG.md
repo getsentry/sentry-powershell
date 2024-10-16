@@ -5,6 +5,7 @@
 ### Fixes
 
 - StackTrace parsing on Windows Powershell 5.1 ([#50](https://github.com/getsentry/sentry-powershell/pull/50))
+- Context lines captured for PowerShell executed directly as a ScriptBlock  ([#60](https://github.com/getsentry/sentry-powershell/pull/60))
 
 ### Dependencies
 

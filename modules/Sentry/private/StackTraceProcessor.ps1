@@ -4,6 +4,7 @@ class StackTraceProcessor : SentryEventProcessor
     [System.Management.Automation.InvocationInfo]$InvocationInfo
     [System.Management.Automation.CallStackFrame[]]$StackTraceFrames
     [string[]]$StackTraceString
+    [string[]]$ScriptBlockSource
     hidden [string[]] $modulePaths
     hidden [hashtable] $pwshModules = @{}
 
@@ -178,7 +179,7 @@ class StackTraceProcessor : SentryEventProcessor
             # Update module info
             $this.SetModule($sentryFrame)
             $sentryFrame.InApp = [string]::IsNullOrEmpty($sentryFrame.Module)
-            $this.SetContextLines($sentryFrame)
+            $this.SetContextLines($sentryFrame, $this.ScriptBlockSource)
         }
 
         $sentryFrames.Reverse()
@@ -190,7 +191,14 @@ class StackTraceProcessor : SentryEventProcessor
     hidden [Sentry.SentryStackFrame] CreateFrame([System.Management.Automation.InvocationInfo] $info)
     {
         $sentryFrame = [Sentry.SentryStackFrame]::new()
-        $sentryFrame.AbsolutePath = $info.ScriptName
+        if ("" -eq $info.ScriptName)
+        {
+            $sentryFrame.AbsolutePath = "<No file>"
+        }
+        else
+        {
+            $sentryFrame.AbsolutePath = $info.ScriptName
+        }
         $sentryFrame.LineNumber = $info.ScriptLineNumber
         $sentryFrame.ColumnNumber = $info.OffsetInLine
         $sentryFrame.ContextLine = $info.Line.TrimEnd()
@@ -275,18 +283,34 @@ class StackTraceProcessor : SentryEventProcessor
         }
     }
 
-    hidden SetContextLines([Sentry.SentryStackFrame] $sentryFrame)
+    hidden SetContextLines([Sentry.SentryStackFrame] $sentryFrame, [string[]] $scriptBlockSource)
     {
-        if ([string]::IsNullOrEmpty($sentryFrame.AbsolutePath) -or $sentryFrame.LineNumber -lt 1)
+        if ($sentryFrame.LineNumber -lt 1)
         {
             return
         }
 
-        if ((Test-Path $sentryFrame.AbsolutePath -IsValid) -and (Test-Path $sentryFrame.AbsolutePath -PathType Leaf))
+        $lines = $null
+
+        if (-not [string]::IsNullOrEmpty($sentryFrame.AbsolutePath) -and (Test-Path $sentryFrame.AbsolutePath -IsValid) -and (Test-Path $sentryFrame.AbsolutePath -PathType Leaf))
         {
             try
             {
                 $lines = Get-Content $sentryFrame.AbsolutePath -TotalCount ($sentryFrame.LineNumber + 5)
+            }
+            catch
+            {
+                Write-Warning "Failed to read context lines for $($sentryFrame.AbsolutePath): $_"
+            }
+        } elseif ($null -ne $scriptBlockSource) {
+            Write-Debug "Using fallback ScriptBlockSource for context lines."
+            $lines = $scriptBlockSource | Select-Object -First ($sentryFrame.LineNumber + 5)
+        }
+
+        if ($null -ne $lines)
+        {
+            try
+            {
                 if ($null -eq $sentryFrame.ContextLine)
                 {
                     $sentryFrame.ContextLine = $lines[$sentryFrame.LineNumber - 1]
@@ -303,7 +327,7 @@ class StackTraceProcessor : SentryEventProcessor
             }
             catch
             {
-                Write-Warning "Failed to read context lines for $($sentryFrame.AbsolutePath): $_"
+                Write-Warning "Failed to process context lines for $($sentryFrame.AbsolutePath): $_"
             }
         }
     }

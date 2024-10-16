@@ -94,6 +94,15 @@ function Out-Sentry
             return
         }
 
+        # Use the PSCallStack to capture the source code of the main script that is being executed.
+        # This is used as a fallback in case the code is executed directly as a ScriptBlock from a hosted .NET environment with no .ps1 file.
+        # If the top frame is Script (i.e. the code is executed as a script file), we don't need to capture the source code.
+        $TopFrame = Get-PSCallStack | Select-Object -Last 1
+        if ("Script" -ne $TopFrame.InvocationInfo.MyCommand.CommandType)
+        {
+            $processor.ScriptBlockSource = $TopFrame.InvocationInfo.MyCommand.ScriptBlock.ToString() -split "`r`n"
+        }
+
         if ($options.AttachStackTrace -and $null -eq $processor.StackTraceFrames -and $null -eq $processor.StackTraceString)
         {
             $processor.StackTraceFrames = Get-PSCallStack | Select-Object -Skip 1
