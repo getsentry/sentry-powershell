@@ -1,5 +1,3 @@
-using assembly System.Net.Http
-
 class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility.ITransport
 {
     hidden [System.Net.Http.HttpClient] $httpClient
