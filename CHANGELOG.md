@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+- Add SynchronousTransport implementation ([#4](https://github.com/SummitHosting/sentry-powershell/pull/4))
+
 ### Fixes
 
 - StackTrace parsing on Windows Powershell 5.1 ([#50](https://github.com/getsentry/sentry-powershell/pull/50))

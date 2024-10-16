@@ -1,4 +1,4 @@
-Add-Type -AssemblyName System.Net.Http
+using assembly System.Net.Http
 
 class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility.ITransport
 {
