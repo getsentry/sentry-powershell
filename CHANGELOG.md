@@ -4,7 +4,7 @@
 
 ### Features
 
-- Add SynchronousTransport implementation ([#4](https://github.com/SummitHosting/sentry-powershell/pull/4))
+- Add SynchronousTransport implementation ([#59](https://github.com/SummitHosting/sentry-powershell/pull/59))
 
 ### Fixes
 
