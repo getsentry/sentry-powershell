@@ -48,7 +48,10 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
 
             $this.options.DiagnosticLogger.Log([Sentry.SentryLevel]::Debug, 'Sending content synchronously, Content-Length: {0}', $null, $content.Length)
 
+            $progressPref = $global:ProgressPreference
+            $ProgressPreference = 'SilentlyContinue'
             $psResponse = Invoke-WebRequest -Uri $request.RequestUri -Method 'POST' -Headers $headers -Body $content -UseBasicParsing
+            $ProgressPreference = $progressPref
 
             $response = [System.Net.Http.HttpResponseMessage]::new($psResponse.StatusCode)
             $contentType = $psResponse.Headers['Content-Type']
