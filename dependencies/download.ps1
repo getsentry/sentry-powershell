@@ -27,6 +27,7 @@ function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $nu
         $assemblyVersion = $props.ContainsKey('assemblyVersion') ? $props.assemblyVersion : "$($props.version).0"
     }
 
+    $package = $props.ContainsKey('package') ? $props.package : $dependency
     $targetLibFile = "$libDir/$targetTFM/$dependency.dll"
     $targetVersionFile = "$libDir/$targetTFM/$dependency.version"
     $targetLicenseFile = "$libDir/$targetTFM/$dependency.license"
@@ -58,7 +59,7 @@ function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $nu
         Remove-Item $targetLicenseFile -Force
     }
 
-    $archiveName = "$($dependency.ToLower()).$($props.version).nupkg"
+    $archiveName = "$($package.ToLower()).$($props.version).nupkg"
     $archiveFile = "$downloadDir/$archiveName"
 
     if (Test-Path $archiveFile)
@@ -67,8 +68,8 @@ function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $nu
     }
     else
     {
-        Write-Output "Downloading $archiveName"
         $sourceUrl = "https://globalcdn.nuget.org/packages/$archiveName"
+        Write-Output "Downloading $sourceUrl"
         Invoke-WebRequest $sourceUrl -OutFile $archiveFile
     }
 
@@ -89,7 +90,7 @@ function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $nu
 
     try
     {
-        extract "lib/$TFM/$dependency.dll" $targetLibFile
+        extract "lib/$TFM/$package.dll" $targetLibFile
         if ($props.ContainsKey('licenseFile'))
         {
             extract $props.licenseFile $targetLicenseFile
@@ -120,7 +121,8 @@ Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Collections.Immut
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Memory'
 Download -TFM 'net46' -TargetTFM 'net462' -Dependency 'System.Numerics.Vectors'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Reflection.Metadata'
-Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Runtime.CompilerServices.Unsafe'
+Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Runtime.CompilerServices.Unsafe.4'
+Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Runtime.CompilerServices.Unsafe.6'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Text.Encodings.Web'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Text.Json'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Threading.Tasks.Extensions'
