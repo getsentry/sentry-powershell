@@ -8,8 +8,9 @@
 
 ### Fixes
 
-- StackTrace parsing on Windows Powershell 5.1 ([#50](https://github.com/getsentry/sentry-powershell/pull/50))
+- StackTrace parsing on Windows PowerShell 5.1 ([#50](https://github.com/getsentry/sentry-powershell/pull/50))
 - Fix out of bounds context for short scripts ([#58](https://github.com/getsentry/sentry-powershell/pull/58))
+- Windows PowerShell needs both unsafe 4.5.3 and 6.0.0 dll ([#61](https://github.com/getsentry/sentry-powershell/pull/61))
 
 ### Dependencies
 
