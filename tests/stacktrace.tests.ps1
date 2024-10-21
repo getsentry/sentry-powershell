@@ -1,6 +1,7 @@
 BeforeAll {
     . "$PSScriptRoot/utils.ps1"
     . "$PSScriptRoot/throwing.ps1"
+    . "$PSScriptRoot/throwingshort.ps1"
     $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
     $transport = [RecordingTransport]::new()
     StartSentryForEventTests ([ref] $events) ([ref] $transport)
@@ -77,6 +78,31 @@ BeforeAll {
         # A module-based frame should be in-app=false
         $frames | Where-Object -Property Module | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $false
     }
+
+    $checkShortErrorRecord = {
+        $events.Count | Should -Be 1
+        [Sentry.SentryEvent]$event = $events.ToArray()[0]
+        $event.SentryExceptions.Count | Should -Be 2
+
+        $event.SentryExceptions[1].Type | Should -Be 'Short context test'
+        $event.SentryExceptions[1].Value | Should -Be 'Short context test'
+        $event.SentryExceptions[1].Module | Should -BeNullOrEmpty
+        [Sentry.SentryStackFrame[]] $frames = $event.SentryExceptions[1].Stacktrace.Frames
+        $frames.Count | Should -BeGreaterThan 1
+
+        $frame = GetListItem $frames -1
+
+        $frame.Function | Should -Be "funcC"
+        $frame.AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'throwingshort.ps1')
+        $frame.LineNumber | Should -BeGreaterThan 0
+        $frame.InApp | Should -Be $true
+
+        $frame.PreContext | Should -Be @('function funcC {')
+        $frame.PreContext.Count | Should -Be 1
+        $frame.ContextLine | Should -Be '    throw "Short context test"'
+        $frame.PostContext | Should -Be @('}')
+        $frame.PostContext.Count | Should -Be 1
+    }
 }
 
 AfterAll {
@@ -117,6 +143,19 @@ Describe 'Out-Sentry' {
         }
 
         @($null) | ForEach-Object $checkErrorRecord
+    }
+
+    It 'captures short context' {
+        try
+        {
+            funcC
+        }
+        catch
+        {
+            $_ | Out-Sentry
+        }
+
+        @($null) | ForEach-Object $checkShortErrorRecord
     }
 
     It 'captures exception' {

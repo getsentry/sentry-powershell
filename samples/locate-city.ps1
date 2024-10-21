@@ -20,7 +20,7 @@ Import-Module $PSScriptRoot/../modules/Sentry/Sentry.psd1
 
 # Start the Sentry client.
 Start-Sentry -Debug {
-    $_.Dsn = 'https://eb18e953812b41c3aeb042e666fd3b5c@o447951.ingest.sentry.io/5428537'
+    $_.Dsn = 'https://997874440feaba4ecc65c1e25df7912b@o447951.ingest.us.sentry.io/4508073336176640'
     $_.TracesSampleRate = 1.0
 }
 
