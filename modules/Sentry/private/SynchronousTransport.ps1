@@ -9,8 +9,7 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
     hidden [System.Reflection.MethodInfo] $CreateRequest
     hidden [System.Reflection.MethodInfo] $SerializeToStream
 
-    SynchronousTransport([Sentry.SentryOptions] $options)
-    : base($options)
+    SynchronousTransport([Sentry.SentryOptions] $options) : base($options)
     {
         $this.options = $options
         $this.httpClient = [System.Net.Http.HttpClient]::new()
@@ -50,7 +49,7 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
 
             $progressPref = $global:ProgressPreference
             $ProgressPreference = 'SilentlyContinue'
-            $psResponse = Invoke-WebRequest -Uri $request.RequestUri -Method 'POST' -Headers $headers -Body $content -UseBasicParsing
+            $psResponse = Invoke-WebRequest -Uri $request.RequestUri -Method $request.Method.Method -Headers $headers -Body $content -UseBasicParsing
             $ProgressPreference = $progressPref
 
             $response = [System.Net.Http.HttpResponseMessage]::new($psResponse.StatusCode)
