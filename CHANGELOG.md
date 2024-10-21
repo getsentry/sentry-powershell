@@ -4,7 +4,7 @@
 
 ### Features
 
-- Add SynchronousTransport implementation ([#59](https://github.com/SummitHosting/sentry-powershell/pull/59))
+- Send events to Sentry fully synchronously ([#59](https://github.com/SummitHosting/sentry-powershell/pull/59), [#62](https://github.com/SummitHosting/sentry-powershell/pull/62))
 
 ### Fixes
 
