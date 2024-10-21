@@ -5,6 +5,7 @@
 ### Fixes
 
 - StackTrace parsing on Windows Powershell 5.1 ([#50](https://github.com/getsentry/sentry-powershell/pull/50))
+- Fix out of bounds context for short scripts ([#58](https://github.com/getsentry/sentry-powershell/pull/58))
 
 ### Dependencies
 
