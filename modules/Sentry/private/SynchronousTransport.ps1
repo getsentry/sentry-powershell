@@ -51,7 +51,12 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
             $psResponse = Invoke-WebRequest -Uri $request.RequestUri -Method 'POST' -Headers $headers -Body $content -UseBasicParsing
 
             $response = [System.Net.Http.HttpResponseMessage]::new($psResponse.StatusCode)
-            $response.Content = [System.Net.Http.StringContent]::new($psResponse.Content, [System.Text.Encoding]::UTF8, 'application/json')
+            $contentType = $psResponse.Headers['Content-Type']
+            if ($null -eq $contentType)
+            {
+                $contentType = 'application/json'
+            }
+            $response.Content = [System.Net.Http.StringContent]::new($psResponse.Content, [System.Text.Encoding]::UTF8, $contentType)
 
             foreach ($header in $psResponse.Headers.GetEnumerator())
             {
