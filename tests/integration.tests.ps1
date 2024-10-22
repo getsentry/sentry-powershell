@@ -14,11 +14,11 @@ BeforeAll {
         # Print out so that we can compare the whole output if the test fails
         $output | Write-Host
 
-        $output.Count | Should -Be $expected.Count
-        for ($i = 0; $i -lt $expected.Count; $i++)
+        for ($i = 0; $i -lt $expected.Count -and $i -lt $output.Count; $i++)
         {
             $output[$i] | Should -Be $expected[$i] -Because "Output line $i"
         }
+        $output.Count | Should -Be $expected.Count
     }
 }
 
