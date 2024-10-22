@@ -18,7 +18,17 @@ BeforeAll {
     }
 }
 
-Describe 'Out-Sentry captures expected stack traces for command input' {
+# These fail when THIS script is executed on Windows PowerShell 5.1 or Poweshell 7.3 or lower with the following error:
+# ParserError:
+# Line |
+#   28 |          $($prop): $value
+#      |                  ~
+#      | Unexpected token ':' in expression or statement.
+#
+# It looks like the variable `$integrationTestScriptContent` is expanded in place and then evaluted as an expression.
+# Let's just skip these versions. We test Windows PowerShell as the target anyway in a test case.
+# And we can live without testing on PowerShell 7.2 & 7.3 because we have tests for 7.4.
+Describe 'Out-Sentry captures expected stack traces for command argument' -Skip:(($PSVersionTable.PSVersion.Major -eq 7 -and $PSVersionTable.PSVersion.Minor -le 3) -or $PSVersionTable.PSEdition -eq 'Desktop') {
     BeforeEach {
         Push-Location "$PSScriptRoot"
         $expected = @(
@@ -97,6 +107,68 @@ Describe 'Out-Sentry captures expected stack traces for command input' {
 
     It 'PowerShell' {
         $output = pwsh -Command "& {$integrationTestScriptContent}" -ErrorAction Continue
+        $checkOutput.Invoke($output, $expected)
+    }
+}
+
+Describe 'Out-Sentry captures expected stack traces for piped command' {
+    BeforeEach {
+        Push-Location "$PSScriptRoot"
+        $expected = @(
+            '----------------'
+            'AbsolutePath: <No file>'
+            'AddressMode: '
+            'ColumnNumber: '
+            'ContextLine: '
+            'FileName: '
+            'FramesOmitted: '
+            'Function: <ScriptBlock>'
+            'FunctionId: '
+            'ImageAddress: '
+            'InApp: True'
+            'InstructionAddress: '
+            'LineNumber: 3'
+            'Module: '
+            'Package: '
+            'Platform: '
+            'PostContext: '
+            'PreContext: '
+            'SymbolAddress: '
+            'Vars: '
+            '----------------'
+            'AbsolutePath: '
+            'AddressMode: '
+            'ColumnNumber: 5'
+            "ContextLine:     funcA 'throw' 'error'"
+            'FileName: '
+            'FramesOmitted: '
+            'Function: '
+            'FunctionId: '
+            'ImageAddress: '
+            'InApp: True'
+            'InstructionAddress: '
+            'LineNumber: 3'
+            'Module: '
+            'Package: '
+            'Platform: '
+            'PostContext: '
+            'PreContext: '
+            'SymbolAddress: '
+            'Vars: '
+        )
+    }
+
+    AfterEach {
+        Pop-Location
+    }
+
+    It 'Windows PowerShell' -Skip:($env:OS -ne 'Windows_NT') {
+        $output = $integrationTestScriptContent | powershell.exe -Command -
+        $checkOutput.Invoke($output, $expected)
+    }
+
+    It 'PowerShell' {
+        $output = $integrationTestScriptContent | pwsh -Command -
         $checkOutput.Invoke($output, $expected)
     }
 }
