@@ -65,7 +65,7 @@ try
 catch
 {
     $_ | Out-Sentry
-    "⚠️ Error in line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
+    "⚠️ Error on line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
 }
 finally
 {

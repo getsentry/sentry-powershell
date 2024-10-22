@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Features
+
+- Send events to Sentry fully synchronously ([#59](https://github.com/SummitHosting/sentry-powershell/pull/59), [#62](https://github.com/SummitHosting/sentry-powershell/pull/62))
+
 ### Fixes
 
 - StackTrace parsing on Windows PowerShell 5.1 ([#50](https://github.com/getsentry/sentry-powershell/pull/50))

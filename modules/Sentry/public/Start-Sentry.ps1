@@ -1,6 +1,7 @@
 . "$privateDir/DiagnosticLogger.ps1"
 . "$privateDir/ScopeIntegration.ps1"
 . "$privateDir/SynchronousWorker.ps1"
+. "$privateDir/SynchronousTransport.ps1"
 . "$privateDir/EventUpdater.ps1"
 
 function Start-Sentry
@@ -47,6 +48,18 @@ function Start-Sentry
 
         $logger = [DiagnosticLogger]::new($options.DiagnosticLevel)
         $options.DiagnosticLogger = $logger
+
+        if ($null -eq $options.Transport)
+        {
+            try
+            {
+                $options.Transport = [SynchronousTransport]::new($options)
+            }
+            catch
+            {
+                $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous transport', $_.Exception, @())
+            }
+        }
 
         if ($null -eq $options.BackgroundWorker)
         {
