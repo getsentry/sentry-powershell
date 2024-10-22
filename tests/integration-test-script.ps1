@@ -20,5 +20,11 @@ catch
 
 $events[0].SentryThreads.Stacktrace.Frames | ForEach-Object {
     '----------------' | Out-String
-    $_ | Out-String -Width 500
+    $frame = $_
+    $properties = $frame | Get-Member -MemberType Properties | Select-Object -ExpandProperty Name
+    foreach ($prop in $properties)
+    {
+        $value = $frame.$prop | Out-String -Width 500
+        "$($prop)=$value"
+    }
 }
