@@ -3,16 +3,14 @@
 # There are limited options to perform synchronous operations in Windows PowerShell 5.1 on .NET 4.6, so this is a workaround.
 class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility.ITransport
 {
-    hidden [System.Net.Http.HttpClient] $httpClient
-    hidden [Sentry.SentryOptions] $options
+    hidden [Sentry.Extensibility.IDiagnosticLogger] $logger
     hidden [System.Reflection.MethodInfo] $ProcessEnvelope
     hidden [System.Reflection.MethodInfo] $CreateRequest
     hidden [System.Reflection.MethodInfo] $SerializeToStream
 
     SynchronousTransport([Sentry.SentryOptions] $options) : base($options)
     {
-        $this.options = $options
-        $this.httpClient = [System.Net.Http.HttpClient]::new()
+        $this.logger = $options.DiagnosticLogger
 
         # These are internal methods, so we need to use reflection to access them.
         $instanceMethod = [System.Reflection.BindingFlags]::Instance + [System.Reflection.BindingFlags]::NonPublic + [System.Reflection.BindingFlags]::Public;
@@ -45,7 +43,7 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
             $content = $reader.ReadToEnd()
             $reader.Close()
 
-            $this.options.DiagnosticLogger.Log([Sentry.SentryLevel]::Debug, 'Sending content synchronously, Content-Length: {0}', $null, $content.Length)
+            $this.logger.Log([Sentry.SentryLevel]::Debug, 'Sending content synchronously, Content-Length: {0}', $null, $content.Length)
 
             $progressPref = $global:ProgressPreference
             $ProgressPreference = 'SilentlyContinue'
