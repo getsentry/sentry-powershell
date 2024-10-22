@@ -116,31 +116,9 @@ class StackTraceProcessor : SentryEventProcessor
         # We collect all frames and then reverse them to the order expected by Sentry (caller->callee).
         # Do not try to make this code go backwards, because it relies on the InvocationInfo from the previous frame.
         $sentryFrames = New-Object System.Collections.Generic.List[Sentry.SentryStackFrame]
-        if ($null -ne $this.StackTraceFrames)
-        {
-            $sentryFrames.Capacity = $this.StackTraceFrames.Count + 1
-        }
-        elseif ($null -ne $this.StackTraceString)
+        if ($null -ne $this.StackTraceString)
         {
             $sentryFrames.Capacity = $this.StackTraceString.Count + 1
-        }
-
-        if ($null -ne $this.StackTraceFrames)
-        {
-            # Note: if InvocationInfo is present, use it to fill the first frame. This is the case for ErrroRecord handling
-            # and has the information about the actual script file and line that have thrown the exception.
-            if ($null -ne $this.InvocationInfo)
-            {
-                $sentryFrames.Add($this.CreateFrame($this.InvocationInfo))
-            }
-
-            foreach ($frame in $this.StackTraceFrames)
-            {
-                $sentryFrames.Add($this.CreateFrame($frame))
-            }
-        }
-        elseif ($null -ne $this.StackTraceString)
-        {
             # Note: if InvocationInfo is present, use it to update:
             #  - the first frame (in case of `$_ | Out-Sentry` in a catch clause).
             #  - the second frame (in case of `write-error` and `$_ | Out-Sentry` in a trap).
@@ -170,6 +148,14 @@ class StackTraceProcessor : SentryEventProcessor
             if ($null -ne $sentryFrameInitial)
             {
                 $sentryFrames.Insert(0, $sentryFrameInitial)
+            }
+        }
+        elseif ($null -ne $this.StackTraceFrames)
+        {
+            $sentryFrames.Capacity = $this.StackTraceFrames.Count + 1
+            foreach ($frame in $this.StackTraceFrames)
+            {
+                $sentryFrames.Add($this.CreateFrame($frame))
             }
         }
 
