@@ -19,6 +19,6 @@ catch
 }
 
 $events[0].SentryThreads.Stacktrace.Frames | ForEach-Object {
-    Write-Output '----------------'
-    Write-Output $_
+    '----------------' | Out-String
+    $_ | Out-String -Width 500
 }
