@@ -94,7 +94,7 @@ Describe 'Out-Sentry captures expected stack traces for command input' {
         Pop-Location
     }
 
-    It 'Windows PowerShell' -Skip:(-not $IsWindows) {
+    It 'Windows PowerShell' -Skip:($env:OS -ne 'Windows_NT') {
         $output = powershell.exe -Command "& {$integrationTestScriptContent}" -ErrorAction Continue
         $checkOutput.Invoke($output, $expected)
     }
@@ -156,7 +156,7 @@ Describe 'Out-Sentry captures expected stack traces for file input' {
         Pop-Location
     }
 
-    It 'Windows PowerShell' -Skip:(-not $IsWindows) {
+    It 'Windows PowerShell' -Skip:($env:OS -ne 'Windows_NT') {
         $PSNativeCommandUseErrorActionPreference = $false
         $output = powershell.exe $integrationTestScript
         $checkOutput.Invoke($output, ($expected -replace '\.}', '...}'))
