@@ -40,7 +40,7 @@ BeforeAll {
 # And we can live without testing on PowerShell 7.2 & 7.3 because we have tests for 7.4.
 Describe 'Out-Sentry captures expected stack traces for command argument' -Skip:(($PSVersionTable.PSVersion.Major -eq 7 -and $PSVersionTable.PSVersion.Minor -le 3) -or $PSVersionTable.PSEdition -eq 'Desktop') {
     BeforeEach {
-        Push-Location "$PSScriptRoot"
+        Push-Location "$PSScriptRoot/.."
         $expected = @(
             '----------------'
             'AbsolutePath: <No file>'
@@ -82,7 +82,7 @@ Describe 'Out-Sentry captures expected stack traces for command argument' -Skip:
 
 Describe 'Out-Sentry captures expected stack traces for piped command' {
     BeforeEach {
-        Push-Location "$PSScriptRoot"
+        Push-Location "$PSScriptRoot/.."
         $expected = @(
             '----------------'
             'AbsolutePath: <No file>'
@@ -118,7 +118,7 @@ Describe 'Out-Sentry captures expected stack traces for piped command' {
 
 Describe 'Out-Sentry captures expected stack traces for file input' {
     BeforeEach {
-        Push-Location "$PSScriptRoot"
+        Push-Location "$PSScriptRoot/.."
         $expected = @(
             '----------------'
             'AbsolutePath: <No file>'
