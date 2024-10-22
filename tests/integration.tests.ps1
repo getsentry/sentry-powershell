@@ -4,6 +4,9 @@ BeforeAll {
 
     $checkOutput = {
         param([string[]] $output, [string[]] $expected)
+        # Remove warnings
+        $output = $output | Where-Object { $_ -notmatch 'WARNING: warning CS1701: Assuming assembly reference' }
+
         # Remove empty lines
         $output = $output | Where-Object { $_ -ne '' }
 
