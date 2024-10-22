@@ -25,6 +25,6 @@ $events[0].SentryThreads.Stacktrace.Frames | ForEach-Object {
     foreach ($prop in $properties)
     {
         $value = $frame.$prop | Out-String -Width 500
-        "$($prop):$value"
+        "$($prop): $value"
     }
 }
