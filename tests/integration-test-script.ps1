@@ -27,6 +27,9 @@ $thread.Stacktrace.Frames | ForEach-Object {
     foreach ($prop in $properties)
     {
         $value = $frame.$prop | Out-String -Width 500
-        "$($prop): $value"
+        if ("$value" -ne '')
+        {
+            "$($prop): $value"
+        }
     }
 }
