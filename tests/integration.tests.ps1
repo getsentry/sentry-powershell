@@ -4,6 +4,12 @@ BeforeAll {
 
     $checkOutput = {
         param([string[]] $output, [string[]] $expected)
+        # Remove color codes
+        $output = $output -replace '\x1b\[[0-9;]*[a-z]', ''
+
+        # Remove escape sequences (these appear on macOS and Linux)
+        $output = $output -replace '\e\[\?1[hl]', ''
+
         # Remove warnings
         $output = $output | Where-Object { $_ -notmatch 'WARNING: warning CS1701: Assuming assembly reference' }
 
