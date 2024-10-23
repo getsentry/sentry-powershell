@@ -1,6 +1,6 @@
 Describe 'Publishing' {
     It 'Test-ModuleManifest' {
-        Test-ModuleManifest -Verbose "$PSScriptRoot/../modules/Sentry/Sentry.psd1"
+        Test-ModuleManifest -Path "$PSScriptRoot/../modules/Sentry/Sentry.psd1" -Verbose
     }
 
     It 'Publish-Module' {
