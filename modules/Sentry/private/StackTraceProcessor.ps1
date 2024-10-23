@@ -239,14 +239,15 @@ class StackTraceProcessor : SentryEventProcessor
                 break
             }
 
-            if ($null -eq $sentryFrame.AbsolutePath -and
-                $null -eq $frame.ScriptName -and
-                $frame.ScriptLineNumber -gt 0 -and
-                $frame.ScriptLineNumber -eq $sentryFrame.LineNumber)
+            if ($null -eq $sentryFrame.AbsolutePath -and $null -eq $frame.ScriptName)
             {
-                $this.SetScriptInfo($sentryFrame, $frame)
-                $this.SetModule($sentryFrame)
-                $this.SetFunction($sentryFrame, $frame)
+                if ($frame.ScriptLineNumber -gt 0 -and $frame.ScriptLineNumber -eq $sentryFrame.LineNumber)
+                {
+                    $this.SetScriptInfo($sentryFrame, $frame)
+                    $this.SetModule($sentryFrame)
+                    $this.SetFunction($sentryFrame, $frame)
+                }
+                $this.SetContextLines($sentryFrame, $frame)
 
                 # Try to match following frames that are part of the same codeblock.
                 while ($j -gt 0)
@@ -329,14 +330,17 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetContextLines([Sentry.SentryStackFrame] $sentryFrame, [System.Management.Automation.CallStackFrame] $frame)
     {
-        try
+        if ($sentryFrame.LineNumber -gt 0)
         {
-            $lines = $frame.InvocationInfo.MyCommand.ScriptBlock.ToString() -split "`n"
-            $this.SetContextLines($sentryFrame, $lines)
-        }
-        catch
-        {
-            Write-Warning "Failed to read context lines for frame with function '$($sentryFrame.Function)': $_"
+            try
+            {
+                $lines = $frame.InvocationInfo.MyCommand.ScriptBlock.ToString() -split "`n"
+                $this.SetContextLines($sentryFrame, $lines)
+            }
+            catch
+            {
+                Write-Warning "Failed to read context lines for frame with function '$($sentryFrame.Function)': $_"
+            }
         }
     }
 
