@@ -162,7 +162,6 @@ Describe 'Out-Sentry captures expected stack traces for piped command' {
     }
 
     It 'PowerShell' {
-        clear
         $output = $integrationTestScriptContent | pwsh -Command -
         $checkOutput.Invoke($output, $expected)
     }
@@ -287,7 +286,7 @@ Describe 'Out-Sentry captures expected stack traces for PowerShell.Create()' {
         $childPs.AddScript($integrationTestScriptContent)
         $output = $childPs.Invoke()
         # Output has weirdly behaving line breaks in this case so let's normalize them:
-        $output = ($output | Join-String -Separator "`n") -split "[`r`n]+"
+        $output = ($output -join "`n") -split "[`r`n]+"
         $checkOutput.Invoke($output, $expected)
     }
 }
