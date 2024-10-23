@@ -6,13 +6,19 @@ Import-Module ./modules/Sentry/Sentry.psd1
 . ./tests/utils.ps1
 . ./tests/throwingshort.ps1
 
+function funcA
+{
+    # Call to another file
+    funcC
+}
+
 $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
 $transport = [RecordingTransport]::new()
 StartSentryForEventTests ([ref] $events) ([ref] $transport)
 
 try
 {
-    funcC
+    funcA
 }
 catch
 {
