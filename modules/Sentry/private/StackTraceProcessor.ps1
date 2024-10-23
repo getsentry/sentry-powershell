@@ -114,33 +114,11 @@ class StackTraceProcessor : SentryEventProcessor
     hidden [Sentry.SentryStackTrace]GetStackTrace()
     {
         # We collect all frames and then reverse them to the order expected by Sentry (caller->callee).
-        # Do not try to make this code go backwards, because it relies on the InvocationInfo from the previous frame.
+        # Do not try to make this code go backwards because it relies on the InvocationInfo from the previous frame.
         $sentryFrames = New-Object System.Collections.Generic.List[Sentry.SentryStackFrame]
-        if ($null -ne $this.StackTraceFrames)
-        {
-            $sentryFrames.Capacity = $this.StackTraceFrames.Count + 1
-        }
-        elseif ($null -ne $this.StackTraceString)
+        if ($null -ne $this.StackTraceString)
         {
             $sentryFrames.Capacity = $this.StackTraceString.Count + 1
-        }
-
-        if ($null -ne $this.StackTraceFrames)
-        {
-            # Note: if InvocationInfo is present, use it to fill the first frame. This is the case for ErrroRecord handling
-            # and has the information about the actual script file and line that have thrown the exception.
-            if ($null -ne $this.InvocationInfo)
-            {
-                $sentryFrames.Add($this.CreateFrame($this.InvocationInfo))
-            }
-
-            foreach ($frame in $this.StackTraceFrames)
-            {
-                $sentryFrames.Add($this.CreateFrame($frame))
-            }
-        }
-        elseif ($null -ne $this.StackTraceString)
-        {
             # Note: if InvocationInfo is present, use it to update:
             #  - the first frame (in case of `$_ | Out-Sentry` in a catch clause).
             #  - the second frame (in case of `write-error` and `$_ | Out-Sentry` in a trap).
@@ -167,9 +145,20 @@ class StackTraceProcessor : SentryEventProcessor
                 }
                 $sentryFrames.Add($sentryFrame)
             }
+
             if ($null -ne $sentryFrameInitial)
             {
                 $sentryFrames.Insert(0, $sentryFrameInitial)
+            }
+
+            $this.EnhanceTailFrames($sentryFrames)
+        }
+        elseif ($null -ne $this.StackTraceFrames)
+        {
+            $sentryFrames.Capacity = $this.StackTraceFrames.Count + 1
+            foreach ($frame in $this.StackTraceFrames)
+            {
+                $sentryFrames.Add($this.CreateFrame($frame))
             }
         }
 
@@ -213,7 +202,10 @@ class StackTraceProcessor : SentryEventProcessor
         $regex = 'at (?<Function>[^,]*), (?<AbsolutePath>.*): line (?<LineNumber>\d*)'
         if ($frame -match $regex)
         {
-            $sentryFrame.AbsolutePath = $Matches.AbsolutePath
+            if ($Matches.AbsolutePath -ne '<No file>')
+            {
+                $sentryFrame.AbsolutePath = $Matches.AbsolutePath
+            }
             $sentryFrame.LineNumber = [int]$Matches.LineNumber
             $sentryFrame.Function = $Matches.Function
         }
@@ -222,6 +214,54 @@ class StackTraceProcessor : SentryEventProcessor
             Write-Warning "Failed to parse stack frame: $frame"
         }
         return $sentryFrame
+    }
+
+    hidden EnhanceTailFrames([Sentry.SentryStackFrame[]] $sentryFrames)
+    {
+        if ($null -eq $this.StackTraceFrames)
+        {
+            return
+        }
+
+        # The last frame is usually how the PowerShell was invoked. We need to get this info from $this.StackTraceFrames
+        # - for pwsh scriptname.ps1 it would be something like `. scriptname.ps1`
+        # - for pwsh -c `& {..}` it would be the `& {..}` code block. And in this case, the next frame would also be
+        #   just a scriptblock without a filename so we need to get the source code from the StackTraceFrames too.
+        $i = 0;
+        for ($j = $sentryFrames.Count - 1; $j -ge 0; $j--)
+        {
+            $sentryFrame = $sentryFrames[$j]
+            $frame = $this.StackTraceFrames | Select-Object -Last 1 -Skip $i
+            $i++
+
+            if ($null -eq $frame)
+            {
+                break
+            }
+
+            if ($null -eq $sentryFrame.AbsolutePath -and $null -eq $frame.ScriptName)
+            {
+                if ($frame.ScriptLineNumber -gt 0 -and $frame.ScriptLineNumber -eq $sentryFrame.LineNumber)
+                {
+                    $this.SetScriptInfo($sentryFrame, $frame)
+                    $this.SetModule($sentryFrame)
+                    $this.SetFunction($sentryFrame, $frame)
+                }
+                $this.SetContextLines($sentryFrame, $frame)
+
+                # Try to match following frames that are part of the same codeblock.
+                while ($j -gt 0)
+                {
+                    $nextSentryFrame = $sentryFrames[$j - 1]
+                    if ($nextSentryFrame.AbsolutePath -ne $sentryFrame.AbsolutePath)
+                    {
+                        break
+                    }
+                    $this.SetContextLines($nextSentryFrame, $frame)
+                    $j--
+                }
+            }
+        }
     }
 
     hidden SetScriptInfo([Sentry.SentryStackFrame] $sentryFrame, [System.Management.Automation.CallStackFrame] $frame)
@@ -268,10 +308,39 @@ class StackTraceProcessor : SentryEventProcessor
         if ([string]::IsNullOrEmpty($sentryFrame.AbsolutePath) -and $frame.FunctionName -eq '<ScriptBlock>' -and ![string]::IsNullOrEmpty($frame.Position))
         {
             $sentryFrame.Function = $frame.Position.Text
+
+            # $frame.Position.Text may be a multiline command (e.g. when executed with `pwsh -c '& { ... \n ... \n ... }`)
+            # So we need to trim it to a single line.
+            if ($sentryFrame.Function.Contains("`n"))
+            {
+                $lines = $sentryFrame.Function -split "[`r`n]+"
+                $sentryFrame.Function = $lines[0] + ' '
+                if ($lines.Count -gt 2)
+                {
+                    $sentryFrame.Function += ' ...<multiline script content omitted>... '
+                }
+                $sentryFrame.Function += $lines[$lines.Count - 1]
+            }
         }
         else
         {
             $sentryFrame.Function = $frame.FunctionName
+        }
+    }
+
+    hidden SetContextLines([Sentry.SentryStackFrame] $sentryFrame, [System.Management.Automation.CallStackFrame] $frame)
+    {
+        if ($sentryFrame.LineNumber -gt 0)
+        {
+            try
+            {
+                $lines = $frame.InvocationInfo.MyCommand.ScriptBlock.ToString() -split "`n"
+                $this.SetContextLines($sentryFrame, $lines)
+            }
+            catch
+            {
+                Write-Warning "Failed to read context lines for frame with function '$($sentryFrame.Function)': $_"
+            }
         }
     }
 
@@ -287,26 +356,42 @@ class StackTraceProcessor : SentryEventProcessor
             try
             {
                 $lines = Get-Content $sentryFrame.AbsolutePath -TotalCount ($sentryFrame.LineNumber + 5)
-                if ($null -eq $sentryFrame.ContextLine)
-                {
-                    $sentryFrame.ContextLine = $lines[$sentryFrame.LineNumber - 1]
-                }
-                $preContextCount = [math]::Min(5, $sentryFrame.LineNumber - 1)
-                $postContextCount = [math]::Min(5, $lines.Count - $sentryFrame.LineNumber)
-                if ($sentryFrame.LineNumber -gt 6)
-                {
-                    $lines = $lines | Select-Object -Skip ($sentryFrame.LineNumber - 6)
-                }
-                # Note: these are read-only in sentry-dotnet so we just update the underlying lists instead of replacing.
-                $sentryFrame.PreContext.Clear()
-                $lines | Select-Object -First $preContextCount | ForEach-Object { $sentryFrame.PreContext.Add($_) }
-                $sentryFrame.PostContext.Clear()
-                $lines | Select-Object -Last $postContextCount  | ForEach-Object { $sentryFrame.PostContext.Add($_) }
+                $this.SetContextLines($sentryFrame, $lines)
             }
             catch
             {
                 Write-Warning "Failed to read context lines for $($sentryFrame.AbsolutePath): $_"
             }
         }
+    }
+
+    hidden SetContextLines([Sentry.SentryStackFrame] $sentryFrame, [string[]] $lines)
+    {
+        if ($lines.Count -lt $sentryFrame.LineNumber)
+        {
+            Write-Debug "Couldn't set frame context because the line number ($($sentryFrame.LineNumber)) is lower than the available number of source code lines ($($lines.Count))."
+            return
+        }
+
+        $numContextLines = 5
+
+        if ($null -eq $sentryFrame.ContextLine)
+        {
+            $sentryFrame.ContextLine = $lines[$sentryFrame.LineNumber - 1]
+        }
+
+        $preContextCount = [math]::Min($numContextLines, $sentryFrame.LineNumber - 1)
+        $postContextCount = [math]::Min($numContextLines, $lines.Count - $sentryFrame.LineNumber)
+
+        if ($sentryFrame.LineNumber -gt $numContextLines + 1)
+        {
+            $lines = $lines | Select-Object -Skip ($sentryFrame.LineNumber - $numContextLines - 1)
+        }
+
+        # Note: these are read-only in sentry-dotnet so we just update the underlying lists instead of replacing.
+        $sentryFrame.PreContext.Clear()
+        $lines | Select-Object -First $preContextCount | ForEach-Object { $sentryFrame.PreContext.Add($_) }
+        $sentryFrame.PostContext.Clear()
+        $lines | Select-Object -First $postContextCount -Skip ($preContextCount + 1) | ForEach-Object { $sentryFrame.PostContext.Add($_) }
     }
 }

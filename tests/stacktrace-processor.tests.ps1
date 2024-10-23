@@ -19,7 +19,7 @@ at <ScriptBlock>, : line 3' -split "[`r`n]+"
         $frames[0].AbsolutePath | Should -Be ''
         $frames[0].LineNumber | Should -Be 3
         $frames[1].Function | Should -Be '<ScriptBlock>'
-        $frames[1].AbsolutePath | Should -Be '<No file>'
+        $frames[1].AbsolutePath | Should -Be $null
         $frames[1].LineNumber | Should -Be 1
         $frames[2].Function | Should -Be 'funcB'
         $frames[2].AbsolutePath | Should -Be 'C:\dev\sentry-powershell\tests\throwing.ps1'

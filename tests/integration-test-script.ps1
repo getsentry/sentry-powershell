@@ -2,9 +2,15 @@ Set-StrictMode -Version latest
 $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 
-Import-Module ../modules/Sentry/Sentry.psd1
-. ./utils.ps1
-. ./throwingshort.ps1
+Import-Module ./modules/Sentry/Sentry.psd1
+. ./tests/utils.ps1
+. ./tests/throwingshort.ps1
+
+function funcA
+{
+    # Call to another file
+    funcC
+}
 
 $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
 $transport = [RecordingTransport]::new()
@@ -12,7 +18,7 @@ StartSentryForEventTests ([ref] $events) ([ref] $transport)
 
 try
 {
-    funcC
+    funcA
 }
 catch
 {
@@ -29,7 +35,7 @@ $thread.Stacktrace.Frames | ForEach-Object {
         $value = $frame.$prop | Out-String -Width 500
         if ("$value" -ne '')
         {
-            "$($prop): $value"
+            "$($prop): $value".TrimEnd()
         }
     }
 }

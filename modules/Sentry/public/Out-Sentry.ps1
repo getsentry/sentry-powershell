@@ -94,7 +94,7 @@ function Out-Sentry
             return
         }
 
-        if ($options.AttachStackTrace -and $null -eq $processor.StackTraceFrames -and $null -eq $processor.StackTraceString)
+        if ($options.AttachStackTrace -and $null -eq $processor.StackTraceFrames)
         {
             $processor.StackTraceFrames = Get-PSCallStack | Select-Object -Skip 1
         }
