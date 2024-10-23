@@ -5,6 +5,7 @@
 ### Features
 
 - Send events to Sentry fully synchronously ([#59](https://github.com/SummitHosting/sentry-powershell/pull/59), [#62](https://github.com/SummitHosting/sentry-powershell/pull/62))
+- Add StackTrace context to frames coming from inline script/command ([#65](https://github.com/getsentry/sentry-powershell/pull/65))
 
 ### Fixes
 
