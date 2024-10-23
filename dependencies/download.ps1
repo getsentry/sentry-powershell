@@ -119,6 +119,7 @@ Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'Microsoft.Bcl.AsyncInter
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Buffers'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Collections.Immutable'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Memory'
+Download -TFM 'net46' -TargetTFM 'net462' -Dependency 'System.Net.Http'
 Download -TFM 'net46' -TargetTFM 'net462' -Dependency 'System.Numerics.Vectors'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Reflection.Metadata'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Runtime.CompilerServices.Unsafe.4'

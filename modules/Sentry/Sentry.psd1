@@ -30,9 +30,6 @@
     # Script files (.ps1) that are run in the caller's environment prior to importing this module.
     ScriptsToProcess     = @('assemblies-loader.ps1')
 
-    # Require System.Net.Http for use by SynchronousTransport
-    RequiredAssemblies = @('System.Net.Http')
-
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
     FunctionsToExport    = @(
         'Add-SentryBreadcrumb',
