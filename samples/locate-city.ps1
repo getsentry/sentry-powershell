@@ -54,7 +54,7 @@ try
         }
     }
     $span.Finish()
-
+    $transaction.Finish()
     if ($FoundOne)
     {
         exit 0 # success
@@ -64,11 +64,9 @@ try
 }
 catch
 {
+    # Mark the transaction as finished (note: this needs to be done prior to calling Out-Sentry)
+    $transaction.Finish($_.Exception)
+
     $_ | Out-Sentry
     "⚠️ Error on line $($_.InvocationInfo.ScriptLineNumber): $($Error[0])"
-}
-finally
-{
-    # Mark the transaction as finished and send it to Sentry
-    $transaction.Finish()
 }
