@@ -312,7 +312,7 @@ class StackTraceProcessor : SentryEventProcessor
             # So we need to trim it to a single line.
             if ($sentryFrame.Function.Contains("`n"))
             {
-                $lines = $sentryFrame.Function -split "`n"
+                $lines = $sentryFrame.Function -split "[`r`n]+"
                 $sentryFrame.Function = $lines[0] + ' '
                 if ($lines.Count -gt 2)
                 {
