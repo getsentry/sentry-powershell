@@ -239,7 +239,8 @@ class StackTraceProcessor : SentryEventProcessor
                 break
             }
 
-            if ($frame.ScriptName -eq $sentryFrame.AbsolutePath -and
+            if ($null -eq $sentryFrame.AbsolutePath -and
+                $null -eq $frame.ScriptName -and
                 $frame.ScriptLineNumber -gt 0 -and
                 $frame.ScriptLineNumber -eq $sentryFrame.LineNumber)
             {
@@ -331,10 +332,7 @@ class StackTraceProcessor : SentryEventProcessor
         try
         {
             $lines = $frame.InvocationInfo.MyCommand.ScriptBlock.ToString() -split "`n"
-            if ($lines.Count -gt 0)
-            {
-                $this.SetContextLines($sentryFrame, $lines)
-            }
+            $this.SetContextLines($sentryFrame, $lines)
         }
         catch
         {
@@ -353,7 +351,7 @@ class StackTraceProcessor : SentryEventProcessor
         {
             try
             {
-                $lines = Get-Content $sentryFrame.AbsolutePath
+                $lines = Get-Content $sentryFrame.AbsolutePath -TotalCount ($sentryFrame.LineNumber + 5)
                 $this.SetContextLines($sentryFrame, $lines)
             }
             catch
@@ -365,6 +363,12 @@ class StackTraceProcessor : SentryEventProcessor
 
     hidden SetContextLines([Sentry.SentryStackFrame] $sentryFrame, [string[]] $lines)
     {
+        if ($lines.Count -lt $sentryFrame.LineNumber)
+        {
+            Write-Debug "Couldn't set frame context because the line number ($($sentryFrame.LineNumber)) is lower than the available number of source code lines ($($lines.Count))."
+            return
+        }
+
         $numContextLines = 5
 
         if ($null -eq $sentryFrame.ContextLine)

@@ -92,7 +92,7 @@ BeforeAll {
 
         $frame = GetListItem $frames -1
 
-        $frame.Function | Should -Be "funcC"
+        $frame.Function | Should -Be 'funcC'
         $frame.AbsolutePath | Should -Be (Join-Path $PSScriptRoot 'throwingshort.ps1')
         $frame.LineNumber | Should -BeGreaterThan 0
         $frame.InApp | Should -Be $true
