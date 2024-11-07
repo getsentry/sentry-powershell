@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Dependencies
+
+- Bump Dotnet SDK from v4.12.1 to v4.13.0 ([#69](https://github.com/getsentry/sentry-powershell/pull/69))
+  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#4130)
+  - [diff](https://github.com/getsentry/sentry-dotnet/compare/4.12.1...4.13.0)
+
 ## 0.2.0
 
 ### Features
