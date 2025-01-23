@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixes
+
+- Windows-Powershell logged debug messages even though -Debug wasn't set ([#75](https://github.com/getsentry/sentry-powershell/pull/75))
+
 ### Dependencies
 
 - Bump Dotnet SDK from v4.12.1 to v4.13.0 ([#69](https://github.com/getsentry/sentry-powershell/pull/69))
