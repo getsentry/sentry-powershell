@@ -11,6 +11,9 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
     SynchronousTransport([Sentry.SentryOptions] $options) : base($options)
     {
         $this.logger = $options.DiagnosticLogger
+        if ($null -eq $this.logger) {
+            $this.logger = $global:SentryPowerShellDiagnosticLogger
+        }
 
         # These are internal methods, so we need to use reflection to access them.
         $instanceMethod = [System.Reflection.BindingFlags]::Instance + [System.Reflection.BindingFlags]::NonPublic + [System.Reflection.BindingFlags]::Public;
@@ -43,7 +46,9 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
             $content = $reader.ReadToEnd()
             $reader.Close()
 
-            $this.logger.Log([Sentry.SentryLevel]::Debug, 'Sending content synchronously, Content-Length: {0}', $null, $content.Length)
+            if ($null -ne $this.logger) {
+                $this.logger.Log([Sentry.SentryLevel]::Debug, 'Sending content synchronously, Content-Length: {0}', $null, $content.Length)
+            }
 
             $ProgressPreference = 'SilentlyContinue'
             $psResponse = Invoke-WebRequest -Uri $request.RequestUri -Method $request.Method.Method -Headers $headers -Body $content -UseBasicParsing

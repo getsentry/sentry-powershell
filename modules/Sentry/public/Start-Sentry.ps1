@@ -47,7 +47,12 @@ function Start-Sentry
         }
 
         $logger = [DiagnosticLogger]::new($options.DiagnosticLevel)
+
+        # Note: this is currently a no-op if options.debug == false; see https://github.com/getsentry/sentry-dotnet/issues/3212
+        # As a workaround, we set the logger as a global variable so that we can reach it in other scripts.
         $options.DiagnosticLogger = $logger
+        [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '', Justification = 'variable is used in another scope')]
+        $global:SentryPowerShellDiagnosticLogger = $logger
 
         if ($null -eq $options.Transport)
         {

@@ -29,6 +29,7 @@ function Out-Sentry
     {
         if (-not [Sentry.SentrySdk]::IsEnabled)
         {
+            Write-Debug "Sentry is not started: Out-Sentry invocation ignored."
             return
         }
 
