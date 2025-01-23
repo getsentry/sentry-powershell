@@ -5,12 +5,12 @@ Any contributions are welcome, be it feedback, bug reports, documentation, or co
 ## Set up this repo for local development
 
 1. Clone the repository
-2. Launch `./scripts/download.ps1' to download the required dependencies.
-   You'll also need to do this after a sentry-dotnet SDK update.
+2. Launch `./scripts/download.ps1` to download the required dependencies.
+   You'll need to do this again later, when a sentry-dotnet SDK version changes.
 
 ## Running tests
 
-We use pester to execute tests. First, you'll need to import the deveopment version of the module.
+We use pester to execute tests. First, you'll need to import the development version of the module.
 
 ```powershell
 Import-Module ./modules/Sentry/Sentry.psd1
