@@ -29,7 +29,12 @@ function Out-Sentry
     {
         if (-not [Sentry.SentrySdk]::IsEnabled)
         {
-            Write-Debug "Sentry is not started: Out-Sentry invocation ignored."
+            # Workaround for:
+            #   NullReferenceException: Object reference not set to an instance of an object.
+            # at Out-Sentry<Process>, D:\a\sentry-powershell\sentry-powershell\modules\Sentry\public\Out-Sentry.ps1:32
+            try {
+                Write-Debug "Sentry is not started: Out-Sentry invocation ignored."
+            } catch {}
             return
         }
 
