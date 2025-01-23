@@ -4,11 +4,17 @@ class StackTraceProcessor : SentryEventProcessor
     [System.Management.Automation.InvocationInfo]$InvocationInfo
     [System.Management.Automation.CallStackFrame[]]$StackTraceFrames
     [string[]]$StackTraceString
+    hidden [Sentry.Extensibility.IDiagnosticLogger] $logger
     hidden [string[]] $modulePaths
     hidden [hashtable] $pwshModules = @{}
 
-    StackTraceProcessor()
+    StackTraceProcessor([Sentry.SentryOptions] $options)
     {
+        $this.logger = $options.DiagnosticLogger
+        if ($null -eq $this.logger) {
+            $this.logger = $script:SentryPowerShellDiagnosticLogger
+        }
+
         if ($env:PSModulePath.Contains(';'))
         {
             # Windows
@@ -369,7 +375,13 @@ class StackTraceProcessor : SentryEventProcessor
     {
         if ($lines.Count -lt $sentryFrame.LineNumber)
         {
-            Write-Debug "Couldn't set frame context because the line number ($($sentryFrame.LineNumber)) is lower than the available number of source code lines ($($lines.Count))."
+            if ($null -ne $this.logger) {
+                $this.logger.Log(
+                    [Sentry.SentryLevel]::Debug,
+                    "Couldn't set frame context because the line number ($($sentryFrame.LineNumber)) " +
+                    "is lower than the available number of source code lines ($($lines.Count))."
+                )
+            }
             return
         }
 

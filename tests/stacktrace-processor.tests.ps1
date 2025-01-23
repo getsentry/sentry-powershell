@@ -8,7 +8,7 @@ Describe 'StackTraceProcessor' {
         $event_.Message = 'Test'
         $event_.Level = [Sentry.SentryLevel]::Info
 
-        $sut = [StackTraceProcessor]::new()
+        $sut = [StackTraceProcessor]::new([Sentry.SentryOptions]::new())
         $sut.StackTraceString = 'at funcB, C:\dev\sentry-powershell\tests\throwing.ps1: line 17
 at <ScriptBlock>, <No file>: line 1
 at <ScriptBlock>, : line 3' -split "[`r`n]+"

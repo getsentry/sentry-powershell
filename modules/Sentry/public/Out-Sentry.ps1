@@ -40,7 +40,7 @@ function Out-Sentry
 
         $options = Get-CurrentOptions
         [Sentry.SentryEvent]$event_ = $null
-        $processor = [StackTraceProcessor]::new()
+        $processor = [StackTraceProcessor]::new($options)
 
         if ($ErrorRecord -ne $null)
         {
