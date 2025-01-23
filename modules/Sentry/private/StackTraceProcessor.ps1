@@ -12,7 +12,7 @@ class StackTraceProcessor : SentryEventProcessor
     {
         $this.logger = $options.DiagnosticLogger
         if ($null -eq $this.logger) {
-            $this.logger = $script:SentryPowerShellDiagnosticLogger
+            $this.logger = Get-Variable -Scope script -Name SentryPowerShellDiagnosticLogger -ValueOnly -ErrorAction SilentlyContinue
         }
 
         if ($env:PSModulePath.Contains(';'))
