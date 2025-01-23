@@ -55,7 +55,7 @@ class DiagnosticLogger : Sentry.Extensibility.IDiagnosticLogger
                 # see https://github.com/PowerShell/PowerShell/issues/5148
                 if ($global:PSVersionTable.PSEdition -eq 'Desktop') {
                     $pref = Get-Variable DebugPreference
-                    if ($pref.value -eq "Inquire") {
+                    if (($null -ne $pref) -and ($pref.value -eq "Inquire")) {
                         $DebugPreference = 'Continue'
                     }
                 }
