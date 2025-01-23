@@ -4,6 +4,7 @@
 
 ### Fixes
 
+- Capture doesn't work if `-Debug` wasn't set ([#74](https://github.com/getsentry/sentry-powershell/pull/74))
 - Don't log debug messages if `-Debug` wasn't set ([#75](https://github.com/getsentry/sentry-powershell/pull/75))
 
 ### Dependencies
