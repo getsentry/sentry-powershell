@@ -4,7 +4,7 @@
 
 ### Fixes
 
-- Windows-Powershell logged debug messages even though -Debug wasn't set ([#75](https://github.com/getsentry/sentry-powershell/pull/75))
+- Don't log debug messages if `-Debug` wasn't set ([#75](https://github.com/getsentry/sentry-powershell/pull/75))
 
 ### Dependencies
 
