@@ -42,8 +42,7 @@ BeforeAll {
 #
 # It looks like the variable `$integrationTestScriptContent` is expanded in place and then evaluted as an expression.
 # Let's just skip these versions. We test Windows PowerShell as the target anyway in a test case.
-# And we can live without testing on PowerShell 7.2 & 7.3 because we have tests for 7.4.
-Describe 'Out-Sentry captures expected stack traces for command argument' -Skip:(($PSVersionTable.PSVersion.Major -eq 7 -and $PSVersionTable.PSVersion.Minor -le 3) -or $PSVersionTable.PSEdition -eq 'Desktop') {
+Describe 'Out-Sentry captures expected stack traces for command argument' -Skip:($PSVersionTable.PSEdition -eq 'Desktop') {
     BeforeEach {
         Push-Location "$PSScriptRoot/.."
         $expected = @(
