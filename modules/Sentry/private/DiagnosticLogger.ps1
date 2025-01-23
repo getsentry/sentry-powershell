@@ -53,7 +53,12 @@ class DiagnosticLogger : Sentry.Extensibility.IDiagnosticLogger
             {
                 # Workaround for Windows Powershell issue of halting and asking for user confirmation.
                 # see https://github.com/PowerShell/PowerShell/issues/5148
-                $DebugPreference = 'Continue'
+                if ($global:PSVersionTable.PSEdition -eq 'Desktop') {
+                    $pref = Get-Variable DebugPreference
+                    if ($pref.value -eq "Inquire") {
+                        $DebugPreference = 'Continue'
+                    }
+                }
 
                 Write-Debug $message
             }
