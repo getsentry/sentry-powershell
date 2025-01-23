@@ -1,5 +1,5 @@
 function Stop-Sentry
 {
     [Sentry.SentrySdk]::Close()
-    Remove-Variable -Scope global -Name SentryPowerShellDiagnosticLogger
+    Remove-Variable -Scope script -Name SentryPowerShellDiagnosticLogger
 }

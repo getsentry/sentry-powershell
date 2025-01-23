@@ -12,7 +12,7 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
     {
         $this.logger = $options.DiagnosticLogger
         if ($null -eq $this.logger) {
-            $this.logger = $global:SentryPowerShellDiagnosticLogger
+            $this.logger = $script:SentryPowerShellDiagnosticLogger
         }
 
         # These are internal methods, so we need to use reflection to access them.
