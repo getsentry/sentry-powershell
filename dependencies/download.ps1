@@ -110,7 +110,6 @@ function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $nu
 }
 
 Download -Dependency 'Sentry' -TFM 'net8.0'
-Download -Dependency 'Sentry' -TFM 'net6.0'
 Download -Dependency 'Sentry' -TFM 'net462'
 
 # You can see the list of dependencies that are actually used in sentry-dotnet/src/Sentry/bin/Debug/net462
