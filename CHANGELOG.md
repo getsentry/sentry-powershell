@@ -8,7 +8,7 @@
 
 ### Features
 
-- Add support for PowerShell 7.5 ([#74](https://github.com/getsentry/sentry-powershell/pull/74))
+- Add support for PowerShell 7.5 ([#76](https://github.com/getsentry/sentry-powershell/pull/76))
 
 ### Dependencies
 
