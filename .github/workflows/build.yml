@@ -40,6 +40,7 @@ jobs:
         os: [ubuntu]
         shell: [pwsh]
         version:
+          - '7.5.0'
           - '7.4.0'
         # And test all built-in PowerShell/Windows Powershell versions on latest CI runner images
         include:
