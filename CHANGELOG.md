@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Breaking changes
+
+- Drop support for PowerShell 7.2 and 7.3 ([#71](https://github.com/getsentry/sentry-powershell/pull/71))
+
+### Features
+
+- Add support for PowerShell 7.5 ([#74](https://github.com/getsentry/sentry-powershell/pull/74))
+
 ### Dependencies
 
 - Bump Dotnet SDK from v4.13.0 to v5.1.1 ([#71](https://github.com/getsentry/sentry-powershell/pull/71), [#78](https://github.com/getsentry/sentry-powershell/pull/78))
