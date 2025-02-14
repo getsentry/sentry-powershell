@@ -10,7 +10,11 @@ function GetTFM
     # PowerShell 6.2 - Built on .NET Core 2.1
     # PowerShell 6.1 - Built on .NET Core 2.1
     # PowerShell 6.0 - Built on .NET Core 2.0
-    if ($PSVersionTable.PSVersion -ge '7.4')
+    if ($PSVersionTable.PSVersion -ge '7.5')
+    {
+        return 'net9.0'
+    }
+    elseif ($PSVersionTable.PSVersion -ge '7.4')
     {
         return 'net8.0'
     }
