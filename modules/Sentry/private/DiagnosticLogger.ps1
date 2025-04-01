@@ -28,7 +28,7 @@ class DiagnosticLogger : Sentry.Extensibility.IDiagnosticLogger
         if ($null -ne $exception)
         {
             $message += [Environment]::NewLine
-            $message += $exception | Format-Table | Out-String
+            $message += $exception | Out-String
         }
 
         switch ($level)
