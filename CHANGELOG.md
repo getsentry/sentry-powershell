@@ -9,6 +9,7 @@
 ### Fixes
 
 - Attachments support regression introduced in v0.2.0 ([#80](https://github.com/getsentry/sentry-powershell/pull/80))
+- Diagnostic logs: exceptions didn't have full context ([#81](https://github.com/getsentry/sentry-powershell/pull/81))
 
 ### Features
 
