@@ -11,7 +11,8 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
     SynchronousTransport([Sentry.SentryOptions] $options) : base($options)
     {
         $this.logger = $options.DiagnosticLogger
-        if ($null -eq $this.logger) {
+        if ($null -eq $this.logger)
+        {
             $this.logger = Get-Variable -Scope script -Name SentryPowerShellDiagnosticLogger -ValueOnly -ErrorAction SilentlyContinue
         }
 
@@ -42,16 +43,13 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
             $this.SerializeToStream.Invoke($request.Content, @($memoryStream, $null, $cancellationToken))
             $memoryStream.Position = 0
 
-            $reader = New-Object System.IO.StreamReader($memoryStream)
-            $content = $reader.ReadToEnd()
-            $reader.Close()
-
-            if ($null -ne $this.logger) {
-                $this.logger.Log([Sentry.SentryLevel]::Debug, 'Sending content synchronously, Content-Length: {0}', $null, $content.Length)
+            if ($null -ne $this.logger)
+            {
+                $this.logger.Log([Sentry.SentryLevel]::Debug, 'Sending content synchronously, Content-Length: {0}', $null, $memoryStream.Length)
             }
 
             $ProgressPreference = 'SilentlyContinue'
-            $psResponse = Invoke-WebRequest -Uri $request.RequestUri -Method $request.Method.Method -Headers $headers -Body $content -UseBasicParsing
+            $psResponse = Invoke-WebRequest -Uri $request.RequestUri -Method $request.Method.Method -Headers $headers -Body $memoryStream -UseBasicParsing
 
             $response = [System.Net.Http.HttpResponseMessage]::new($psResponse.StatusCode)
             $contentType = $psResponse.Headers['Content-Type']
