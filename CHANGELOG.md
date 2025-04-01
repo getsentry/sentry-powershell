@@ -6,6 +6,10 @@
 
 - Drop support for PowerShell 7.2 and 7.3 ([#71](https://github.com/getsentry/sentry-powershell/pull/71))
 
+### Fixes
+
+- Attachments support regression introduced in v0.2.0 ([#80](https://github.com/getsentry/sentry-powershell/pull/80))
+
 ### Features
 
 - Add support for PowerShell 7.5 ([#76](https://github.com/getsentry/sentry-powershell/pull/76))
