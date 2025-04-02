@@ -14,7 +14,6 @@ _Bad software is everywhere, and we're tired of it. Sentry is on a mission to he
 [![Discord Chat](https://img.shields.io/discord/621778831602221064?logo=discord&logoColor=ffffff&color=7389D8)](https://discord.gg/PXa5Apfe7K)
 
 PowerShell Sentry SDK is a thin wrapper on top of [Sentry .NET SDK](https://github.com/getsentry/sentry-dotnet) with some quality of life improvements for PowerShell users.
-Although the underlying .NET SDK is proven in production, the PowerShell Sentry SDK is in its very early stages and is not recommended for production use.
 
 ## Packages
 
