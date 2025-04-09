@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Dependencies
+
+- Bump Dotnet SDK from v5.4.0 to v5.5.1 ([#83](https://github.com/getsentry/sentry-powershell/pull/83))
+  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#551)
+  - [diff](https://github.com/getsentry/sentry-dotnet/compare/5.4.0...5.5.1)
+
 ## 0.3.0
 
 ### Breaking changes
