@@ -8,29 +8,25 @@ inputs:
 runs:
   using: composite
   steps:
+    # Set global environment variable for all subsequent steps
+    - run: echo "POWERSHELL_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
+      shell: bash
+
     # Download the powershell '.tar.gz' archive
     - run: curl -L -o /tmp/powershell.tar.gz "https://github.com/PowerShell/PowerShell/releases/download/v$POWERSHELL_VERSION/powershell-$POWERSHELL_VERSION-linux-x64.tar.gz"
       shell: bash
-      env:
-        POWERSHELL_VERSION: ${{ inputs.version }}
 
     # Create the target folder where powershell will be placed
     - run: sudo mkdir -p "/opt/microsoft/powershell/$POWERSHELL_VERSION"
       shell: bash
-      env:
-        POWERSHELL_VERSION: ${{ inputs.version }}
 
     # Expand powershell to the target folder
     - run: sudo tar zxf /tmp/powershell.tar.gz -C "/opt/microsoft/powershell/$POWERSHELL_VERSION"
       shell: bash
-      env:
-        POWERSHELL_VERSION: ${{ inputs.version }}
 
     # Set execute permissions
     - run: sudo chmod +x "/opt/microsoft/powershell/$POWERSHELL_VERSION/pwsh"
       shell: bash
-      env:
-        POWERSHELL_VERSION: ${{ inputs.version }}
 
     # Unlink the original pwsh binary already present in the system
     - run: sudo unlink /usr/bin/pwsh
@@ -39,21 +35,15 @@ runs:
     # Create the symbolic link that points to pwsh
     - run: sudo ln -s "/opt/microsoft/powershell/$POWERSHELL_VERSION/pwsh" /usr/bin/pwsh
       shell: bash
-      env:
-        POWERSHELL_VERSION: ${{ inputs.version }}
 
     # Verify the installation by checking the `pwsh` command version.
     - run: |
         pwsh --version
         [[ "$(pwsh --version)" == "PowerShell $POWERSHELL_VERSION" ]]
       shell: bash
-      env:
-        POWERSHELL_VERSION: ${{ inputs.version }}
 
     # Verify the installation by using the `pwsh` shell.
     - run: |
         $PSVersionTable
         if ( $PSVersionTable.PSVersion.ToString() -ne "$env:POWERSHELL_VERSION" ) { exit 1 }
       shell: pwsh
-      env:
-        POWERSHELL_VERSION: ${{ inputs.version }}
