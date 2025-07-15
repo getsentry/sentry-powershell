@@ -42,7 +42,7 @@ jobs:
         version:
           - '7.5.0'
           - '7.4.0'
-        # Test builtin `pwsh` version on all `*-latest` os images and Windows Powershell explicitly on Windows 2022 and 2025.
+        # Test builtin `pwsh` version on all `*-latest` os images and Windows Powershell on Windows 2022 and 2025.
         include:
           - os: ubuntu
             shell: pwsh
