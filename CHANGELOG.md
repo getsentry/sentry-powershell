@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixes
+
+- Remove workaround for Dotnet SDK issue causing a hang on process exit - automatic flush should work now. ([#85](https://github.com/getsentry/sentry-powershell/pull/85))
+
 ### Dependencies
 
 - Bump Dotnet SDK from v5.4.0 to v5.12.0 ([#83](https://github.com/getsentry/sentry-powershell/pull/83))
