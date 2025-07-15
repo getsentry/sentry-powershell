@@ -42,7 +42,7 @@ jobs:
         version:
           - '7.5.0'
           - '7.4.0'
-        # And test all built-in PowerShell/Windows Powershell versions on latest CI runner images
+        # Test builtin `pwsh` version on all `*-latest` os images and Windows Powershell on Windows 2022 and 2025.
         include:
           - os: ubuntu
             shell: pwsh
@@ -50,9 +50,9 @@ jobs:
             shell: pwsh
           - os: windows
             shell: pwsh
-          - os: windows-2019
+          - os: windows-2022
             shell: powershell
-          - os: windows-2022 # same as windows-latest as of 02/2024
+          - os: windows-2025
             shell: powershell
 
     defaults:
