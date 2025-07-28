@@ -1,9 +1,5 @@
 name: Setup PowerShell
 description: Setup PowerShell (Core) at a given version
-inputs:
-  version:
-    description: Powershell version to install
-    required: true
 
 runs:
   using: composite
