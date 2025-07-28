@@ -8,10 +8,6 @@ inputs:
 runs:
   using: composite
   steps:
-    # Set global environment variable for all subsequent steps
-    - run: echo "POWERSHELL_VERSION=${{ inputs.version }}" >> $GITHUB_ENV
-      shell: bash
-
     # Download the powershell '.tar.gz' archive
     - run: curl -L -o /tmp/powershell.tar.gz "https://github.com/PowerShell/PowerShell/releases/download/v$POWERSHELL_VERSION/powershell-$POWERSHELL_VERSION-linux-x64.tar.gz"
       shell: bash

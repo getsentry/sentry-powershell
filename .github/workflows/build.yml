@@ -75,8 +75,8 @@ jobs:
       - name: Setup PowerShell ${{ matrix.version }}
         if: ${{ matrix.version != '' }}
         uses: ./.github/actions/setup-powershell
-        with:
-          version: ${{ matrix.version }}
+        env:
+          POWERSHELL_VERSION: ${{ matrix.version }}
 
       - run: $PSVersionTable
 
