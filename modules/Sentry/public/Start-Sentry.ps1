@@ -76,9 +76,6 @@ function Start-Sentry
                 $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous worker', $_.Exception, @())
             }
         }
-
-        # Workaround for https://github.com/getsentry/sentry-dotnet/issues/3141
-        $options.DisableAppDomainProcessExitFlush()
     }
     process
     {
