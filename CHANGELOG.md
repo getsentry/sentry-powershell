@@ -4,9 +4,9 @@
 
 ### Dependencies
 
-- Bump Dotnet SDK from v5.4.0 to v5.12.0 ([#83](https://github.com/getsentry/sentry-powershell/pull/83))
-  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#5120)
-  - [diff](https://github.com/getsentry/sentry-dotnet/compare/5.4.0...5.12.0)
+- Bump Dotnet SDK from v5.4.0 to v5.14.1 ([#83](https://github.com/getsentry/sentry-powershell/pull/83), [#89](https://github.com/getsentry/sentry-powershell/pull/89))
+  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#5141)
+  - [diff](https://github.com/getsentry/sentry-dotnet/compare/5.4.0...5.14.1)
 
 ## 0.3.0
 
