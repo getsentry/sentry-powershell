@@ -14,18 +14,49 @@ class SynchronousWorker : Sentry.Extensibility.IBackgroundWorker
         $this.transport = $options.Transport;
         if ($null -eq $this.transport)
         {
-            $this.transport = New-HttpTransport($options)
+            try
+            {
+                $this.transport = New-HttpTransport($options)
+            }
+            catch
+            {
+                if ($null -ne $options.DiagnosticLogger)
+                {
+                    $options.DiagnosticLogger.Log([Sentry.SentryLevel]::Warning, 'Failed to create HTTP transport in SynchronousWorker: {0}', $_.Exception, @())
+                }
+                throw
+            }
         }
     }
 
     [bool] EnqueueEnvelope([Sentry.Protocol.Envelopes.Envelope] $envelope)
     {
-        $task = $this.transport.SendEnvelopeAsync($envelope, [System.Threading.CancellationToken]::None)
-        if (-not $task.Wait($this.options.FlushTimeout))
+        try
         {
-            $this.unfinishedTasks.Add($task)
+            if ($null -eq $this.transport)
+            {
+                if ($null -ne $this.options.DiagnosticLogger)
+                {
+                    $this.options.DiagnosticLogger.Log([Sentry.SentryLevel]::Warning, 'Transport is null, cannot enqueue envelope', $null, @())
+                }
+                return $false
+            }
+
+            $task = $this.transport.SendEnvelopeAsync($envelope, [System.Threading.CancellationToken]::None)
+            if (-not $task.Wait($this.options.FlushTimeout))
+            {
+                $this.unfinishedTasks.Add($task)
+            }
+            return $true
         }
-        return $true
+        catch
+        {
+            if ($null -ne $this.options.DiagnosticLogger)
+            {
+                $this.options.DiagnosticLogger.Log([Sentry.SentryLevel]::Error, 'Failed to enqueue envelope: {0}', $_.Exception, @())
+            }
+            return $false
+        }
     }
 
     [System.Threading.Tasks.Task] FlushAsync([System.TimeSpan] $timeout)
