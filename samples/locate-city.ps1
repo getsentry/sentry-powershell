@@ -27,8 +27,7 @@ Start-Sentry -Debug {
 # Transaction can be started by providing, at minimum, the name and the operation
 $transaction = Start-SentryTransaction 'transaction-name' 'transaction-operation'
 
-try
-{
+try {
     $span = $transaction.StartChild('wait for input')
     if ($City -eq '' ) { $City = Read-Host 'Enter the city name' }
     $span.Finish()
@@ -40,10 +39,8 @@ try
 
     $span = $transaction.StartChild('search')
     $FoundOne = 0
-    foreach ($Row in $Table)
-    {
-        if ($Row.city -eq $City)
-        {
+    foreach ($Row in $Table) {
+        if ($Row.city -eq $City) {
             $FoundOne = 1
             $Country = $Row.country
             $Region = $Row.admin_name
@@ -55,15 +52,12 @@ try
     }
     $span.Finish()
     $transaction.Finish()
-    if ($FoundOne)
-    {
+    if ($FoundOne) {
         exit 0 # success
     }
     Write-Error "City $City not found"
     exit 1
-}
-catch
-{
+} catch {
     # Mark the transaction as finished (note: this needs to be done prior to calling Out-Sentry)
     $transaction.Finish($_.Exception)
 

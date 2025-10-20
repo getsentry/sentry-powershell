@@ -1,5 +1,10 @@
 BeforeAll {
     . "$PSScriptRoot/../modules/Sentry/private/StackTraceProcessor.ps1"
+    $global:SentryPowershellRethrowErrors = $true
+}
+
+AfterAll {
+    $global:SentryPowershellRethrowErrors = $false
 }
 
 Describe 'StackTraceProcessor' {

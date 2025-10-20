@@ -1,5 +1,10 @@
 BeforeAll {
     . $PSScriptRoot/utils.ps1
+    $global:SentryPowershellRethrowErrors = $true
+}
+
+AfterAll {
+    $global:SentryPowershellRethrowErrors = $false
 }
 
 Describe 'SentrySdk' {
@@ -53,23 +58,17 @@ Describe 'SentrySdk' {
     It 'Start-Sentry sets Debug based on DebugPreference (<_>)' -ForEach @($true, $false) {
         $value = $_
         $originalValue = $global:DebugPreference
-        if ($value)
-        {
+        if ($value) {
             $global:DebugPreference = 'Continue'
-        }
-        else
-        {
+        } else {
             $global:DebugPreference = 'SilentlyContinue'
         }
-        try
-        {
+        try {
             Start-Sentry {
                 $_.Dsn = 'https://key@127.0.0.1/1'
                 $_.Debug | Should -Be $value
             }
-        }
-        finally
-        {
+        } finally {
             $global:DebugPreference = $originalValue
         }
     }

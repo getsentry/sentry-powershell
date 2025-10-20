@@ -2,29 +2,22 @@
 # Changes here may require changes in tests/stacktrace.test.ps1
 # Especially in the contexts-lines checks.
 
-function funcA($action, $param)
-{
+function funcA($action, $param) {
     funcB $action $param
 }
 
-function funcB
-{
+function funcB {
     [CmdletBinding()]
     param([string]$action, [string] $value)
 
-    switch ($action)
-    {
+    switch ($action) {
         'throw' { throw $value }
         'write' { Write-Error $value -ErrorAction Stop }
         'pass' { $value | Out-Sentry }
-        'pipeline'
-        {
-            try
-            {
+        'pipeline' {
+            try {
                 throw $value
-            }
-            catch
-            {
+            } catch {
                 [System.Management.Automation.ErrorRecord]$ErrorRecord = $_
                 $PSCmdlet.ThrowTerminatingError($ErrorRecord)
             }

@@ -105,13 +105,10 @@ Describe 'Start-SentryTransaction' {
             $_.Dsn = 'https://key@127.0.0.1/1'
         }
 
-        if ($ForceSampled)
-        {
+        if ($ForceSampled) {
             $transaction = Start-SentryTransaction 'foo' 'bar' -ForceSampled
             $transaction.IsSampled | Should -Be $true
-        }
-        else
-        {
+        } else {
             $transaction = Start-SentryTransaction 'foo' 'bar'
             $transaction.IsSampled | Should -Be $false
         }
@@ -125,13 +122,10 @@ Describe 'Start-SentryTransaction' {
             $_.TracesSampleRate = 1.0
         }
 
-        if ($ForceSampled)
-        {
+        if ($ForceSampled) {
             $transaction = Start-SentryTransaction 'foo' 'bar' -ForceSampled
             $transaction.IsSampled | Should -Be $true
-        }
-        else
-        {
+        } else {
             $transaction = Start-SentryTransaction 'foo' 'bar'
             $transaction.IsSampled | Should -Be $true
         }
