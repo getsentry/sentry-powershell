@@ -11,15 +11,12 @@ Describe 'Publishing' {
         # Update version in the module manifest
         $content = Get-Content "$tempModuleDir/Sentry.psd1"
         $changes = 0
-        for ($i = 0; $i -lt $content.Length; $i++)
-        {
-            if ($content[$i] -match "^(\s*ModuleVersion\s*=\s*)'[^']*'\s*$")
-            {
+        for ($i = 0; $i -lt $content.Length; $i++) {
+            if ($content[$i] -match "^(\s*ModuleVersion\s*=\s*)'[^']*'\s*$") {
                 $content[$i] = $matches[1] + "'9.9.9'"
                 $changes++
             }
-            if ($content[$i] -match "^(\s*Prerelease\s*=\s*)'[^']*'\s*$")
-            {
+            if ($content[$i] -match "^(\s*Prerelease\s*=\s*)'[^']*'\s*$") {
                 $content[$i] = $matches[1] + "'test'"
                 $changes++
             }

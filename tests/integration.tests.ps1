@@ -22,8 +22,7 @@ BeforeAll {
         Write-Host 'Testing output:'
         $output | Write-Host
 
-        for ($i = 0; $i -lt $expected.Count -and $i -lt $output.Count; $i++)
-        {
+        for ($i = 0; $i -lt $expected.Count -and $i -lt $output.Count; $i++) {
             $output[$i] | Should -Be $expected[$i] -Because "Output line $i"
         }
         $output.Count | Should -Be $expected.Count

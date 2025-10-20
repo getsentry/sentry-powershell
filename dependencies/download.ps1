@@ -6,24 +6,20 @@ $libDir = "$moduleDir/lib"
 
 New-Item $libDir -ItemType Directory -Force | Out-Null
 
-function CheckAssemblyVersion([string] $libFile, [string] $assemblyVersion)
-{
+function CheckAssemblyVersion([string] $libFile, [string] $assemblyVersion) {
     $assembly = [Reflection.Assembly]::LoadFile($libFile)
-    if ($assembly.GetName().Version.ToString() -ne $assemblyVersion)
-    {
+    if ($assembly.GetName().Version.ToString() -ne $assemblyVersion) {
         throw "Dependency $libFile has different assembly version ($($assembly.GetName().Version)) than expected ($assemblyVersion)"
     }
 }
 
-function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $null, [string] $assemblyVersion = $null)
-{
+function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $null, [string] $assemblyVersion = $null) {
     $targetTFM = "$targetTFM" -eq '' ? $TFM : $targetTFM
     New-Item "$libDir/$targetTFM" -ItemType Directory -Force | Out-Null
 
     $props = (Get-Content "$propsDir/$dependency.properties" -Raw | ConvertFrom-StringData)
 
-    if ("$assemblyVersion" -eq '')
-    {
+    if ("$assemblyVersion" -eq '') {
         $assemblyVersion = $props.ContainsKey('assemblyVersion') ? $props.assemblyVersion : "$($props.version).0"
     }
 
@@ -32,42 +28,32 @@ function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $nu
     $targetVersionFile = "$libDir/$targetTFM/$dependency.version"
     $targetLicenseFile = "$libDir/$targetTFM/$dependency.license"
 
-    if ((Test-Path $targetLibFile) -and ((Get-Content $targetVersionFile -Raw -ErrorAction SilentlyContinue) -eq $assemblyVersion))
-    {
-        try
-        {
+    if ((Test-Path $targetLibFile) -and ((Get-Content $targetVersionFile -Raw -ErrorAction SilentlyContinue) -eq $assemblyVersion)) {
+        try {
             CheckAssemblyVersion $targetLibFile $assemblyVersion
             Write-Debug "Dependency $targetLibFile already exists and has the expected assembly version ($assemblyVersion), skipping."
             return
-        }
-        catch
-        {
+        } catch {
             Write-Warning "$_, downloading again"
         }
     }
 
-    if (Test-Path $targetLibFile)
-    {
+    if (Test-Path $targetLibFile) {
         Remove-Item $targetLibFile -Force
     }
-    if (Test-Path $targetVersionFile)
-    {
+    if (Test-Path $targetVersionFile) {
         Remove-Item $targetVersionFile -Force
     }
-    if (Test-Path $targetLicenseFile)
-    {
+    if (Test-Path $targetLicenseFile) {
         Remove-Item $targetLicenseFile -Force
     }
 
     $archiveName = "$($package.ToLower()).$($props.version).nupkg"
     $archiveFile = "$downloadDir/$archiveName"
 
-    if (Test-Path $archiveFile)
-    {
+    if (Test-Path $archiveFile) {
         Write-Debug "Archive $archiveFile already exists, skipping download"
-    }
-    else
-    {
+    } else {
         $sourceUrl = "https://globalcdn.nuget.org/packages/$archiveName"
         Write-Output "Downloading $sourceUrl"
         Invoke-WebRequest $sourceUrl -OutFile $archiveFile
@@ -75,33 +61,23 @@ function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $nu
 
     $archive = [IO.Compression.ZipFile]::OpenRead($archiveFile)
 
-    function extract([string] $fileToExtract, [string] $targetFile)
-    {
-        if ($file = $archive.Entries.Where(({ $_.FullName -eq $fileToExtract })))
-        {
+    function extract([string] $fileToExtract, [string] $targetFile) {
+        if ($file = $archive.Entries.Where(({ $_.FullName -eq $fileToExtract }))) {
             Write-Output "Extracting $fileToExtract to $targetFile"
             [IO.Compression.ZipFileExtensions]::ExtractToFile($file[0], $targetFile)
-        }
-        else
-        {
+        } else {
             throw "File not found in ZIP: $fileToExtract"
         }
     }
 
-    try
-    {
+    try {
         extract "lib/$TFM/$package.dll" $targetLibFile
-        if ($props.ContainsKey('licenseFile'))
-        {
+        if ($props.ContainsKey('licenseFile')) {
             extract $props.licenseFile $targetLicenseFile
-        }
-        else
-        {
+        } else {
             $props.license | Out-File -NoNewline $targetLicenseFile
         }
-    }
-    finally
-    {
+    } finally {
         $archive.Dispose()
     }
 

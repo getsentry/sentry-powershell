@@ -27,12 +27,9 @@ Describe 'Out-Sentry' {
     }
 
     It 'returns an event ID for an error record' {
-        try
-        {
+        try {
             throw 'error'
-        }
-        catch
-        {
+        } catch {
             $eventId = $_ | Out-Sentry
         }
         $eventId | Should -BeOfType [Sentry.SentryId]

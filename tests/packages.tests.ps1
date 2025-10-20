@@ -13,19 +13,13 @@ AfterAll {
 Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
     BeforeEach {
         $param = $_
-        if ($param -eq 'error')
-        {
-            try
-            {
+        if ($param -eq 'error') {
+            try {
                 throw 'error'
-            }
-            catch
-            {
+            } catch {
                 $_ | Out-Sentry
             }
-        }
-        else
-        {
+        } else {
             $param | Out-Sentry
         }
         $events.Count | Should -Be 1
@@ -65,12 +59,9 @@ Describe 'Out-Sentry for <_>' -ForEach @('message', 'error') {
     }
 
     It 'Sets PowerShell as runtime' {
-        if ($PSVersionTable.PSVersion.Major -eq 5)
-        {
+        if ($PSVersionTable.PSVersion.Major -eq 5) {
             $event.Contexts.Runtime.Name | Should -Be 'Windows PowerShell'
-        }
-        else
-        {
+        } else {
             $event.Contexts.Runtime.Name | Should -Be 'PowerShell'
         }
         $event.Contexts.Runtime.Version | Should -Be $PSVersionTable.PSVersion.ToString()
