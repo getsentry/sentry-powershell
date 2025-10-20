@@ -346,6 +346,9 @@ class StackTraceProcessor : SentryEventProcessor
             catch
             {
                 Write-Warning "Failed to read context lines for frame with function '$($sentryFrame.Function)': $_"
+                if ($global:SentryPowershellRethrowErrors -eq $true) {
+                    throw
+                }
             }
         }
     }
@@ -367,6 +370,9 @@ class StackTraceProcessor : SentryEventProcessor
             catch
             {
                 Write-Warning "Failed to read context lines for $($sentryFrame.AbsolutePath): $_"
+                if ($global:SentryPowershellRethrowErrors -eq $true) {
+                    throw
+                }
             }
         }
     }
