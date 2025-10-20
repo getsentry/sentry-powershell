@@ -103,9 +103,11 @@ BeforeAll {
         $frame.PostContext | Should -Be @('}')
         $frame.PostContext.Count | Should -Be 1
     }
+    $global:SentryPowershellRethrowErrors = $true
 }
 
 AfterAll {
+    $global:SentryPowershellRethrowErrors = $false
     Stop-Sentry
 }
 

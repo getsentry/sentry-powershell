@@ -62,6 +62,9 @@ function Start-Sentry
             catch
             {
                 $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous transport', $_.Exception, @())
+                if ($global:SentryPowershellRethrowErrors -eq $true) {
+                    throw
+                }
             }
         }
 
@@ -74,6 +77,9 @@ function Start-Sentry
             catch
             {
                 $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous worker', $_.Exception, @())
+                if ($global:SentryPowershellRethrowErrors -eq $true) {
+                    throw
+                }
             }
         }
 

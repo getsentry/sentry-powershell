@@ -31,6 +31,11 @@ BeforeAll {
         Write-Host 'LGTM!'
         Write-Host '================'
     }
+    $global:SentryPowershellRethrowErrors = $true
+}
+
+AfterAll {
+    $global:SentryPowershellRethrowErrors = $false
 }
 
 # These fail when THIS script is executed on Windows PowerShell 5.1 or Poweshell 7.3 or lower with the following error:
