@@ -2,10 +2,11 @@
 # then translate the response back to a .NET HttpResponseMessage.
 # There are limited options to perform synchronous operations in Windows PowerShell 5.1 on .NET 4.6, so this is a workaround.
 class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility.ITransport {
-    hidden [Sentry.Extensibility.IDiagnosticLogger] $logger
-    hidden [System.Reflection.MethodInfo] $ProcessEnvelope
-    hidden [System.Reflection.MethodInfo] $CreateRequest
-    hidden [System.Reflection.MethodInfo] $SerializeToStream
+    [Sentry.Extensibility.IDiagnosticLogger] $logger
+    # PowerShell 7.5.2+ changed how property assignment works in constructors when inheriting from .NET classes.
+    # Using a hashtable instead of individual [System.Reflection.MethodInfo] properties works around this issue.
+    # See: https://github.com/PowerShell/PowerShell/releases/tag/v7.5.2
+    [hashtable] $reflectionMethods = @{}
 
     SynchronousTransport([Sentry.SentryOptions] $options) : base($options) {
         $this.logger = $options.DiagnosticLogger
@@ -15,16 +16,31 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
 
         # These are internal methods, so we need to use reflection to access them.
         $instanceMethod = [System.Reflection.BindingFlags]::Instance + [System.Reflection.BindingFlags]::NonPublic + [System.Reflection.BindingFlags]::Public;
-        $this.ProcessEnvelope = [Sentry.Http.HttpTransportBase].GetMethod('ProcessEnvelope', $instanceMethod)
-        $this.CreateRequest = [Sentry.Http.HttpTransportBase].GetMethod('CreateRequest', $instanceMethod)
+        $this.reflectionMethods['ProcessEnvelope'] = [Sentry.Http.HttpTransportBase].GetMethod('ProcessEnvelope', $instanceMethod)
+        if ($null -eq $this.reflectionMethods['ProcessEnvelope']) {
+            throw "Failed to find ProcessEnvelope method on Sentry.Http.HttpTransportBase"
+        }
+
+        $this.reflectionMethods['CreateRequest'] = [Sentry.Http.HttpTransportBase].GetMethod('CreateRequest', $instanceMethod)
+        if ($null -eq $this.reflectionMethods['CreateRequest']) {
+            throw "Failed to find CreateRequest method on Sentry.Http.HttpTransportBase"
+        }
+
         $EnvelopeHttpContentType = [Sentry.SentrySdk].Assembly.GetType('Sentry.Internal.Http.EnvelopeHttpContent')
-        $this.SerializeToStream = $EnvelopeHttpContentType.GetMethod('SerializeToStream', $instanceMethod)
+        if ($null -eq $EnvelopeHttpContentType) {
+            throw "Failed to find Sentry.Internal.Http.EnvelopeHttpContent type"
+        }
+
+        $this.reflectionMethods['SerializeToStream'] = $EnvelopeHttpContentType.GetMethod('SerializeToStream', $instanceMethod)
+        if ($null -eq $this.reflectionMethods['SerializeToStream']) {
+            throw "Failed to find SerializeToStream method on EnvelopeHttpContent"
+        }
     }
 
     [System.Threading.Tasks.Task] SendEnvelopeAsync([Sentry.Protocol.Envelopes.Envelope] $envelope, [System.Threading.CancellationToken]$cancellationToken = [System.Threading.CancellationToken]::None) {
-        $processedEnvelope = $this.ProcessEnvelope.Invoke($this, @($envelope))
+        $processedEnvelope = $this.reflectionMethods['ProcessEnvelope'].Invoke($this, @($envelope))
         if ($processedEnvelope.Items.count -gt 0) {
-            $request = $this.CreateRequest.Invoke($this, @($processedEnvelope))
+            $request = $this.reflectionMethods['CreateRequest'].Invoke($this, @($processedEnvelope))
 
             $headers = @{}
             foreach ($header in $request.Headers) {
@@ -34,7 +50,7 @@ class SynchronousTransport : Sentry.Http.HttpTransportBase, Sentry.Extensibility
             }
 
             $memoryStream = [System.IO.MemoryStream]::new()
-            $this.SerializeToStream.Invoke($request.Content, @($memoryStream, $null, $cancellationToken))
+            $this.reflectionMethods['SerializeToStream'].Invoke($request.Content, @($memoryStream, $null, $cancellationToken))
             $memoryStream.Position = 0
 
             if ($null -ne $this.logger) {

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixes
+
+- Fix PowerShell 7.5.2+ compatibility for SynchronousTransport ([#105](https://github.com/getsentry/sentry-powershell/pull/105))
+
 ### Dependencies
 
 - Bump Dotnet SDK from v5.4.0 to v5.16.1 ([#83](https://github.com/getsentry/sentry-powershell/pull/83), [#89](https://github.com/getsentry/sentry-powershell/pull/89))
