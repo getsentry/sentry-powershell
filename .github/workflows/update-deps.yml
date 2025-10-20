@@ -17,10 +17,10 @@ jobs:
         include:
           - name: Dotnet SDK
             path: dependencies/Sentry.properties
-          - name: PowerShell Test v7.4.*
+          - name: PowerShell Test v7.4
             path: tests/test-pwsh-7.4.props
             pattern: '^7\.4\.\d+$'
-          - name: PowerShell Test v7.5.*
+          - name: PowerShell Test v7.5
             path: tests/test-pwsh-7.5.props
             pattern: '^7\.5\.\d+$'
           - name: PowerShell Test latest
@@ -32,3 +32,4 @@ jobs:
           path: ${{ matrix.path }}
           pr-strategy: update
           ssh-key: ${{ secrets.CI_DEPLOY_KEY }}
+
