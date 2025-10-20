@@ -7,9 +7,6 @@
 - Bump Dotnet SDK from v5.4.0 to v5.12.0 ([#83](https://github.com/getsentry/sentry-powershell/pull/83))
   - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#5120)
   - [diff](https://github.com/getsentry/sentry-dotnet/compare/5.4.0...5.12.0)
-- Bump PowerShell Test v7.4 from v7.4.0 to v7.4.12 ([#99](https://github.com/getsentry/sentry-powershell/pull/99))
-  - [changelog](https://github.com/PowerShell/PowerShell//blob/master/CHANGELOG.md#v7412)
-  - [diff](https://github.com/PowerShell/PowerShell//compare/v7.4.0...v7.4.12)
 
 ## 0.3.0
 

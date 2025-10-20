@@ -26,6 +26,20 @@ jobs:
         include:
           - name: Dotnet SDK
             path: dependencies/Sentry.properties
+    steps:
+      - uses: getsentry/github-workflows/updater@v3
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.path }}
+          ssh-key: ${{ secrets.CI_DEPLOY_KEY }}
+
+  test-deps:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
           - name: PowerShell Test v7.4
             path: tests/test-pwsh-7.4.props
             pattern: '^v7\.4\.\d+$'
@@ -39,7 +53,6 @@ jobs:
         with:
           name: ${{ matrix.name }}
           path: ${{ matrix.path }}
-          pr-strategy: update
           ssh-key: ${{ secrets.CI_DEPLOY_KEY }}
           pattern: ${{ matrix.pattern || '' }}
-
+          changelog-entry: false
