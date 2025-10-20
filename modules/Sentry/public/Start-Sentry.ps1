@@ -45,27 +45,24 @@ function Start-Sentry {
         $options.DiagnosticLogger = $logger
         $script:SentryPowerShellDiagnosticLogger = $logger
 
-        # We don't need synchronous workers with newer PowerShell versions.
-        if (($PSVersionTable.PSVersion.Major -lt 7) -or ($PSVersionTable.PSVersion.Minor -l 5)) {
-            if ($null -eq $options.Transport) {
-                try {
-                    $options.Transport = [SynchronousTransport]::new($options)
-                } catch {
-                    $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous transport', $_.Exception, @())
-                    if ($global:SentryPowershellRethrowErrors -eq $true) {
-                        throw
-                    }
+        if ($null -eq $options.Transport) {
+            try {
+                $options.Transport = [SynchronousTransport]::new($options)
+            } catch {
+                $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous transport', $_.Exception, @())
+                if ($global:SentryPowershellRethrowErrors -eq $true) {
+                    throw
                 }
             }
+        }
 
-            if ($null -eq $options.BackgroundWorker) {
-                try {
-                    $options.BackgroundWorker = [SynchronousWorker]::new($options)
-                } catch {
-                    $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous worker', $_.Exception, @())
-                    if ($global:SentryPowershellRethrowErrors -eq $true) {
-                        throw
-                    }
+        if ($null -eq $options.BackgroundWorker) {
+            try {
+                $options.BackgroundWorker = [SynchronousWorker]::new($options)
+            } catch {
+                $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous worker', $_.Exception, @())
+                if ($global:SentryPowershellRethrowErrors -eq $true) {
+                    throw
                 }
             }
         }
