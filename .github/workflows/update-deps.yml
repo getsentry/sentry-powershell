@@ -6,6 +6,15 @@ on:
     - cron: '0 3 * * *'
   # Allow a manual trigger to be able to run the update when there are new dependencies or after a PR merge to resolve CHANGELOG conflicts.
   workflow_dispatch:
+  # And on every PR merge so we get the updated dependencies ASAP, and to make sure the changelog doesn't conflict.
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write      # To modify files and create commits
+  pull-requests: write # To create and update pull requests
+  actions: write       # To cancel previous workflow runs
 
 jobs:
   deps:
@@ -22,7 +31,7 @@ jobs:
             pattern: '^v7\.4\.\d+$'
           - name: PowerShell Test v7.5
             path: tests/test-pwsh-7.5.props
-            pattern: '^v7\.5\.\d+$'
+            pattern: '^7\.5\.\d+$'
           - name: PowerShell Test latest
             path: tests/test-pwsh-latest.props
     steps:
