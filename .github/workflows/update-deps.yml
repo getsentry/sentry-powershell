@@ -19,10 +19,10 @@ jobs:
             path: dependencies/Sentry.properties
           - name: PowerShell Test v7.4
             path: tests/test-pwsh-7.4.props
-            pattern: '^7\.4\.\d+$'
+            pattern: '^v7\.4\.\d+$'
           - name: PowerShell Test v7.5
             path: tests/test-pwsh-7.5.props
-            pattern: '^7\.5\.\d+$'
+            pattern: '^v7\.5\.\d+$'
           - name: PowerShell Test latest
             path: tests/test-pwsh-latest.props
     steps:
@@ -32,4 +32,5 @@ jobs:
           path: ${{ matrix.path }}
           pr-strategy: update
           ssh-key: ${{ secrets.CI_DEPLOY_KEY }}
+          pattern: ${{ matrix.pattern || '' }}
 

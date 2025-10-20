@@ -77,7 +77,8 @@ jobs:
         if: ${{ matrix.version != '' }}
         run: |
           $config = Get-Content ./tests/test-pwsh-${{matrix.version}}.props | ConvertFrom-StringData
-          "POWERSHELL_VERSION=$($config.version)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          $version = $config.version -replace '^v',''
+          "POWERSHELL_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Setup PowerShell ${{ env.POWERSHELL_VERSION }}
         if: ${{ matrix.version != '' }}
