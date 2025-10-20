@@ -74,13 +74,13 @@ jobs:
           Expand-Archive -Path Sentry.zip -DestinationPath modules/Sentry
 
       - name: Set POWERSHELL_VERSION env var
-        if: ${{ env.POWERSHELL_VERSION != '' }}
+        if: ${{ matrix.version != '' }}
         run: |
           $config = Get-Content ./tests/test-pwsh-${{matrix.version}}.props | ConvertFrom-StringData
           "POWERSHELL_VERSION=$($config.version)" | Out-File -FilePath $env:GITHUB_ENV -Append
 
       - name: Setup PowerShell ${{ env.POWERSHELL_VERSION }}
-        if: ${{ env.POWERSHELL_VERSION != '' }}
+        if: ${{ matrix.version != '' }}
         uses: ./.github/actions/setup-powershell
 
       - run: $PSVersionTable
