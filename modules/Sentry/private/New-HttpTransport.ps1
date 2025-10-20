@@ -1,6 +1,5 @@
 # Wrapper to expose Sentry.Internal.SdkComposer::CreateHttpTransport()
-function New-HttpTransport
-{
+function New-HttpTransport {
     [OutputType([Sentry.Extensibility.ITransport])]
     [CmdletBinding()]
     param(

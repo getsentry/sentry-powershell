@@ -4,8 +4,7 @@
 . "$privateDir/SynchronousTransport.ps1"
 . "$privateDir/EventUpdater.ps1"
 
-function Start-Sentry
-{
+function Start-Sentry {
     [CmdletBinding(DefaultParameterSetName = 'Simple')]
     param(
         [Parameter(Mandatory, ParameterSetName = 'Simple', Position = 0)]
@@ -15,8 +14,7 @@ function Start-Sentry
         [scriptblock] $EditOptions
     )
 
-    begin
-    {
+    begin {
         $options = [Sentry.SentryOptions]::new()
         $options.FlushTimeout = [System.TimeSpan]::FromSeconds(10)
         $options.ShutDownTimeout = $options.FlushTimeout
@@ -25,23 +23,17 @@ function Start-Sentry
         $options.AddIntegration([ScopeIntegration]::new())
         $options.AddEventProcessor([EventUpdater]::new())
 
-        if ($DebugPreference -eq 'SilentlyContinue')
-        {
+        if ($DebugPreference -eq 'SilentlyContinue') {
             $Options.Debug = $false
             $options.DiagnosticLevel = [Sentry.SentryLevel]::Info
-        }
-        else
-        {
+        } else {
             $Options.Debug = $true
             $options.DiagnosticLevel = [Sentry.SentryLevel]::Debug
         }
 
-        if ($EditOptions -eq $null)
-        {
+        if ($EditOptions -eq $null) {
             $options.Dsn = $Dsn
-        }
-        else
-        {
+        } else {
             # Execute the script block in the caller's scope & set the automatic $_ variable to the options object.
             $options | ForEach-Object $EditOptions
         }
@@ -53,14 +45,10 @@ function Start-Sentry
         $options.DiagnosticLogger = $logger
         $script:SentryPowerShellDiagnosticLogger = $logger
 
-        if ($null -eq $options.Transport)
-        {
-            try
-            {
+        if ($null -eq $options.Transport) {
+            try {
                 $options.Transport = [SynchronousTransport]::new($options)
-            }
-            catch
-            {
+            } catch {
                 $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous transport', $_.Exception, @())
                 if ($global:SentryPowershellRethrowErrors -eq $true) {
                     throw
@@ -68,14 +56,10 @@ function Start-Sentry
             }
         }
 
-        if ($null -eq $options.BackgroundWorker)
-        {
-            try
-            {
+        if ($null -eq $options.BackgroundWorker) {
+            try {
                 $options.BackgroundWorker = [SynchronousWorker]::new($options)
-            }
-            catch
-            {
+            } catch {
                 $logger.Log([Sentry.SentryLevel]::Warning, 'Failed to create a PowerShell-specific synchronous worker', $_.Exception, @())
                 if ($global:SentryPowershellRethrowErrors -eq $true) {
                     throw
@@ -86,8 +70,7 @@ function Start-Sentry
         # Workaround for https://github.com/getsentry/sentry-dotnet/issues/3141
         $options.DisableAppDomainProcessExitFlush()
     }
-    process
-    {
+    process {
         [Sentry.SentrySdk]::init($options) | Out-Null
     }
 }

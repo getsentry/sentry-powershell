@@ -1,7 +1,5 @@
-class ScopeIntegration : Sentry.Integrations.ISdkIntegration
-{
-    Register([Sentry.IHub] $hub, [Sentry.SentryOptions] $options)
-    {
+class ScopeIntegration : Sentry.Integrations.ISdkIntegration {
+    Register([Sentry.IHub] $hub, [Sentry.SentryOptions] $options) {
         $hub.ConfigureScope([System.Action[Sentry.Scope]] {
                 param([Sentry.Scope]$scope)
 
@@ -9,12 +7,9 @@ class ScopeIntegration : Sentry.Integrations.ISdkIntegration
                 $scope.Sdk.Version = $moduleInfo.ModuleVersion
                 $scope.Sdk.AddPackage("ps:$($scope.Sdk.Name)", $scope.Sdk.Version)
 
-                if ($PSVersionTable.PSEdition -eq 'Core')
-                {
+                if ($PSVersionTable.PSEdition -eq 'Core') {
                     $scope.Contexts.Runtime.Name = 'PowerShell'
-                }
-                else
-                {
+                } else {
                     $scope.Contexts.Runtime.Name = 'Windows PowerShell'
                 }
                 $scope.Contexts.Runtime.Version = $PSVersionTable.PSVersion.ToString()

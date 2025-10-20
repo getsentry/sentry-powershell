@@ -1,5 +1,4 @@
-function Start-SentryTransaction
-{
+function Start-SentryTransaction {
     [OutputType([Sentry.ITransactionTracer])]
     [CmdletBinding(DefaultParameterSetName = 'Basic')]
     param(
@@ -28,27 +27,20 @@ function Start-SentryTransaction
         [switch] $ForceSampled
     )
 
-    begin
-    {
-        if ($null -eq $TransactionContext)
-        {
+    begin {
+        if ($null -eq $TransactionContext) {
             $IsSampled = $null
-            if ($ForceSampled)
-            {
+            if ($ForceSampled) {
                 $IsSampled = $true
             }
             $TransactionContext = [Sentry.TransactionContext]::new($Name, $Operation, $null, $null, $null, $Description, $null, $IsSampled)
         }
 
     }
-    process
-    {
-        if ($CustomSamplingContext -eq $null)
-        {
+    process {
+        if ($CustomSamplingContext -eq $null) {
             return [Sentry.SentrySdk]::StartTransaction($TransactionContext)
-        }
-        else
-        {
+        } else {
             $samplingContext = HashTableToDictionary $CustomSamplingContext
             return [Sentry.SentrySdk]::StartTransaction($TransactionContext, $samplingContext)
         }
@@ -56,11 +48,9 @@ function Start-SentryTransaction
 }
 
 # Converts [hashtable] to [System.Collections.generic.dictionary]
-function HashTableToDictionary([hashtable] $hash)
-{
+function HashTableToDictionary([hashtable] $hash) {
     $dict = [System.Collections.Generic.Dictionary[string, object]]::new()
-    foreach ($key in $hash.Keys)
-    {
+    foreach ($key in $hash.Keys) {
         $dict.Add($key, $hash[$key])
     }
     return $dict

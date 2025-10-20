@@ -1,18 +1,14 @@
 . "$publicDir/Out-Sentry.ps1"
 
-function Invoke-WithSentry
-{
+function Invoke-WithSentry {
     param(
         [scriptblock]
         $ScriptBlock
     )
 
-    try
-    {
+    try {
         & $ScriptBlock
-    }
-    catch
-    {
+    } catch {
         $_ | Out-Sentry
         throw
     }

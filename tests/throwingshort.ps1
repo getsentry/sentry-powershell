@@ -1,3 +1,3 @@
 function funcC {
-    throw "Short context test"
+    throw 'Short context test'
 }
