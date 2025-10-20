@@ -37,21 +37,21 @@ BeforeAll {
         $frames.Count | Should -BeGreaterThan 0
 
         if ($event.SentryExceptions[1].Type -eq 'Write-Error') {
-            $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 18)
+            $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 15)
             $event.SentryExceptions[0].Type | Should -Be 'Microsoft.PowerShell.Commands.WriteErrorException'
             $event.SentryExceptions[0].Module | Should -Match 'Microsoft.PowerShell.Commands.Utility'
         } else {
             if ($event.SentryExceptions[1].Type -eq 'error') {
-                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 17)
+                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 14)
                 $(GetListItem $frames -1).ColumnNumber | Should -BeGreaterThan 0
             } else {
-                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 24)
+                $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 19)
             }
             $event.SentryExceptions[0].Type | Should -Be 'System.Management.Automation.RuntimeException'
             $event.SentryExceptions[0].Module | Should -Match 'System.Management.Automation'
         }
 
-        $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 7)
+        $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 6)
 
         $event.SentryExceptions[0].Value | Should -Be 'error'
         if ($event.SentryExceptions[1].Type -eq 'error,funcB') {
@@ -88,7 +88,7 @@ BeforeAll {
 
         $frame.PreContext | Should -Be @('function funcC {')
         $frame.PreContext.Count | Should -Be 1
-        $frame.ContextLine | Should -Be '    throw "Short context test"'
+        $frame.ContextLine | Should -Be "    throw 'Short context test'"
         $frame.PostContext | Should -Be @('}')
         $frame.PostContext.Count | Should -Be 1
     }
@@ -116,8 +116,8 @@ Describe 'Out-Sentry' {
         $event.SentryThreads.Count | Should -Be 2
         [Sentry.SentryStackFrame[]] $frames = $event.SentryThreads[0].Stacktrace.Frames
         $frames.Count | Should -BeGreaterThan 0
-        $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 19)
-        $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 7)
+        $checkFrame.Invoke((GetListItem $frames -1), 'funcB', 16)
+        $checkFrame.Invoke((GetListItem $frames -2), 'funcA', 6)
 
         # A module-based frame should be in-app=false
         $frames | Where-Object -Property Module | Select-Object -First 1 -ExpandProperty 'InApp' | Should -Be $false
@@ -162,7 +162,7 @@ Describe 'Out-Sentry' {
         (GetListItem $frames -1).AbsolutePath | Should -Be $PSCommandPath
         (GetListItem $frames -1).LineNumber | Should -BeGreaterThan 0
         (GetListItem $frames -1).InApp | Should -Be $true
-        (GetListItem $frames -1).PreContext | Should -Be @('        {', "            funcA 'throw' 'exception'", '        }', '        catch', '        {')
+        (GetListItem $frames -1).PreContext | Should -Be @('', "    It 'captures exception' {", '        try {', "            funcA 'throw' 'exception'", '        } catch {')
         (GetListItem $frames -1).ContextLine | Should -Be '            $_.Exception | Out-Sentry'
         (GetListItem $frames -1).PostContext | Should -Be @('        }', '        $events.Count | Should -Be 1', '        [Sentry.SentryEvent]$event = $events.ToArray()[0]', '        $event.SentryExceptions.Count | Should -Be 2', '')
 
