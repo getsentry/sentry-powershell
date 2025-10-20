@@ -5,7 +5,7 @@ Describe 'Publishing' {
 
     It 'Publish-Module' {
         $tempModuleDir = "$PSScriptRoot/temp/Sentry"
-        Remove-Item $tempModuleDir -Recurse -ErrorAction SilentlyContinue
+        Remove-Item $tempModuleDir -Recurse -Force -ErrorAction SilentlyContinue
         Copy-Item "$PSScriptRoot/../modules/Sentry" -Destination $tempModuleDir -Recurse
 
         # Update version in the module manifest
