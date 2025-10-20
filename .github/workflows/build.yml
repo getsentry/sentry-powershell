@@ -40,8 +40,9 @@ jobs:
         os: [ubuntu]
         shell: [pwsh]
         version:
-          - '7.5.0'
-          - '7.4.0'
+          - 'latest'
+          - '7.5'
+          - '7.4'
         # Test builtin `pwsh` version on all `*-latest` os images and Windows Powershell on Windows 2022 and 2025.
         include:
           - os: ubuntu
@@ -72,11 +73,15 @@ jobs:
           Remove-Item -Recurse -Force modules/Sentry
           Expand-Archive -Path Sentry.zip -DestinationPath modules/Sentry
 
-      - name: Setup PowerShell ${{ matrix.version }}
+      - name: Set POWERSHELL_VERSION env var
+        if: ${{ matrix.version != '' }}
+        run: |
+          $config = Get-Content ./tests/test-pwsh-${{matrix.version}}.props | ConvertFrom-StringData
+          "POWERSHELL_VERSION=$($config.version)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Setup PowerShell ${{ env.POWERSHELL_VERSION }}
         if: ${{ matrix.version != '' }}
         uses: ./.github/actions/setup-powershell
-        env:
-          POWERSHELL_VERSION: ${{ matrix.version }}
 
       - run: $PSVersionTable
 

@@ -10,16 +10,25 @@ on:
 jobs:
   deps:
     name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: Dotnet SDK
             path: dependencies/Sentry.properties
-    uses: getsentry/github-workflows/.github/workflows/updater.yml@v2
-    with:
-      name: ${{ matrix.name }}
-      path: ${{ matrix.path }}
-      pr-strategy: update
-    secrets:
-      api-token: ${{ secrets.CI_DEPLOY_KEY }}
+          - name: PowerShell Test v7.4.*
+            path: tests/test-pwsh-7.4.props
+            pattern: '^7\.4\.\d+$'
+          - name: PowerShell Test v7.5.*
+            path: tests/test-pwsh-7.5.props
+            pattern: '^7\.5\.\d+$'
+          - name: PowerShell Test latest
+            path: tests/test-pwsh-latest.props
+    steps:
+      - uses: getsentry/github-workflows/updater@v3
+        with:
+          name: ${{ matrix.name }}
+          path: ${{ matrix.path }}
+          pr-strategy: update
+          ssh-key: ${{ secrets.CI_DEPLOY_KEY }}
