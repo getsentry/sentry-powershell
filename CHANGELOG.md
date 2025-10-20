@@ -5,6 +5,7 @@
 ### Fixes
 
 - Fix PowerShell 7.5.2+ compatibility for SynchronousTransport ([#105](https://github.com/getsentry/sentry-powershell/pull/105))
+- Remove workaround for Dotnet SDK issue causing a hang on process exit - automatic flush should work now. ([#85](https://github.com/getsentry/sentry-powershell/pull/85))
 
 ### Dependencies
 

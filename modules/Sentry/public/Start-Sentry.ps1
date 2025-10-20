@@ -66,9 +66,6 @@ function Start-Sentry {
                 }
             }
         }
-
-        # Workaround for https://github.com/getsentry/sentry-dotnet/issues/3141
-        $options.DisableAppDomainProcessExitFlush()
     }
     process {
         [Sentry.SentrySdk]::init($options) | Out-Null
