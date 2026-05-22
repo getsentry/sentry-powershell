@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- Silence CS1701/CS1702 warnings emitted by `Add-Type` when importing the module on PowerShell hosts whose runtime `System.Runtime` version differs from the one `Sentry.dll` was compiled against ([#129](https://github.com/getsentry/sentry-powershell/pull/129))
+
 ## 0.4.0
 
 ### Fixes
