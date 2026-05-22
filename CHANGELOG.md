@@ -4,7 +4,7 @@
 
 ### Features
 
-- Add `Write-SentryLog` cmdlet, a native PowerShell API for sending structured logs (Sentry Logs)
+- Add `Write-SentryLog` cmdlet, a native PowerShell API for sending structured logs (Sentry Logs) ([#131](https://github.com/getsentry/sentry-powershell/pull/131))
 
 ## 0.4.0
 
