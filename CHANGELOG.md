@@ -6,6 +6,10 @@
 
 - Silence CS1701/CS1702 warnings emitted by `Add-Type` when importing the module on PowerShell hosts whose runtime `System.Runtime` version differs from the one `Sentry.dll` was compiled against ([#129](https://github.com/getsentry/sentry-powershell/pull/129))
 
+### Features
+
+- Add `Write-SentryLog` cmdlet, a native PowerShell API for sending structured logs (Sentry Logs) ([#131](https://github.com/getsentry/sentry-powershell/pull/131))
+
 ## 0.4.0
 
 ### Fixes
