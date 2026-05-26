@@ -9,6 +9,7 @@
 ### Features
 
 - Add `Write-SentryLog` cmdlet, a native PowerShell API for sending structured logs (Sentry Logs) ([#131](https://github.com/getsentry/sentry-powershell/pull/131))
+- Add `Add-SentryEventProcessor` cmdlet for registering a global event processor from a PowerShell script block ([#130](https://github.com/getsentry/sentry-powershell/pull/130))
 
 ## 0.4.0
 
