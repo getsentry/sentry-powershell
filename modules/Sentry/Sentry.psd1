@@ -33,6 +33,7 @@
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
     FunctionsToExport    = @(
         'Add-SentryBreadcrumb',
+        'Add-SentryEventProcessor',
         'Edit-SentryScope',
         'Invoke-WithSentry',
         'Out-Sentry',
