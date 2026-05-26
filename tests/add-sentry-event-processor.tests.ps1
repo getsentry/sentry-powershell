@@ -1,10 +1,5 @@
 BeforeAll {
     . "$PSScriptRoot/utils.ps1"
-    $global:SentryPowershellRethrowErrors = $true
-}
-
-AfterAll {
-    $global:SentryPowershellRethrowErrors = $false
 }
 
 Describe 'Add-SentryEventProcessor' {
