@@ -41,6 +41,20 @@ Describe 'Add-SentryEventProcessor' {
         $events[0].Message.Message | Should -Be 'msg'
     }
 
+    It 'Captures the closure independently for each registration' {
+        # Verifies that GetNewClosure() in Add-SentryEventProcessor binds each
+        # wrapper to its own user-supplied $ScriptBlock — i.e. registrations
+        # don't collapse to a single shared reference. (Note: variables that
+        # the user's scriptblock closes over from the caller's scope are still
+        # resolved at invoke time per normal PowerShell scoping rules.)
+        Add-SentryEventProcessor { $_.SetTag('which', 'first'); $_ }
+        Add-SentryEventProcessor { $_.SetTag('also', 'second'); $_ }
+        'msg' | Out-Sentry
+
+        $events[0].Tags['which'] | Should -Be 'first'
+        $events[0].Tags['also'] | Should -Be 'second'
+    }
+
     It 'Chains multiple processors in registration order' {
         Add-SentryEventProcessor { $_.SetTag('first', '1'); $_ }
         Add-SentryEventProcessor { $_.SetTag('second', '2'); $_ }
