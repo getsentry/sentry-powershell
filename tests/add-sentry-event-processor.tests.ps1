@@ -50,6 +50,16 @@ Describe 'Add-SentryEventProcessor' {
         $events[0].Tags['second'] | Should -Be '2'
     }
 
+    It 'Still captures the event when the script block throws' {
+        # Silent-failure contract: a throwing processor must not break event capture
+        # or propagate the exception to the caller of Out-Sentry.
+        Add-SentryEventProcessor { throw 'boom' }
+        { 'msg' | Out-Sentry } | Should -Not -Throw
+
+        $events.Count | Should -Be 1
+        $events[0].Message.Message | Should -Be 'msg'
+    }
+
     It 'Throws when Sentry is not initialized' {
         Stop-Sentry
         { Add-SentryEventProcessor { $_ } } | Should -Throw '*Sentry is not initialized*'
