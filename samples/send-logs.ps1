@@ -14,11 +14,11 @@
 # Import the Sentry module. In your code, you would just use `Import-Module Sentry`.
 Import-Module $PSScriptRoot/../modules/Sentry/Sentry.psd1
 
-# Start the Sentry client. Set Experimental.EnableLogs = $true to opt in to Logs.
+# Start the Sentry client. Set EnableLogs = $true to opt in to Logs.
 Start-Sentry {
     $_.Dsn = 'https://997874440feaba4ecc65c1e25df7912b@o447951.ingest.us.sentry.io/4508073336176640'
     $_.Debug = $true
-    $_.Experimental.EnableLogs = $true
+    $_.EnableLogs = $true
 }
 
 try {
