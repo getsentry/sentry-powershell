@@ -74,7 +74,9 @@ Describe 'Add-SentryEventProcessor' {
 
         $events.Count | Should -Be 1
         $events[0].Message.Message | Should -Be 'msg'
-        ($logger.entries | Where-Object { $_ -match 'Event processor scriptblock failed' }).Count | Should -BeGreaterThan 0
+        # Use string-join + -Match: in Windows PowerShell 5.1, Where-Object
+        # unwraps a single result to a scalar, breaking .Count.
+        ($logger.entries -join "`n") | Should -Match 'Event processor scriptblock failed'
     }
 
     It 'Throws when Sentry is not initialized' {
