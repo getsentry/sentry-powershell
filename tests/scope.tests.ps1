@@ -41,3 +41,49 @@ Describe 'Edit-SentryScope' {
         $envelope.Items[1].Header.filename | Should -Be 'filename.bin'
     }
 }
+
+Describe 'Add-SentryAttachment' {
+    BeforeEach {
+        $events = [System.Collections.Generic.List[Sentry.SentryEvent]]::new();
+        $transport = [RecordingTransport]::new()
+        StartSentryForEventTests ([ref] $events) ([ref] $transport)
+    }
+
+    AfterEach {
+        Stop-Sentry
+    }
+
+    It 'infers text/plain for a .ps1 file' {
+        Add-SentryAttachment -Path $PSCommandPath
+        'message' | Out-Sentry
+        $envelope = [Sentry.Protocol.Envelopes.Envelope]$transport.Envelopes.ToArray()[0]
+        $envelope.Items[1].Header.filename | Should -Be 'scope.tests.ps1'
+        $envelope.Items[1].Header.content_type | Should -Be 'text/plain'
+    }
+
+    It 'infers application/json for a .json byte attachment' {
+        [byte[]] $data = [System.Text.Encoding]::UTF8.GetBytes('{"hello":"world"}')
+        Add-SentryAttachment -Bytes $data -FileName 'payload.json'
+        'message' | Out-Sentry
+        $envelope = [Sentry.Protocol.Envelopes.Envelope]$transport.Envelopes.ToArray()[0]
+        $envelope.Items[1].Header.filename | Should -Be 'payload.json'
+        $envelope.Items[1].Header.content_type | Should -Be 'application/json'
+    }
+
+    It 'honors an explicit -ContentType' {
+        Add-SentryAttachment -Path $PSCommandPath -ContentType 'text/x-powershell'
+        'message' | Out-Sentry
+        $envelope = [Sentry.Protocol.Envelopes.Envelope]$transport.Envelopes.ToArray()[0]
+        $envelope.Items[1].Header.content_type | Should -Be 'text/x-powershell'
+    }
+
+    It 'leaves content-type unset for unknown extensions' {
+        [byte[]] $data = 1, 2, 3
+        Add-SentryAttachment -Bytes $data -FileName 'thing.unknownext'
+        'message' | Out-Sentry
+        $envelope = [Sentry.Protocol.Envelopes.Envelope]$transport.Envelopes.ToArray()[0]
+        $envelope.Items[1].Header.filename | Should -Be 'thing.unknownext'
+        # When no extension match and no explicit override, we don't set a content type.
+        [string]::IsNullOrEmpty($envelope.Items[1].Header.content_type) | Should -Be $true
+    }
+}
