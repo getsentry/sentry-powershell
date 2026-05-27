@@ -25,6 +25,9 @@ public sealed class ScriptBlockEventProcessor : ISentryEventProcessor
     {
         try
         {
+            // ScriptBlock.Invoke is not annotated and in practice always returns a
+            // Collection<PSObject>, but guard against null defensively and treat it
+            // the same as "no pipeline output" -> leave the event unchanged.
             var results = _scriptBlock.Invoke(@event);
             if (results == null || results.Count == 0)
             {
@@ -34,10 +37,24 @@ public sealed class ScriptBlockEventProcessor : ISentryEventProcessor
             var last = results[results.Count - 1];
             if (last == null)
             {
+                // User's script block explicitly returned $null -> drop the event.
                 return null;
             }
 
-            return (last.BaseObject as SentryEvent) ?? @event;
+            if (last.BaseObject is SentryEvent processed)
+            {
+                return processed;
+            }
+
+            if (_logger != null)
+            {
+                _logger.Log(
+                    SentryLevel.Warning,
+                    "Event processor scriptblock for event {0} returned {1} instead of a SentryEvent; keeping the original event.",
+                    null,
+                    new object[] { @event.EventId, last.BaseObject?.GetType().FullName ?? "null" });
+            }
+            return @event;
         }
         catch (Exception ex)
         {

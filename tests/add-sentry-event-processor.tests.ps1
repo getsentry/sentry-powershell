@@ -33,6 +33,14 @@ Describe 'Add-SentryEventProcessor' {
         $events[0].Message.Message | Should -Be 'keep this one'
     }
 
+    It 'Keeps the original event when the script block returns a non-SentryEvent value' {
+        Add-SentryEventProcessor { 'not an event' }
+        'msg' | Out-Sentry
+
+        $events.Count | Should -Be 1
+        $events[0].Message.Message | Should -Be 'msg'
+    }
+
     It 'Chains multiple processors in registration order' {
         Add-SentryEventProcessor { $_.SetTag('first', '1'); $_ }
         Add-SentryEventProcessor { $_.SetTag('second', '2'); $_ }
