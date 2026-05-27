@@ -38,8 +38,8 @@ function Start-Sentry {
             $options | ForEach-Object $EditOptions
         }
 
-        # Respect a logger supplied via EditOptions (e.g. a TestLogger in tests);
-        # otherwise fall back to the project's default DiagnosticLogger.
+        # Allow the logger to be injected/supplied via EditOptions (e.g. a TestLogger).
+        # Use default DiagnosticLogger as a fall back in normal circumstances.
         if ($null -eq $options.DiagnosticLogger) {
             $options.DiagnosticLogger = [DiagnosticLogger]::new($options.DiagnosticLevel)
         }
