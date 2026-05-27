@@ -41,18 +41,20 @@ public sealed class ScriptBlockEventProcessor : ISentryEventProcessor
                 return null;
             }
 
-            if (last.BaseObject is SentryEvent processed)
+            var processed = last.BaseObject as SentryEvent;
+            if (processed != null)
             {
                 return processed;
             }
 
             if (_logger != null)
             {
+                var returnedTypeName = last.BaseObject != null ? last.BaseObject.GetType().FullName : "null";
                 _logger.Log(
                     SentryLevel.Warning,
                     "Event processor scriptblock for event {0} returned {1} instead of a SentryEvent; keeping the original event.",
                     null,
-                    new object[] { @event.EventId, last.BaseObject?.GetType().FullName ?? "null" });
+                    new object[] { @event.EventId, returnedTypeName });
             }
             return @event;
         }
