@@ -50,14 +50,31 @@ Describe 'Add-SentryEventProcessor' {
         $events[0].Tags['second'] | Should -Be '2'
     }
 
-    It 'Still captures the event when the script block throws' {
+    It 'Still captures the event and logs a warning when the script block throws' {
         # Silent-failure contract: a throwing processor must not break event capture
-        # or propagate the exception to the caller of Out-Sentry.
+        # or propagate the exception, and the failure must be logged.
+        Stop-Sentry
+        $logger = [TestLogger]::new([Sentry.SentryLevel]::Debug)
+        Start-Sentry {
+            $_.Dsn = 'https://key@127.0.0.1/1'
+            # Debug=true is required for Sentry to retain a custom DiagnosticLogger;
+            # see https://github.com/getsentry/sentry-dotnet/issues/3212
+            $_.Debug = $true
+            $_.DiagnosticLogger = $logger
+            $_.SetBeforeSend([System.Func[Sentry.SentryEvent, Sentry.SentryEvent]] {
+                    param([Sentry.SentryEvent]$e)
+                    $events.Add($e)
+                    return $e
+                })
+            $_.Transport = $transport
+        }
+
         Add-SentryEventProcessor { throw 'boom' }
         { 'msg' | Out-Sentry } | Should -Not -Throw
 
         $events.Count | Should -Be 1
         $events[0].Message.Message | Should -Be 'msg'
+        ($logger.entries | Where-Object { $_ -match 'Event processor scriptblock failed' }).Count | Should -BeGreaterThan 0
     }
 
     It 'Throws when Sentry is not initialized' {
