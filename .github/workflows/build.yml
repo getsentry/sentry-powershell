@@ -41,6 +41,7 @@ jobs:
         shell: [pwsh]
         version:
           - 'latest'
+          - '7.6'
           - '7.5'
           - '7.4'
         # Test builtin `pwsh` version on all `*-latest` os images and Windows Powershell on Windows 2022 and 2025.
