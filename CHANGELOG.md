@@ -8,17 +8,17 @@
 
 ### Features
 
-- Add support for .NET 10 / PowerShell 7.6 ([#132](https://github.com/getsentry/sentry-powershell/pull/132))
+- Add support for .NET 10 / PowerShell 7.6 ([#133](https://github.com/getsentry/sentry-powershell/pull/133))
 - Add `Write-SentryLog` cmdlet, a native PowerShell API for sending structured logs (Sentry Logs) ([#131](https://github.com/getsentry/sentry-powershell/pull/131))
 - Add `Add-SentryEventProcessor` cmdlet for registering a global event processor from a PowerShell script block ([#130](https://github.com/getsentry/sentry-powershell/pull/130))
 
 ### Breaking changes
 
-- Sentry Logs (`Write-SentryLog`) options have moved off `Experimental`: use `$_.EnableLogs` and `$_.SetBeforeSendLog(...)` instead of `$_.Experimental.EnableLogs` / `$_.Experimental.SetBeforeSendLog(...)` ([#132](https://github.com/getsentry/sentry-powershell/pull/132))
+- Sentry Logs (`Write-SentryLog`) options have moved off `Experimental`: use `$_.EnableLogs` and `$_.SetBeforeSendLog(...)` instead of `$_.Experimental.EnableLogs` / `$_.Experimental.SetBeforeSendLog(...)` ([#133](https://github.com/getsentry/sentry-powershell/pull/133))
 
 ### Dependencies
 
-- Bump Dotnet SDK from v5.16.1 to v6.5.0 ([#132](https://github.com/getsentry/sentry-powershell/pull/132))
+- Bump Dotnet SDK from v5.16.1 to v6.5.0 ([#133](https://github.com/getsentry/sentry-powershell/pull/133))
   - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#650)
   - [diff](https://github.com/getsentry/sentry-dotnet/compare/5.16.1...6.5.0)
 
