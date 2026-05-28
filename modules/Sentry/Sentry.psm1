@@ -23,6 +23,7 @@ function Add-SentryInlineType([string] $sourceFile, [string[]] $extraReferences)
 Add-SentryInlineType "$privateDir/SentryEventProcessor.cs" @()
 Add-SentryInlineType "$privateDir/ScriptBlockEventProcessor.cs" @($automationDllPath)
 . "$privateDir/SentryEventProcessor.ps1"
+. "$privateDir/Get-AttachmentContentType.ps1"
 
 Get-ChildItem $publicDir -Filter '*.ps1' | ForEach-Object {
     . $_.FullName

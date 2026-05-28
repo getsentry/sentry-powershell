@@ -8,6 +8,7 @@
 
 ### Features
 
+- Add `Add-SentryAttachment` cmdlet that infers a content type from the file extension (including PowerShell-specific extensions like `.ps1`, `.psm1`, `.psd1`) so the Sentry UI can preview attachments as text/JSON instead of falling back to `application/octet-stream` ([#134](https://github.com/getsentry/sentry-powershell/pull/134))
 - Add support for .NET 10 / PowerShell 7.6 ([#133](https://github.com/getsentry/sentry-powershell/pull/133))
 - Add `Write-SentryLog` cmdlet, a native PowerShell API for sending structured logs (Sentry Logs) ([#131](https://github.com/getsentry/sentry-powershell/pull/131))
 - Add `Add-SentryEventProcessor` cmdlet for registering a global event processor from a PowerShell script block ([#130](https://github.com/getsentry/sentry-powershell/pull/130))
