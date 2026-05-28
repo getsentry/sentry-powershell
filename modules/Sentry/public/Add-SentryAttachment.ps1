@@ -10,7 +10,10 @@ function Add-SentryAttachment {
     .PARAMETER Path
         Path to a file to attach.
     .PARAMETER Bytes
-        Raw bytes to attach. Must be combined with -FileName.
+        Raw bytes to attach. Must be combined with -FileName. Accepts pipeline
+        input, but note the pipeline unrolls arrays: to pipe a byte[] as a single
+        attachment, wrap it with the unary comma operator, e.g.
+        `,$bytes | Add-SentryAttachment -FileName 'data.json'`.
     .PARAMETER FileName
         File name to associate with byte data.
     .PARAMETER ContentType
@@ -30,7 +33,7 @@ function Add-SentryAttachment {
         [Parameter(Mandatory, Position = 0, ParameterSetName = 'Path', ValueFromPipeline = $true)]
         [string] $Path,
 
-        [Parameter(Mandatory, ParameterSetName = 'Bytes')]
+        [Parameter(Mandatory, ParameterSetName = 'Bytes', ValueFromPipeline = $true)]
         [byte[]] $Bytes,
 
         [Parameter(Mandatory, ParameterSetName = 'Bytes')]
