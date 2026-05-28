@@ -6,7 +6,7 @@ function Add-SentryAttachment {
         Wraps Scope.AddAttachment and, when -ContentType is not specified,
         infers a sensible content type from the file extension so that the
         Sentry UI can preview common text formats (including PowerShell
-        scripts) instead of falling back to application/octet-stream.
+        scripts).
     .PARAMETER Path
         Path to a file to attach.
     .PARAMETER Bytes

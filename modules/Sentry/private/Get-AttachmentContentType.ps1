@@ -1,7 +1,5 @@
-# Maps common file extensions (especially PowerShell-flavored ones that aren't
-# in most OS MIME databases) to a content type suitable for the Sentry server's
-# attachment preview. Returns $null when no match is known, in which case the
-# caller should leave content-type unset and let the server default it.
+# Maps common file extensions that aren't guaranteed to be in OS MIME databases
+# to a content type that Sentry will recognize for attachment preview to work.
 $script:SentryAttachmentContentTypes = @{
     # PowerShell
     '.ps1'    = 'text/plain'
