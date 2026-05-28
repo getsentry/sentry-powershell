@@ -102,5 +102,17 @@ at <ScriptBlock>, : line 3' -split "[`r`n]+"
             $sut = [StackTraceProcessor]::new($options)
             $sut.ResolveInApp((MakeFrame 'Foo')) | Should -BeFalse
         }
+
+        It 'MatchesAny operates on plain records without reflection' {
+            # The hot path consumes normalized { String; Regex } records (produced once in the ctor),
+            # so it must not depend on Sentry.StringOrRegex internals.
+            $stringPattern = [PSCustomObject]@{ String = 'MyApp'; Regex = $null }
+            $regexPattern = [PSCustomObject]@{ String = $null; Regex = [regex]'^Other.*' }
+            [StackTraceProcessor]::MatchesAny(@($stringPattern), 'MyApp.Sub') | Should -BeTrue
+            [StackTraceProcessor]::MatchesAny(@($stringPattern), 'Unrelated') | Should -BeFalse
+            [StackTraceProcessor]::MatchesAny(@($regexPattern), 'OtherThing') | Should -BeTrue
+            [StackTraceProcessor]::MatchesAny(@(), 'MyApp') | Should -BeFalse
+            [StackTraceProcessor]::MatchesAny($null, 'MyApp') | Should -BeFalse
+        }
     }
 }
