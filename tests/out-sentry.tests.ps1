@@ -42,14 +42,15 @@ Describe 'Out-Sentry' {
         $eventId | Should -BeOfType [Sentry.SentryId]
         $transport.Envelopes.Count | Should -Be 1
 
-        [Sentry.SentrySdk]::CaptureUserFeedback($eventId, 'email@example.com', 'comments', 'name')
+        [Sentry.SentrySdk]::CaptureFeedback('comments', 'email@example.com', 'name', $null, $null, $eventId)
         $transport.Envelopes.Count | Should -Be 2
         $envelopeItem = $transport.Envelopes.ToArray()[1].Items[0]
-        $envelopeItem.Header['type'] | Should -Be 'user_report'
-        $envelopeItem.Payload.Source.EventId | Should -Be $eventId
-        $envelopeItem.Payload.Source.Name | Should -Be 'name'
-        $envelopeItem.Payload.Source.Email | Should -Be 'email@example.com'
-        $envelopeItem.Payload.Source.Comments | Should -Be 'comments'
+        $envelopeItem.Header['type'] | Should -Be 'feedback'
+        $feedback = $envelopeItem.Payload.Source.Contexts.Feedback
+        $feedback.AssociatedEventId | Should -Be $eventId
+        $feedback.Name | Should -Be 'name'
+        $feedback.ContactEmail | Should -Be 'email@example.com'
+        $feedback.Message | Should -Be 'comments'
     }
 
     It 'sends synchronously' {

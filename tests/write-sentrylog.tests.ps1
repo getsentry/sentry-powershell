@@ -5,8 +5,8 @@ BeforeAll {
     function StartSentryForLogTests {
         Start-Sentry {
             $_.Dsn = 'https://key@127.0.0.1/1'
-            $_.Experimental.EnableLogs = $true
-            $_.Experimental.SetBeforeSendLog([System.Func[Sentry.SentryLog, Sentry.SentryLog]] {
+            $_.EnableLogs = $true
+            $_.SetBeforeSendLog([System.Func[Sentry.SentryLog, Sentry.SentryLog]] {
                     param([Sentry.SentryLog]$log)
                     $script:logs.Add($log)
                     return $null
@@ -40,7 +40,8 @@ Describe 'Write-SentryLog' {
         $script:logs.Count | Should -Be 1
         $script:logs[0].Level | Should -Be ([Sentry.SentryLogLevel]::Info)
         $script:logs[0].Message | Should -Be 'hello'
-        $script:logs[0].Template | Should -Be 'hello'
+        # In sentry-dotnet 6.x, when there are no parameters, Template is null and the raw string is set as Message.
+        $script:logs[0].Template | Should -BeNullOrEmpty
     }
 
     It 'accepts the message from the pipeline' {
