@@ -77,6 +77,37 @@ Describe 'Add-SentryAttachment' {
         $envelope.Items[1].Header.content_type | Should -Be 'text/x-powershell'
     }
 
+    It 'resolves relative paths against PowerShell $PWD, not [Environment]::CurrentDirectory' {
+        # Simulate the common case where PowerShell's location diverges from the
+        # process working directory (which is what .NET I/O uses for relative paths).
+        $originalLocation = Get-Location
+        $originalEnvCwd = [Environment]::CurrentDirectory
+        try {
+            $tempDir = New-Item -ItemType Directory -Path (Join-Path ([System.IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString()))
+            $relativeName = 'attachment-relative.txt'
+            $fileContents = 'hello from a relative path'
+            Set-Content -Path (Join-Path $tempDir $relativeName) -Value $fileContents -NoNewline
+            Set-Location $tempDir
+            # Force divergence: leave [Environment]::CurrentDirectory pointed elsewhere.
+            [Environment]::CurrentDirectory = $originalEnvCwd
+
+            Add-SentryAttachment -Path $relativeName
+            'message' | Out-Sentry
+
+            $envelope = [Sentry.Protocol.Envelopes.Envelope]$transport.Envelopes.ToArray()[0]
+            $envelope.Items[1].Header.filename | Should -Be $relativeName
+            # The envelope serializer reads the file lazily — if the path didn't resolve,
+            # we'd see an empty/zero-length payload instead of the real bytes.
+            $envelope.Items[1].Header.length | Should -Be $fileContents.Length
+        } finally {
+            Set-Location $originalLocation
+            [Environment]::CurrentDirectory = $originalEnvCwd
+            if ($tempDir -and (Test-Path $tempDir)) {
+                Remove-Item $tempDir -Recurse -Force
+            }
+        }
+    }
+
     It 'leaves content-type unset for unknown extensions' {
         [byte[]] $data = 1, 2, 3
         Add-SentryAttachment -Bytes $data -FileName 'thing.unknownext'

@@ -41,6 +41,10 @@ function Add-SentryAttachment {
 
     process {
         if ($PSCmdlet.ParameterSetName -eq 'Path') {
+            # Resolve relative paths against PowerShell's $PWD. The Sentry SDK reads
+            # the file lazily via .NET I/O, which resolves against [Environment]::CurrentDirectory
+            # — that can diverge from $PWD after Set-Location, so resolve eagerly here.
+            $Path = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($Path)
             $resolvedFileName = [System.IO.Path]::GetFileName($Path)
             $resolvedContentType = if ($PSBoundParameters.ContainsKey('ContentType')) { $ContentType } else { Get-AttachmentContentType $resolvedFileName }
             Edit-SentryScope { $_.AddAttachment($Path, $Type, $resolvedContentType) }.GetNewClosure()
