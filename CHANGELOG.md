@@ -8,6 +8,7 @@
 
 ### Features
 
+- Honor `InAppInclude` / `InAppExclude` options when classifying PowerShell stack frames. Entries are matched against the PowerShell module name (the directory under a `$env:PSModulePath` entry) with prefix-then-dot semantics, mirroring how the .NET SDK matches namespaces. Regex variants (`AddInAppIncludeRegex` / `AddInAppExcludeRegex`) are also supported. The existing default — module frames are not in-app, script frames are — is preserved for modules not matched by any rule.
 - Add support for .NET 10 / PowerShell 7.6 ([#133](https://github.com/getsentry/sentry-powershell/pull/133))
 - Add `Write-SentryLog` cmdlet, a native PowerShell API for sending structured logs (Sentry Logs) ([#131](https://github.com/getsentry/sentry-powershell/pull/131))
 - Add `Add-SentryEventProcessor` cmdlet for registering a global event processor from a PowerShell script block ([#130](https://github.com/getsentry/sentry-powershell/pull/130))

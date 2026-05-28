@@ -6,6 +6,8 @@ class StackTraceProcessor : SentryEventProcessor {
     hidden [Sentry.Extensibility.IDiagnosticLogger] $logger
     hidden [string[]] $modulePaths
     hidden [hashtable] $pwshModules = @{}
+    hidden [System.Collections.IEnumerable] $inAppInclude
+    hidden [System.Collections.IEnumerable] $inAppExclude
 
     StackTraceProcessor([Sentry.SentryOptions] $options) {
         $this.logger = $options.DiagnosticLogger
@@ -20,6 +22,55 @@ class StackTraceProcessor : SentryEventProcessor {
             # Unix
             $this.modulePaths = $env:PSModulePath -split ':'
         }
+
+        # The SentryOptions.InAppInclude / InAppExclude lists are internal; read them via reflection.
+        # Entries are Sentry.StringOrRegex (string prefix or compiled regex) per the .NET SDK.
+        $flags = [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance
+        $includeProp = [Sentry.SentryOptions].GetProperty('InAppInclude', $flags)
+        $excludeProp = [Sentry.SentryOptions].GetProperty('InAppExclude', $flags)
+        if ($null -ne $includeProp) {
+            $this.inAppInclude = $includeProp.GetValue($options)
+        }
+        if ($null -ne $excludeProp) {
+            $this.inAppExclude = $excludeProp.GetValue($options)
+        }
+    }
+
+    hidden static [bool] MatchesAny([System.Collections.IEnumerable] $patterns, [string] $module) {
+        if ($null -eq $patterns -or [string]::IsNullOrEmpty($module)) {
+            return $false
+        }
+        foreach ($item in $patterns) {
+            # StringOrRegex has private _string / _regex fields, exactly one set.
+            $type = $item.GetType()
+            $flags = [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance
+            $stringValue = $type.GetField('_string', $flags).GetValue($item)
+            $regexValue = $type.GetField('_regex', $flags).GetValue($item)
+            if (-not [string]::IsNullOrEmpty($stringValue)) {
+                # Prefix match, matching .NET SDK namespace semantics ("Foo" matches "Foo" and "Foo.Bar").
+                if ($module -eq $stringValue -or $module.StartsWith("$stringValue.")) {
+                    return $true
+                }
+            } elseif ($null -ne $regexValue -and $regexValue.IsMatch($module)) {
+                return $true
+            }
+        }
+        return $false
+    }
+
+    hidden [bool] ResolveInApp([Sentry.SentryStackFrame] $sentryFrame) {
+        $module = $sentryFrame.Module
+        # InAppExclude wins, then InAppInclude. Both match against the PowerShell module name we stamped
+        # onto the frame (see SetModule). Falls back to the PS default: user-script frames (no module)
+        # are in-app; module frames are not. This default differs from sentry-dotnet because PS module
+        # frames are almost always third-party.
+        if ([StackTraceProcessor]::MatchesAny($this.inAppExclude, $module)) {
+            return $false
+        }
+        if ([StackTraceProcessor]::MatchesAny($this.inAppInclude, $module)) {
+            return $true
+        }
+        return [string]::IsNullOrEmpty($module)
     }
 
     [Sentry.SentryEvent]DoProcess([Sentry.SentryEvent] $event_) {
@@ -137,7 +188,7 @@ class StackTraceProcessor : SentryEventProcessor {
         foreach ($sentryFrame in $sentryFrames) {
             # Update module info
             $this.SetModule($sentryFrame)
-            $sentryFrame.InApp = [string]::IsNullOrEmpty($sentryFrame.Module)
+            $sentryFrame.InApp = $this.ResolveInApp($sentryFrame)
             $this.SetContextLines($sentryFrame)
         }
 
