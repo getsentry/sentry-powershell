@@ -60,8 +60,7 @@ class StackTraceProcessor : SentryEventProcessor {
 
     hidden [bool] ResolveInApp([Sentry.SentryStackFrame] $sentryFrame) {
         $module = $sentryFrame.Module
-        # InAppExclude wins, then InAppInclude. Both match against the PowerShell module name we stamped
-        # onto the frame (see SetModule). Falls back to the PS default: user-script frames (no module)
+        # InAppExclude wins, then InAppInclude. Falls back to the PS default: user-script frames (no module)
         # are in-app; module frames are not. This default differs from sentry-dotnet because PS module
         # frames are almost always third-party.
         if ([StackTraceProcessor]::MatchesAny($this.inAppExclude, $module)) {
