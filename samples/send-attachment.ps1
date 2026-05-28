@@ -24,6 +24,8 @@ Start-Sentry {
 try {
     # 1) Attach a file by path. The extension (.ps1) is recognized as text,
     #    so Sentry will render it inline in the event's Attachments tab.
+    #    A path can also be supplied from the pipeline:
+    #        $PSCommandPath | Add-SentryAttachment
     Add-SentryAttachment -Path $PSCommandPath
 
     # 2) Attach raw bytes with a filename hint. .json maps to application/json

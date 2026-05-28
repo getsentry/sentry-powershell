@@ -61,6 +61,14 @@ Describe 'Add-SentryAttachment' {
         $envelope.Items[1].Header.content_type | Should -Be 'text/plain'
     }
 
+    It 'accepts a file path from the pipeline' {
+        $PSCommandPath | Add-SentryAttachment
+        'message' | Out-Sentry
+        $envelope = [Sentry.Protocol.Envelopes.Envelope]$transport.Envelopes.ToArray()[0]
+        $envelope.Items[1].Header.filename | Should -Be 'scope.tests.ps1'
+        $envelope.Items[1].Header.content_type | Should -Be 'text/plain'
+    }
+
     It 'infers application/json for a .json byte attachment' {
         [byte[]] $data = [System.Text.Encoding]::UTF8.GetBytes('{"hello":"world"}')
         Add-SentryAttachment -Bytes $data -FileName 'payload.json'

@@ -21,6 +21,8 @@ function Add-SentryAttachment {
     .EXAMPLE
         PS> Add-SentryAttachment -Path $PSCommandPath
     .EXAMPLE
+        PS> $PSCommandPath | Add-SentryAttachment
+    .EXAMPLE
         PS> Add-SentryAttachment -Bytes $bytes -FileName 'data.json'
     #>
     [CmdletBinding(DefaultParameterSetName = 'Path')]
