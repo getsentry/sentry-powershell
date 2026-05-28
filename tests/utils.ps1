@@ -11,6 +11,26 @@ class RecordingTransport:Sentry.Extensibility.ITransport {
     }
 }
 
+class FileTransport:Sentry.Extensibility.ITransport {
+    [string] $path
+
+    FileTransport([string] $path) {
+        $this.path = $path
+    }
+
+    # Serializes every envelope it's asked to send to a file on disk so that delivery can be
+    # observed from a parent process after the sending process exits (used by the exit-flush test).
+    [System.Threading.Tasks.Task]SendEnvelopeAsync([Sentry.Protocol.Envelopes.Envelope] $envelope, [System.Threading.CancellationToken] $cancellationToken) {
+        $stream = [System.IO.File]::Open($this.path, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write, [System.IO.FileShare]::ReadWrite)
+        try {
+            $envelope.Serialize($stream, $null)
+        } finally {
+            $stream.Dispose()
+        }
+        return [System.Threading.Tasks.Task]::CompletedTask
+    }
+}
+
 class TestLogger:Sentry.Infrastructure.DiagnosticLogger {
     TestLogger([Sentry.SentryLevel]$level) : base($level) {}
 
