@@ -87,11 +87,12 @@ function Download([string] $dependency, [string] $TFM, [string] $targetTFM = $nu
 
 Download -Dependency 'Sentry' -TFM 'net8.0'
 Download -Dependency 'Sentry' -TFM 'net9.0'
+Download -Dependency 'Sentry' -TFM 'net10.0'
 Download -Dependency 'Sentry' -TFM 'net462'
 
 # You can see the list of dependencies that are actually used in sentry-dotnet/src/Sentry/bin/Debug/net462
 # As for the versions in use, check the sentry package on nuget.org.
-Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'Microsoft.Bcl.AsyncInterfaces'
+Download -TFM 'net462' -Dependency 'Microsoft.Bcl.AsyncInterfaces'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Buffers'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Collections.Immutable'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Memory'
@@ -100,7 +101,8 @@ Download -TFM 'net46' -TargetTFM 'net462' -Dependency 'System.Numerics.Vectors'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Reflection.Metadata'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Runtime.CompilerServices.Unsafe.4'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Runtime.CompilerServices.Unsafe.6'
-Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Text.Encodings.Web'
-Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Text.Json'
+Download -TFM 'net45' -TargetTFM 'net462' -Dependency 'System.Runtime.InteropServices.RuntimeInformation'
+Download -TFM 'net462' -Dependency 'System.Text.Encodings.Web'
+Download -TFM 'net462' -Dependency 'System.Text.Json'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.Threading.Tasks.Extensions'
 Download -TFM 'net461' -TargetTFM 'net462' -Dependency 'System.ValueTuple'
