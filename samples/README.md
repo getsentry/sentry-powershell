@@ -15,3 +15,8 @@ Or send structured logs to Sentry (see the [Sentry Logs docs](https://docs.sentr
 ```sh
 pwsh ./samples/send-logs.ps1
 ```
+
+Or send an event with file/byte attachments (see the [Attachments docs](https://docs.sentry.io/platforms/powershell/enriching-events/attachments/)):
+```sh
+pwsh ./samples/send-attachment.ps1
+```
