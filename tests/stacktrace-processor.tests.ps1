@@ -60,11 +60,15 @@ at <ScriptBlock>, : line 3' -split "[`r`n]+"
         }
 
         It 'Honors InAppExclude for module frames' {
+            # Module frames already default to not-in-app, so an exclude can only be *observed* when it
+            # overrides an include. Include both modules, exclude one, and verify only the other stays in-app.
             $options = [Sentry.SentryOptions]::new()
-            $options.AddInAppExclude('Pester')
+            $options.AddInAppInclude('Included')
+            $options.AddInAppInclude('Excluded')
+            $options.AddInAppExclude('Excluded')
             $sut = [StackTraceProcessor]::new($options)
-            $sut.ResolveInApp((MakeFrame 'Pester')) | Should -BeFalse
-            $sut.ResolveInApp((MakeFrame 'MyApp')) | Should -BeFalse
+            $sut.ResolveInApp((MakeFrame 'Excluded')) | Should -BeFalse
+            $sut.ResolveInApp((MakeFrame 'Included')) | Should -BeTrue
         }
 
         It 'Matches prefix on dotted module names' {
