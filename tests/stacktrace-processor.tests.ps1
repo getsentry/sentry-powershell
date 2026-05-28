@@ -30,4 +30,86 @@ at <ScriptBlock>, : line 3' -split "[`r`n]+"
         $frames[2].AbsolutePath | Should -Be 'C:\dev\sentry-powershell\tests\throwing.ps1'
         $frames[2].LineNumber | Should -Be 17
     }
+
+    Context 'ResolveInApp' {
+        BeforeAll {
+            function MakeFrame([string] $module) {
+                $f = [Sentry.SentryStackFrame]::new()
+                $f.Module = $module
+                $f
+            }
+        }
+
+        It 'Defaults user-script frames (no module) to in-app' {
+            $sut = [StackTraceProcessor]::new([Sentry.SentryOptions]::new())
+            $sut.ResolveInApp((MakeFrame $null)) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame '')) | Should -BeTrue
+        }
+
+        It 'Defaults module frames to not-in-app' {
+            $sut = [StackTraceProcessor]::new([Sentry.SentryOptions]::new())
+            $sut.ResolveInApp((MakeFrame 'Pester')) | Should -BeFalse
+        }
+
+        It 'Honors InAppInclude for module frames' {
+            $options = [Sentry.SentryOptions]::new()
+            $options.AddInAppInclude('MyApp')
+            $sut = [StackTraceProcessor]::new($options)
+            $sut.ResolveInApp((MakeFrame 'MyApp')) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame 'Pester')) | Should -BeFalse
+        }
+
+        It 'Honors InAppExclude for module frames' {
+            # Module frames already default to not-in-app, so an exclude can only be *observed* when it
+            # overrides an include. Include both modules, exclude one, and verify only the other stays in-app.
+            $options = [Sentry.SentryOptions]::new()
+            $options.AddInAppInclude('Included')
+            $options.AddInAppInclude('Excluded')
+            $options.AddInAppExclude('Excluded')
+            $sut = [StackTraceProcessor]::new($options)
+            $sut.ResolveInApp((MakeFrame 'Excluded')) | Should -BeFalse
+            $sut.ResolveInApp((MakeFrame 'Included')) | Should -BeTrue
+        }
+
+        It 'Matches prefix on dotted module names' {
+            $options = [Sentry.SentryOptions]::new()
+            $options.AddInAppInclude('MyApp')
+            $sut = [StackTraceProcessor]::new($options)
+            $sut.ResolveInApp((MakeFrame 'MyApp.Submodule')) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame 'MyAppOther')) | Should -BeFalse
+        }
+
+        It 'Matches case-insensitively for both exact and dotted-prefix' {
+            $options = [Sentry.SentryOptions]::new()
+            $options.AddInAppInclude('myapp')
+            $sut = [StackTraceProcessor]::new($options)
+            $sut.ResolveInApp((MakeFrame 'MyApp')) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame 'MyApp.Submodule')) | Should -BeTrue
+        }
+
+        It 'Honors regex include patterns' {
+            $options = [Sentry.SentryOptions]::new()
+            $options.AddInAppIncludeRegex('^My.*App$')
+            $sut = [StackTraceProcessor]::new($options)
+            $sut.ResolveInApp((MakeFrame 'MyAwesomeApp')) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame 'OtherApp')) | Should -BeFalse
+        }
+
+        It 'InAppExclude wins over InAppInclude' {
+            $options = [Sentry.SentryOptions]::new()
+            $options.AddInAppInclude('Foo')
+            $options.AddInAppExclude('Foo')
+            $sut = [StackTraceProcessor]::new($options)
+            $sut.ResolveInApp((MakeFrame 'Foo')) | Should -BeFalse
+        }
+
+        It 'Sentry.StringOrRegex still exposes the private fields we reflect on' {
+            # ResolveInApp reaches into the internal _string / _regex fields of Sentry.StringOrRegex.
+            # If a sentry-dotnet bump renames these, this fails so we catch it at upgrade time rather
+            # than silently no-op-ing InAppInclude/InAppExclude in production.
+            $flags = [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance
+            [Sentry.StringOrRegex].GetField('_string', $flags) | Should -Not -BeNullOrEmpty
+            [Sentry.StringOrRegex].GetField('_regex', $flags) | Should -Not -BeNullOrEmpty
+        }
+    }
 }
