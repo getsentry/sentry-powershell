@@ -6,8 +6,8 @@ class StackTraceProcessor : SentryEventProcessor {
     hidden [Sentry.Extensibility.IDiagnosticLogger] $logger
     hidden [string[]] $modulePaths
     hidden [hashtable] $pwshModules = @{}
-    hidden [object[]] $inAppInclude
-    hidden [object[]] $inAppExclude
+    hidden [System.Collections.IEnumerable] $inAppInclude
+    hidden [System.Collections.IEnumerable] $inAppExclude
 
     StackTraceProcessor([Sentry.SentryOptions] $options) {
         $this.logger = $options.DiagnosticLogger
@@ -23,66 +23,37 @@ class StackTraceProcessor : SentryEventProcessor {
             $this.modulePaths = $env:PSModulePath -split ':'
         }
 
-        # The SentryOptions.InAppInclude / InAppExclude lists are internal; read them via reflection and
-        # normalize each Sentry.StringOrRegex entry into a plain { String; Regex } record up front. This keeps
-        # the reflection (and its failure handling) out of the per-frame hot path, and means a future SDK
-        # rename of these internals degrades gracefully (the option is ignored) instead of crashing capture.
+        # The SentryOptions.InAppInclude / InAppExclude lists are internal; read them via reflection.
+        # Entries are Sentry.StringOrRegex (string prefix or compiled regex) per the .NET SDK.
         $flags = [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance
         $includeProp = [Sentry.SentryOptions].GetProperty('InAppInclude', $flags)
         $excludeProp = [Sentry.SentryOptions].GetProperty('InAppExclude', $flags)
         if ($null -ne $includeProp) {
-            $this.inAppInclude = $this.ExtractPatterns($includeProp.GetValue($options))
+            $this.inAppInclude = $includeProp.GetValue($options)
         }
         if ($null -ne $excludeProp) {
-            $this.inAppExclude = $this.ExtractPatterns($excludeProp.GetValue($options))
+            $this.inAppExclude = $excludeProp.GetValue($options)
         }
     }
 
-    # Convert a list of Sentry.StringOrRegex into plain [PSCustomObject]@{ String; Regex } records.
-    # StringOrRegex has private _string / _regex fields (exactly one set); reached via reflection.
-    hidden [object[]] ExtractPatterns([System.Collections.IEnumerable] $patterns) {
-        $result = [System.Collections.Generic.List[object]]::new()
-        if ($null -eq $patterns) {
-            return $result.ToArray()
-        }
-        $flags = [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance
-        foreach ($item in $patterns) {
-            $type = $item.GetType()
-            $stringField = $type.GetField('_string', $flags)
-            $regexField = $type.GetField('_regex', $flags)
-            if ($null -eq $stringField -or $null -eq $regexField) {
-                # sentry-dotnet changed StringOrRegex internals: we can't introspect this entry. Skip it
-                # (so the option simply isn't honored) rather than throwing while capturing an event.
-                if ($null -ne $this.logger) {
-                    $this.logger.Log(
-                        [Sentry.SentryLevel]::Warning,
-                        "Couldn't read an InApp include/exclude pattern via reflection " +
-                        "(Sentry.StringOrRegex internals changed); '$item' will be ignored when classifying frames."
-                    )
-                }
-                continue
-            }
-            $result.Add([PSCustomObject]@{
-                    String = $stringField.GetValue($item)
-                    Regex  = $regexField.GetValue($item)
-                })
-        }
-        return $result.ToArray()
-    }
-
-    hidden static [bool] MatchesAny([object[]] $patterns, [string] $module) {
+    hidden static [bool] MatchesAny([System.Collections.IEnumerable] $patterns, [string] $module) {
         if ($null -eq $patterns -or [string]::IsNullOrEmpty($module)) {
             return $false
         }
         foreach ($item in $patterns) {
-            if (-not [string]::IsNullOrEmpty($item.String)) {
+            # StringOrRegex has private _string / _regex fields, exactly one set.
+            $type = $item.GetType()
+            $flags = [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance
+            $stringValue = $type.GetField('_string', $flags).GetValue($item)
+            $regexValue = $type.GetField('_regex', $flags).GetValue($item)
+            if (-not [string]::IsNullOrEmpty($stringValue)) {
                 # Prefix match, matching .NET SDK namespace semantics ("Foo" matches "Foo" and "Foo.Bar").
                 # Case-insensitive on both halves, consistent with sentry-dotnet and PS module name resolution.
                 # (PowerShell's -eq is already case-insensitive; StartsWith needs it specified explicitly.)
-                if ($module -eq $item.String -or $module.StartsWith("$($item.String).", [System.StringComparison]::OrdinalIgnoreCase)) {
+                if ($module -eq $stringValue -or $module.StartsWith("$stringValue.", [System.StringComparison]::OrdinalIgnoreCase)) {
                     return $true
                 }
-            } elseif ($null -ne $item.Regex -and $item.Regex.IsMatch($module)) {
+            } elseif ($null -ne $regexValue -and $regexValue.IsMatch($module)) {
                 return $true
             }
         }
