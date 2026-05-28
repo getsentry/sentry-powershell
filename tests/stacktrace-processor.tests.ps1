@@ -33,7 +33,7 @@ at <ScriptBlock>, : line 3' -split "[`r`n]+"
 
     Context 'ResolveInApp' {
         BeforeAll {
-            function New-Frame([string] $module) {
+            function MakeFrame([string] $module) {
                 $f = [Sentry.SentryStackFrame]::new()
                 $f.Module = $module
                 $f
@@ -42,45 +42,45 @@ at <ScriptBlock>, : line 3' -split "[`r`n]+"
 
         It 'Defaults user-script frames (no module) to in-app' {
             $sut = [StackTraceProcessor]::new([Sentry.SentryOptions]::new())
-            $sut.ResolveInApp((New-Frame $null)) | Should -BeTrue
-            $sut.ResolveInApp((New-Frame '')) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame $null)) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame '')) | Should -BeTrue
         }
 
         It 'Defaults module frames to not-in-app' {
             $sut = [StackTraceProcessor]::new([Sentry.SentryOptions]::new())
-            $sut.ResolveInApp((New-Frame 'Pester')) | Should -BeFalse
+            $sut.ResolveInApp((MakeFrame 'Pester')) | Should -BeFalse
         }
 
         It 'Honors InAppInclude for module frames' {
             $options = [Sentry.SentryOptions]::new()
             $options.AddInAppInclude('MyApp')
             $sut = [StackTraceProcessor]::new($options)
-            $sut.ResolveInApp((New-Frame 'MyApp')) | Should -BeTrue
-            $sut.ResolveInApp((New-Frame 'Pester')) | Should -BeFalse
+            $sut.ResolveInApp((MakeFrame 'MyApp')) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame 'Pester')) | Should -BeFalse
         }
 
         It 'Honors InAppExclude for module frames' {
             $options = [Sentry.SentryOptions]::new()
             $options.AddInAppExclude('Pester')
             $sut = [StackTraceProcessor]::new($options)
-            $sut.ResolveInApp((New-Frame 'Pester')) | Should -BeFalse
-            $sut.ResolveInApp((New-Frame 'MyApp')) | Should -BeFalse
+            $sut.ResolveInApp((MakeFrame 'Pester')) | Should -BeFalse
+            $sut.ResolveInApp((MakeFrame 'MyApp')) | Should -BeFalse
         }
 
         It 'Matches prefix on dotted module names' {
             $options = [Sentry.SentryOptions]::new()
             $options.AddInAppInclude('MyApp')
             $sut = [StackTraceProcessor]::new($options)
-            $sut.ResolveInApp((New-Frame 'MyApp.Submodule')) | Should -BeTrue
-            $sut.ResolveInApp((New-Frame 'MyAppOther')) | Should -BeFalse
+            $sut.ResolveInApp((MakeFrame 'MyApp.Submodule')) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame 'MyAppOther')) | Should -BeFalse
         }
 
         It 'Honors regex include patterns' {
             $options = [Sentry.SentryOptions]::new()
             $options.AddInAppIncludeRegex('^My.*App$')
             $sut = [StackTraceProcessor]::new($options)
-            $sut.ResolveInApp((New-Frame 'MyAwesomeApp')) | Should -BeTrue
-            $sut.ResolveInApp((New-Frame 'OtherApp')) | Should -BeFalse
+            $sut.ResolveInApp((MakeFrame 'MyAwesomeApp')) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame 'OtherApp')) | Should -BeFalse
         }
 
         It 'InAppExclude wins over InAppInclude' {
@@ -88,7 +88,7 @@ at <ScriptBlock>, : line 3' -split "[`r`n]+"
             $options.AddInAppInclude('Foo')
             $options.AddInAppExclude('Foo')
             $sut = [StackTraceProcessor]::new($options)
-            $sut.ResolveInApp((New-Frame 'Foo')) | Should -BeFalse
+            $sut.ResolveInApp((MakeFrame 'Foo')) | Should -BeFalse
         }
     }
 }
