@@ -102,8 +102,11 @@ Describe 'Add-SentryAttachment' {
         } finally {
             Set-Location $originalLocation
             [Environment]::CurrentDirectory = $originalEnvCwd
+            # On Windows the SDK may still have a handle on the attachment file
+            # until Stop-Sentry runs in AfterEach, so cleanup can race. The temp
+            # dir is harmless to leave behind, so don't fail the test over it.
             if ($tempDir -and (Test-Path $tempDir)) {
-                Remove-Item $tempDir -Recurse -Force
+                Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
             }
         }
     }
