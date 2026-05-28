@@ -79,6 +79,14 @@ at <ScriptBlock>, : line 3' -split "[`r`n]+"
             $sut.ResolveInApp((MakeFrame 'MyAppOther')) | Should -BeFalse
         }
 
+        It 'Matches case-insensitively for both exact and dotted-prefix' {
+            $options = [Sentry.SentryOptions]::new()
+            $options.AddInAppInclude('myapp')
+            $sut = [StackTraceProcessor]::new($options)
+            $sut.ResolveInApp((MakeFrame 'MyApp')) | Should -BeTrue
+            $sut.ResolveInApp((MakeFrame 'MyApp.Submodule')) | Should -BeTrue
+        }
+
         It 'Honors regex include patterns' {
             $options = [Sentry.SentryOptions]::new()
             $options.AddInAppIncludeRegex('^My.*App$')

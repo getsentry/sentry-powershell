@@ -48,7 +48,9 @@ class StackTraceProcessor : SentryEventProcessor {
             $regexValue = $type.GetField('_regex', $flags).GetValue($item)
             if (-not [string]::IsNullOrEmpty($stringValue)) {
                 # Prefix match, matching .NET SDK namespace semantics ("Foo" matches "Foo" and "Foo.Bar").
-                if ($module -eq $stringValue -or $module.StartsWith("$stringValue.")) {
+                # Case-insensitive on both halves, consistent with sentry-dotnet and PS module name resolution.
+                # (PowerShell's -eq is already case-insensitive; StartsWith needs it specified explicitly.)
+                if ($module -eq $stringValue -or $module.StartsWith("$stringValue.", [System.StringComparison]::OrdinalIgnoreCase)) {
                     return $true
                 }
             } elseif ($null -ne $regexValue -and $regexValue.IsMatch($module)) {
