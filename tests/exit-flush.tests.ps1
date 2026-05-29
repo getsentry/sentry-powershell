@@ -20,17 +20,28 @@ BeforeAll {
         )
 
         $outputFile = [IO.Path]::GetTempFileName()
-        $stdout = [IO.Path]::GetTempFileName()
-        $stderr = [IO.Path]::GetTempFileName()
         # FileTransport appends; start from an empty file.
         Remove-Item $outputFile -ErrorAction SilentlyContinue
 
-        try {
-            $proc = Start-Process -FilePath $Executable `
-                -ArgumentList @('-NoProfile', '-File', $script:childScript, $outputFile) `
-                -PassThru -NoNewWindow `
-                -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+        # Use System.Diagnostics.Process directly rather than Start-Process: on Windows PowerShell 5.1
+        # the object returned by `Start-Process -PassThru` does not reliably populate .ExitCode after
+        # WaitForExit(timeout), whereas reading it from a Process we started ourselves works on both
+        # editions.
+        $psi = [System.Diagnostics.ProcessStartInfo]::new()
+        $psi.FileName = $Executable
+        # ArgumentList isn't available on .NET Framework (WinPS 5.1), so build the argument string.
+        $psi.Arguments = '-NoProfile -File "{0}" "{1}"' -f $script:childScript, $outputFile
+        $psi.UseShellExecute = $false
+        $psi.RedirectStandardOutput = $true
+        $psi.RedirectStandardError = $true
+        $psi.CreateNoWindow = $true
 
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        # Read the streams asynchronously to avoid deadlocking if a pipe buffer fills.
+        $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+        $stderrTask = $proc.StandardError.ReadToEndAsync()
+
+        try {
             $exited = $proc.WaitForExit($TimeoutSeconds * 1000)
             if (-not $exited) {
                 try { $proc.Kill() } catch {}
@@ -38,8 +49,8 @@ BeforeAll {
                     Exited   = $false
                     ExitCode = $null
                     Envelope = ''
-                    StdOut   = (Get-Content -Raw $stdout -ErrorAction SilentlyContinue)
-                    StdErr   = (Get-Content -Raw $stderr -ErrorAction SilentlyContinue)
+                    StdOut   = $stdoutTask.Result
+                    StdErr   = $stderrTask.Result
                 }
             }
 
@@ -47,11 +58,12 @@ BeforeAll {
                 Exited   = $true
                 ExitCode = $proc.ExitCode
                 Envelope = (Get-Content -Raw $outputFile -ErrorAction SilentlyContinue)
-                StdOut   = (Get-Content -Raw $stdout -ErrorAction SilentlyContinue)
-                StdErr   = (Get-Content -Raw $stderr -ErrorAction SilentlyContinue)
+                StdOut   = $stdoutTask.Result
+                StdErr   = $stderrTask.Result
             }
         } finally {
-            Remove-Item $outputFile, $stdout, $stderr -ErrorAction SilentlyContinue
+            $proc.Dispose()
+            Remove-Item $outputFile -ErrorAction SilentlyContinue
         }
     }
 }
