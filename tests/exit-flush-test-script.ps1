@@ -17,6 +17,15 @@ param(
 Set-StrictMode -Version latest
 $ErrorActionPreference = 'Stop'
 
+# When this script is launched cross-edition - e.g. powershell.exe (Windows PowerShell) spawned
+# from a pwsh (PowerShell Core) host - the inherited $env:PSModulePath points only at the launching
+# edition's module directories. That prevents Windows PowerShell from autoloading its built-in
+# modules (notably Microsoft.PowerShell.Utility, which provides Import-PowerShellDataFile used while
+# importing the Sentry module). Reset to the machine default so built-in modules are discoverable.
+if ($PSVersionTable.PSEdition -eq 'Desktop') {
+    $env:PSModulePath = [System.Environment]::GetEnvironmentVariable('PSModulePath', 'Machine')
+}
+
 Import-Module "$PSScriptRoot/../modules/Sentry/Sentry.psd1"
 . "$PSScriptRoot/utils.ps1"
 
