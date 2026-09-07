@@ -1,18 +1,16 @@
-. "$privateDir/New-HttpTransport.ps1"
-
 class SynchronousWorker : Sentry.Extensibility.IBackgroundWorker {
     hidden [Sentry.Extensibility.ITransport] $transport
     hidden [Sentry.SentryOptions] $options
     hidden $unfinishedTasks = [System.Collections.Generic.List[System.Threading.Tasks.Task]]::new()
 
     SynchronousWorker([Sentry.SentryOptions] $options) {
-        $this.options = $options
-
-        # Start from either the transport given on options, or create a new HTTP transport.
-        $this.transport = $options.Transport;
-        if ($null -eq $this.transport) {
-            $this.transport = New-HttpTransport($options)
+        # No fallback: the SDK builds its own default worker and transport when BackgroundWorker is left unset.
+        if ($null -eq $options.Transport) {
+            throw 'SynchronousWorker requires options.Transport to be set.'
         }
+
+        $this.options = $options
+        $this.transport = $options.Transport
     }
 
     [bool] EnqueueEnvelope([Sentry.Protocol.Envelopes.Envelope] $envelope) {
