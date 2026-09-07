@@ -14,7 +14,7 @@
 # Import the Sentry module. In your code, you would just use `Import-Module Sentry`.
 Import-Module $PSScriptRoot/../modules/Sentry/Sentry.psd1
 
-# Start the Sentry client. Logs are sent by default, so Write-SentryLog needs no opt-in.
+# Start the Sentry client.
 Start-Sentry {
     $_.Dsn = 'https://997874440feaba4ecc65c1e25df7912b@o447951.ingest.us.sentry.io/4508073336176640'
     $_.Debug = $true
