@@ -11,18 +11,14 @@
 - Honor `InAppInclude` / `InAppExclude` options when classifying PowerShell stack frames. Entries are matched against the PowerShell module name (the directory under a `$env:PSModulePath` entry) with prefix-then-dot semantics, mirroring how the .NET SDK matches namespaces. Regex variants (`AddInAppIncludeRegex` / `AddInAppExcludeRegex`) are also supported. The existing default — module frames are not in-app, script frames are — is preserved for modules not matched by any rule. ([#135](https://github.com/getsentry/sentry-powershell/pull/135))
 - Add `Add-SentryAttachment` cmdlet that infers a content type from the file extension (including PowerShell-specific extensions like `.ps1`, `.psm1`, `.psd1`) so the Sentry UI can preview attachments as text/JSON instead of falling back to `application/octet-stream` ([#134](https://github.com/getsentry/sentry-powershell/pull/134))
 - Add support for .NET 10 / PowerShell 7.6 ([#133](https://github.com/getsentry/sentry-powershell/pull/133))
-- Add `Write-SentryLog` cmdlet, a native PowerShell API for sending structured logs (Sentry Logs) ([#131](https://github.com/getsentry/sentry-powershell/pull/131))
+- Add `Write-SentryLog` cmdlet, a native PowerShell API for sending structured logs (Sentry Logs) ([#131](https://github.com/getsentry/sentry-powershell/pull/131), [#133](https://github.com/getsentry/sentry-powershell/pull/133), [#137](https://github.com/getsentry/sentry-powershell/pull/137))
 - Add `Add-SentryEventProcessor` cmdlet for registering a global event processor from a PowerShell script block ([#130](https://github.com/getsentry/sentry-powershell/pull/130))
-
-### Breaking changes
-
-- Sentry Logs (`Write-SentryLog`) options have moved off `Experimental`: use `$_.EnableLogs` and `$_.SetBeforeSendLog(...)` instead of `$_.Experimental.EnableLogs` / `$_.Experimental.SetBeforeSendLog(...)` ([#133](https://github.com/getsentry/sentry-powershell/pull/133))
 
 ### Dependencies
 
-- Bump Dotnet SDK from v5.16.1 to v6.5.0 ([#133](https://github.com/getsentry/sentry-powershell/pull/133))
-  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#650)
-  - [diff](https://github.com/getsentry/sentry-dotnet/compare/5.16.1...6.5.0)
+- Bump Dotnet SDK from v5.16.1 to v6.10.0 ([#133](https://github.com/getsentry/sentry-powershell/pull/133), [#137](https://github.com/getsentry/sentry-powershell/pull/137))
+  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#6100)
+  - [diff](https://github.com/getsentry/sentry-dotnet/compare/5.16.1...6.10.0)
 
 ## 0.4.0
 
