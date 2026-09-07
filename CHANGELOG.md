@@ -20,9 +20,9 @@
 
 ### Dependencies
 
-- Bump Dotnet SDK from v5.16.1 to v6.5.0 ([#133](https://github.com/getsentry/sentry-powershell/pull/133))
-  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#650)
-  - [diff](https://github.com/getsentry/sentry-dotnet/compare/5.16.1...6.5.0)
+- Bump Dotnet SDK from v5.16.1 to v6.10.0 ([#133](https://github.com/getsentry/sentry-powershell/pull/133), [#137](https://github.com/getsentry/sentry-powershell/pull/137))
+  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#6100)
+  - [diff](https://github.com/getsentry/sentry-dotnet/compare/5.16.1...6.10.0)
 
 ## 0.4.0
 
