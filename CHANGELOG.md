@@ -14,10 +14,6 @@
 - Add `Write-SentryLog` cmdlet, a native PowerShell API for sending structured logs (Sentry Logs) ([#131](https://github.com/getsentry/sentry-powershell/pull/131), [#137](https://github.com/getsentry/sentry-powershell/pull/137))
 - Add `Add-SentryEventProcessor` cmdlet for registering a global event processor from a PowerShell script block ([#130](https://github.com/getsentry/sentry-powershell/pull/130))
 
-### Breaking changes
-
-- Sentry Logs (`Write-SentryLog`) options have moved off `Experimental`: use `$_.SetBeforeSendLog(...)` instead of `$_.Experimental.SetBeforeSendLog(...)` ([#133](https://github.com/getsentry/sentry-powershell/pull/133))
-
 ### Dependencies
 
 - Bump Dotnet SDK from v5.16.1 to v6.10.0 ([#133](https://github.com/getsentry/sentry-powershell/pull/133), [#137](https://github.com/getsentry/sentry-powershell/pull/137))
