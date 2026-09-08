@@ -4,6 +4,7 @@
 
 ### Fixes
 
+- Remove the `SdkComposer` fallback transport in `SynchronousWorker`, which has thrown since the sentry-dotnet 5.1.1 bump. The SDK's own default worker and transport are used instead ([#143](https://github.com/getsentry/sentry-powershell/pull/143))
 - Silence CS1701/CS1702 warnings emitted by `Add-Type` when importing the module on PowerShell hosts whose runtime `System.Runtime` version differs from the one `Sentry.dll` was compiled against ([#129](https://github.com/getsentry/sentry-powershell/pull/129))
 
 ### Features
