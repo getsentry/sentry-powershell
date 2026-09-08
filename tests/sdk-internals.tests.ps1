@@ -4,6 +4,8 @@
 BeforeAll {
     . "$PSScriptRoot/utils.ps1"
     . "$PSScriptRoot/../modules/Sentry/private/SynchronousTransport.ps1"
+    . "$PSScriptRoot/../modules/Sentry/private/StackTraceProcessor.ps1"
+    $global:SentryPowershellRethrowErrors = $true
 
     $instanceFlags = [System.Reflection.BindingFlags]::Instance + [System.Reflection.BindingFlags]::NonPublic + [System.Reflection.BindingFlags]::Public
     $staticFlags = [System.Reflection.BindingFlags]::Static + [System.Reflection.BindingFlags]::NonPublic + [System.Reflection.BindingFlags]::Public
@@ -17,6 +19,10 @@ BeforeAll {
         $method.ReturnType.FullName | Should -Be $returnType
         ($method.GetParameters() | ForEach-Object { $_.ParameterType.FullName }) | Should -Be $parameterTypes
     }
+}
+
+AfterAll {
+    $global:SentryPowershellRethrowErrors = $false
 }
 
 Describe 'Sentry SDK internals used by SynchronousTransport' {
@@ -54,11 +60,43 @@ Describe 'Sentry SDK internals used by Get-CurrentOptions' {
     }
 }
 
+Describe 'Sentry SDK internals used by StackTraceProcessor' {
+    It 'SentryOptions.InAppInclude' {
+        $property = [Sentry.SentryOptions].GetProperty('InAppInclude', $instanceFlags)
+        $property | Should -Not -BeNullOrEmpty
+        [System.Collections.Generic.IEnumerable[Sentry.StringOrRegex]].IsAssignableFrom($property.PropertyType) | Should -BeTrue
+    }
+
+    It 'SentryOptions.InAppExclude' {
+        $property = [Sentry.SentryOptions].GetProperty('InAppExclude', $instanceFlags)
+        $property | Should -Not -BeNullOrEmpty
+        [System.Collections.Generic.IEnumerable[Sentry.StringOrRegex]].IsAssignableFrom($property.PropertyType) | Should -BeTrue
+    }
+
+    It 'StringOrRegex._string' {
+        $field = [Sentry.StringOrRegex].GetField('_string', $instanceFlags)
+        $field | Should -Not -BeNullOrEmpty
+        $field.FieldType.FullName | Should -Be 'System.String'
+    }
+
+    It 'StringOrRegex._regex' {
+        $field = [Sentry.StringOrRegex].GetField('_regex', $instanceFlags)
+        $field | Should -Not -BeNullOrEmpty
+        $field.FieldType.FullName | Should -Be 'System.Text.RegularExpressions.Regex'
+    }
+}
+
 Describe 'SynchronousTransport' {
     It 'resolves every internal member it needs' {
         # The constructor does all of the above lookups and throws on any that fail.
         $options = [Sentry.SentryOptions]::new()
         $options.Dsn = 'https://key@127.0.0.1/1'
         { [SynchronousTransport]::new($options) } | Should -Not -Throw
+    }
+}
+
+Describe 'StackTraceProcessor' {
+    It 'resolves every internal member it needs' {
+        { [StackTraceProcessor]::new([Sentry.SentryOptions]::new()) } | Should -Not -Throw
     }
 }
