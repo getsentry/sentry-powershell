@@ -103,13 +103,8 @@ at <ScriptBlock>, : line 3' -split "[`r`n]+"
             $sut.ResolveInApp((MakeFrame 'Foo')) | Should -BeFalse
         }
 
-        It 'Sentry.StringOrRegex still exposes the private fields we reflect on' {
-            # ResolveInApp reaches into the internal _string / _regex fields of Sentry.StringOrRegex.
-            # If a sentry-dotnet bump renames these, this fails so we catch it at upgrade time rather
-            # than silently no-op-ing InAppInclude/InAppExclude in production.
-            $flags = [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance
-            [Sentry.StringOrRegex].GetField('_string', $flags) | Should -Not -BeNullOrEmpty
-            [Sentry.StringOrRegex].GetField('_regex', $flags) | Should -Not -BeNullOrEmpty
+        It 'Names the missing member when the SDK internals it reflects on have moved' {
+            { [StackTraceProcessor]::GetInternalMember([Sentry.StringOrRegex], 'NoSuchMember') } | Should -Throw '*NoSuchMember*'
         }
     }
 }

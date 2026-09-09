@@ -8,6 +8,8 @@ class StackTraceProcessor : SentryEventProcessor {
     hidden [hashtable] $pwshModules = @{}
     hidden [System.Collections.IEnumerable] $inAppInclude
     hidden [System.Collections.IEnumerable] $inAppExclude
+    # A hashtable rather than typed FieldInfo properties, for the reason given in SynchronousTransport.
+    hidden [hashtable] $stringOrRegexFields = @{}
 
     StackTraceProcessor([Sentry.SentryOptions] $options) {
         $this.logger = $options.DiagnosticLogger
@@ -23,29 +25,43 @@ class StackTraceProcessor : SentryEventProcessor {
             $this.modulePaths = $env:PSModulePath -split ':'
         }
 
-        # The SentryOptions.InAppInclude / InAppExclude lists are internal; read them via reflection.
-        # Entries are Sentry.StringOrRegex (string prefix or compiled regex) per the .NET SDK.
-        $flags = [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance
-        $includeProp = [Sentry.SentryOptions].GetProperty('InAppInclude', $flags)
-        $excludeProp = [Sentry.SentryOptions].GetProperty('InAppExclude', $flags)
-        if ($null -ne $includeProp) {
-            $this.inAppInclude = $includeProp.GetValue($options)
-        }
-        if ($null -ne $excludeProp) {
-            $this.inAppExclude = $excludeProp.GetValue($options)
+        # InAppInclude / InAppExclude and the StringOrRegex value fields are internal to sentry-dotnet.
+        try {
+            $this.inAppInclude = [StackTraceProcessor]::GetInternalMember([Sentry.SentryOptions], 'InAppInclude').GetValue($options)
+            $this.inAppExclude = [StackTraceProcessor]::GetInternalMember([Sentry.SentryOptions], 'InAppExclude').GetValue($options)
+            $this.stringOrRegexFields['_string'] = [StackTraceProcessor]::GetInternalMember([Sentry.StringOrRegex], '_string')
+            $this.stringOrRegexFields['_regex'] = [StackTraceProcessor]::GetInternalMember([Sentry.StringOrRegex], '_regex')
+        } catch {
+            Write-Warning "Ignoring InAppInclude / InAppExclude: $_"
+            if ($global:SentryPowershellRethrowErrors -eq $true) {
+                throw
+            }
+            $this.inAppInclude = $null
+            $this.inAppExclude = $null
         }
     }
 
-    hidden static [bool] MatchesAny([System.Collections.IEnumerable] $patterns, [string] $module) {
+    # Throws on a miss so an SDK bump that moves a member is reported instead of silently dropping the option.
+    hidden static [System.Reflection.MemberInfo] GetInternalMember([type] $type, [string] $name) {
+        $flags = [System.Reflection.BindingFlags]::Instance -bor [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Public
+        $member = $type.GetProperty($name, $flags)
+        if ($null -eq $member) {
+            $member = $type.GetField($name, $flags)
+        }
+        if ($null -eq $member) {
+            throw "Failed to find internal member '$name' on $type"
+        }
+        return $member
+    }
+
+    hidden [bool] MatchesAny([System.Collections.IEnumerable] $patterns, [string] $module) {
         if ($null -eq $patterns -or [string]::IsNullOrEmpty($module)) {
             return $false
         }
         foreach ($item in $patterns) {
-            # StringOrRegex has private _string / _regex fields, exactly one set.
-            $type = $item.GetType()
-            $flags = [System.Reflection.BindingFlags]::NonPublic -bor [System.Reflection.BindingFlags]::Instance
-            $stringValue = $type.GetField('_string', $flags).GetValue($item)
-            $regexValue = $type.GetField('_regex', $flags).GetValue($item)
+            # Exactly one of the two is set.
+            $stringValue = $this.stringOrRegexFields['_string'].GetValue($item)
+            $regexValue = $this.stringOrRegexFields['_regex'].GetValue($item)
             if (-not [string]::IsNullOrEmpty($stringValue)) {
                 # Prefix match, matching .NET SDK namespace semantics ("Foo" matches "Foo" and "Foo.Bar").
                 # Case-insensitive on both halves, consistent with sentry-dotnet and PS module name resolution.
@@ -65,10 +81,10 @@ class StackTraceProcessor : SentryEventProcessor {
         # InAppExclude wins, then InAppInclude. Falls back to the PS default: user-script frames (no module)
         # are in-app; module frames are not. This default differs from sentry-dotnet because PS module
         # frames are almost always third-party.
-        if ([StackTraceProcessor]::MatchesAny($this.inAppExclude, $module)) {
+        if ($this.MatchesAny($this.inAppExclude, $module)) {
             return $false
         }
-        if ([StackTraceProcessor]::MatchesAny($this.inAppInclude, $module)) {
+        if ($this.MatchesAny($this.inAppInclude, $module)) {
             return $true
         }
         return [string]::IsNullOrEmpty($module)
