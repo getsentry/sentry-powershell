@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Dependencies
+
+- Bump Dotnet SDK from v6.10.0 to v6.11.0 ([#148](https://github.com/getsentry/sentry-powershell/pull/148))
+  - [changelog](https://github.com/getsentry/sentry-dotnet/blob/main/CHANGELOG.md#6110)
+  - [diff](https://github.com/getsentry/sentry-dotnet/compare/6.10.0...6.11.0)
+
 ## 0.5.0
 
 ### Fixes
