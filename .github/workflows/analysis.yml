@@ -31,7 +31,7 @@ jobs:
           Install-Module -Name ConvertToSARIF -Force
           Import-Module -Name ConvertToSARIF -Force
           Get-Item ./modules/Sentry/Sentry.psd1 | Import-Module
-          $results = foreach ($path in './modules', './scripts', './dependencies') {
+          $results = foreach ($path in './modules', './scripts', './dependencies', './samples') {
             Invoke-ScriptAnalyzer -Path $path -Recurse -Settings PSGallery
           }
           $results += Invoke-ScriptAnalyzer -Path ./tests -Recurse -Settings PSGallery -ExcludeRule `
