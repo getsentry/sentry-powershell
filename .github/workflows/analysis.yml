@@ -31,7 +31,12 @@ jobs:
           Install-Module -Name ConvertToSARIF -Force
           Import-Module -Name ConvertToSARIF -Force
           Get-Item ./modules/Sentry/Sentry.psd1 | Import-Module
-          Invoke-ScriptAnalyzer -Path . -Recurse -Settings PSGallery | ConvertTo-SARIF -FilePath results.sarif
+          $results = foreach ($path in './modules', './scripts', './dependencies') {
+            Invoke-ScriptAnalyzer -Path $path -Recurse -Settings PSGallery
+          }
+          $results += Invoke-ScriptAnalyzer -Path ./tests -Recurse -Settings PSGallery -ExcludeRule `
+            PSUseShouldProcessForStateChangingFunctions, PSUseApprovedVerbs, PSAvoidUsingWriteHost
+          $results | ConvertTo-SARIF -FilePath results.sarif
 
       - uses: github/codeql-action/upload-sarif@v3
         with:
