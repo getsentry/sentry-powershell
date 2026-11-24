@@ -1,0 +1,38 @@
+# getsentry/sentry-powershell e59bf9aff001dff8c274276eda77622009f34b30
+
+rubric = "sdk"
+
+# The PowerShell Gallery module. It loads the bundled sentry-dotnet assemblies
+# (downloaded into modules/Sentry/lib at build time) into the PowerShell process.
+[[area]]
+paths = ["modules/**"]
+families = ["server", "hybrid"]
+shared_core = true
+
+# Version pins of the bundled assemblies; a bump ships that SDK's changes. download.ps1 decides
+# which builds of them go into the module.
+[[area]]
+paths = ["dependencies/*.properties", "dependencies/download.ps1"]
+families = ["hybrid"]
+
+# The module manifest: exported functions, minimum PowerShell version and editions.
+[[kind]]
+paths = ["modules/Sentry/Sentry.psd1"]
+kind = "public-api-record"
+
+# Pinned bundled assemblies: dependencies/Sentry.properties pins sentry-dotnet.
+[[kind]]
+paths = ["dependencies/**"]
+kind = "dependencies"
+
+[[kind]]
+paths = ["dependencies/download.ps1", "scripts/**"]
+kind = "build-release"
+
+[[kind]]
+paths = ["samples/**"]
+kind = "samples"
+
+[[kind]]
+paths = ["tests/**"]
+kind = "tests"
